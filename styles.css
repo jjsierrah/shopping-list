@@ -10,18 +10,14 @@ body {
   padding: 16px;
   max-width: 600px;
   margin: 0 auto;
+  position: relative;
+  min-height: 100vh;
 }
 
 header h1 {
   text-align: center;
   margin-bottom: 20px;
   color: #2e7d32;
-}
-
-h2 {
-  margin: 16px 0 12px;
-  color: #333;
-  font-size: 1.2em;
 }
 
 form {
@@ -51,6 +47,12 @@ button {
 
 button:hover {
   background-color: #388E3C;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  width: 100%;
+  margin-top: 16px;
 }
 
 .controls {
@@ -97,16 +99,65 @@ input[type="checkbox"].bought {
   transform: scale(1.3);
 }
 
-/* Categorías */
+/* Floating button */
+.floating-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 24px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  z-index: 100;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: white;
+  margin: 40px auto;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #666;
+}
+
 .categories-list {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .category-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
 .category-item input {
@@ -122,5 +173,19 @@ input[type="checkbox"].bought {
 }
 
 .add-form {
-  gap: 6px;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.add-form input {
+  flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .modal-content {
+    margin: 20px auto;
+    padding: 16px;
+  }
 }
