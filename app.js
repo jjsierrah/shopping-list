@@ -71,62 +71,55 @@ function renderShoppingList() {
   saveData();
 }
 
-// Drag & Drop para categorías
+// Drag & Drop mejorado
 let dragSrcEl = null;
 
 function handleDragStart(e) {
   dragSrcEl = this;
   e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/html', this.innerHTML);
+  e.dataTransfer.setData('text/plain', this.dataset.id);
   this.classList.add('dragging');
 }
 
 function handleDragOver(e) {
-  if (e.preventDefault) {
-    e.preventDefault();
-  }
+  e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
-  return false;
-}
-
-function handleDragEnter(e) {
-  this.classList.add('over');
-}
-
-function handleDragLeave() {
-  this.classList.remove('over');
+  
+  const draggingOverEl = this;
+  const draggingEl = dragSrcEl;
+  
+  if (draggingOverEl !== draggingEl) {
+    const rect = draggingOverEl.getBoundingClientRect();
+    const nextSibling = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+    
+    draggingOverEl.parentNode.insertBefore(
+      draggingEl,
+      nextSibling ? draggingOverEl.nextSibling : draggingOverEl
+    );
+  }
 }
 
 function handleDrop(e) {
-  if (e.stopPropagation) {
-    e.stopPropagation();
+  e.stopPropagation();
+  e.preventDefault();
+  
+  if (dragSrcEl) {
+    dragSrcEl.classList.remove('dragging');
+    
+    // Reconstruir el array según el nuevo orden del DOM
+    const newOrder = Array.from(categoriesListEl.children).map(el => {
+      const id = Number(el.dataset.id);
+      return categories.find(c => c.id === id);
+    }).filter(Boolean);
+    
+    categories = newOrder;
+    renderCategories();
+    renderShoppingList();
   }
-
-  if (dragSrcEl !== this) {
-    const srcId = Number(dragSrcEl.dataset.id);
-    const targetId = Number(this.dataset.id);
-
-    const srcIndex = categories.findIndex(c => c.id === srcId);
-    const targetIndex = categories.findIndex(c => c.id === targetId);
-
-    if (srcIndex !== -1 && targetIndex !== -1) {
-      // Reordenar array
-      const [movedItem] = categories.splice(srcIndex, 1);
-      categories.splice(targetIndex, 0, movedItem);
-      renderCategories();
-      renderShoppingList();
-    }
-  }
-
-  this.classList.remove('over');
-  return false;
 }
 
 function handleDragEnd() {
   this.classList.remove('dragging');
-  document.querySelectorAll('.category-item').forEach(item => {
-    item.classList.remove('over');
-  });
 }
 
 function addDragEvents() {
@@ -134,8 +127,6 @@ function addDragEvents() {
   items.forEach(item => {
     item.addEventListener('dragstart', handleDragStart, false);
     item.addEventListener('dragover', handleDragOver, false);
-    item.addEventListener('dragenter', handleDragEnter, false);
-    item.addEventListener('dragleave', handleDragLeave, false);
     item.addEventListener('drop', handleDrop, false);
     item.addEventListener('dragend', handleDragEnd, false);
   });
@@ -144,7 +135,7 @@ function addDragEvents() {
 // Modal controls
 openCategoriesBtn.addEventListener('click', () => {
   modal.style.display = 'block';
-  setTimeout(addDragEvents, 100); // Asegurar que los elementos existan
+  setTimeout(addDragEvents, 100);
 });
 
 closeCategoriesBtn.addEventListener('click', () => {
