@@ -32,6 +32,8 @@ function renderCategories() {
   categories.forEach(cat => {
     const div = document.createElement('div');
     div.className = 'category-item';
+    div.dataset.id = cat.id;
+    div.draggable = true;
     div.innerHTML = `
       <input type="text" value="${cat.name}" data-id="${cat.id}" />
       <div class="category-actions">
@@ -69,9 +71,80 @@ function renderShoppingList() {
   saveData();
 }
 
+// Drag & Drop para categorías
+let dragSrcEl = null;
+
+function handleDragStart(e) {
+  dragSrcEl = this;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/html', this.innerHTML);
+  this.classList.add('dragging');
+}
+
+function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  e.dataTransfer.dropEffect = 'move';
+  return false;
+}
+
+function handleDragEnter(e) {
+  this.classList.add('over');
+}
+
+function handleDragLeave() {
+  this.classList.remove('over');
+}
+
+function handleDrop(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  }
+
+  if (dragSrcEl !== this) {
+    const srcId = Number(dragSrcEl.dataset.id);
+    const targetId = Number(this.dataset.id);
+
+    const srcIndex = categories.findIndex(c => c.id === srcId);
+    const targetIndex = categories.findIndex(c => c.id === targetId);
+
+    if (srcIndex !== -1 && targetIndex !== -1) {
+      // Reordenar array
+      const [movedItem] = categories.splice(srcIndex, 1);
+      categories.splice(targetIndex, 0, movedItem);
+      renderCategories();
+      renderShoppingList();
+    }
+  }
+
+  this.classList.remove('over');
+  return false;
+}
+
+function handleDragEnd() {
+  this.classList.remove('dragging');
+  document.querySelectorAll('.category-item').forEach(item => {
+    item.classList.remove('over');
+  });
+}
+
+function addDragEvents() {
+  const items = document.querySelectorAll('.category-item');
+  items.forEach(item => {
+    item.addEventListener('dragstart', handleDragStart, false);
+    item.addEventListener('dragover', handleDragOver, false);
+    item.addEventListener('dragenter', handleDragEnter, false);
+    item.addEventListener('dragleave', handleDragLeave, false);
+    item.addEventListener('drop', handleDrop, false);
+    item.addEventListener('dragend', handleDragEnd, false);
+  });
+}
+
 // Modal controls
 openCategoriesBtn.addEventListener('click', () => {
   modal.style.display = 'block';
+  setTimeout(addDragEvents, 100); // Asegurar que los elementos existan
 });
 
 closeCategoriesBtn.addEventListener('click', () => {
