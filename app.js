@@ -25,8 +25,10 @@ const configModal = document.getElementById('config-modal');
 const favoritesModal = document.getElementById('favorites-modal');
 const defaultsModal = document.getElementById('defaults-modal');
 
-// Load data
+// Load data - TRES LISTAS SEPARADAS
 let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
+let favoriteProducts = JSON.parse(localStorage.getItem('favoriteProducts')) || [];
+let defaultProducts = JSON.parse(localStorage.getItem('defaultProducts')) || [];
 let categories = JSON.parse(localStorage.getItem('categories')) || [
   { id: Date.now(), name: 'Pescadería' },
   { id: Date.now() + 1, name: 'Frutería' },
@@ -40,6 +42,8 @@ let locations = JSON.parse(localStorage.getItem('locations')) || [
 
 function saveData() {
   localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
+  localStorage.setItem('favoriteProducts', JSON.stringify(favoriteProducts));
+  localStorage.setItem('defaultProducts', JSON.stringify(defaultProducts));
   localStorage.setItem('categories', JSON.stringify(categories));
   localStorage.setItem('locations', JSON.stringify(locations));
 }
@@ -123,19 +127,17 @@ function renderShoppingList() {
 
 function renderFavoritesList() {
   favoritesListEl.innerHTML = '';
-  const favorites = shoppingList.filter(item => item.favorite);
   
-  favorites.forEach(item => {
-    const itemIndex = shoppingList.indexOf(item);
+  favoriteProducts.forEach((item, idx) => {
     const div = document.createElement('div');
     div.className = 'favorite-item';
-    div.dataset.index = itemIndex;
+    div.dataset.index = idx;
     div.draggable = true;
     div.innerHTML = `
-      <input type="text" value="${item.name}" data-index="${itemIndex}" />
+      <input type="text" value="${item.name}" data-index="${idx}" />
       <div class="favorite-actions">
-        <button type="button" class="save-favorite" data-index="${itemIndex}">💾</button>
-        <button type="button" class="delete-favorite" data-index="${itemIndex}">🗑️</button>
+        <button type="button" class="save-favorite" data-index="${idx}">💾</button>
+        <button type="button" class="delete-favorite" data-index="${idx}">🗑️</button>
       </div>
     `;
     favoritesListEl.appendChild(div);
@@ -144,19 +146,17 @@ function renderFavoritesList() {
 
 function renderDefaultsList() {
   defaultsListEl.innerHTML = '';
-  const defaults = shoppingList.filter(item => item.isDefault);
   
-  defaults.forEach(item => {
-    const itemIndex = shoppingList.indexOf(item);
+  defaultProducts.forEach((item, idx) => {
     const div = document.createElement('div');
     div.className = 'default-item';
-    div.dataset.index = itemIndex;
+    div.dataset.index = idx;
     div.draggable = true;
     div.innerHTML = `
-      <input type="text" value="${item.name}" data-index="${itemIndex}" />
+      <input type="text" value="${item.name}" data-index="${idx}" />
       <div class="default-actions">
-        <button type="button" class="save-default" data-index="${itemIndex}">💾</button>
-        <button type="button" class="delete-default" data-index="${itemIndex}">🗑️</button>
+        <button type="button" class="save-default" data-index="${idx}">💾</button>
+        <button type="button" class="delete-default" data-index="${idx}">🗑️</button>
       </div>
     `;
     defaultsListEl.appendChild(div);
@@ -164,7 +164,7 @@ function renderDefaultsList() {
 }
 
 // Drag & Drop genérico
-function setupDragAndDrop(listEl, itemClass, getItemIndex, updateFunction) {
+function setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn) {
   let dragSrcEl = null;
 
   function handleDragStart(e) {
@@ -197,7 +197,25 @@ function setupDragAndDrop(listEl, itemClass, getItemIndex, updateFunction) {
     
     if (dragSrcEl) {
       dragSrcEl.classList.remove('dragging');
-      updateFunction();
+      
+      const newOrder = Array.from(listEl.children).map(el => {
+        const idx = Number(el.dataset.index);
+        return arrayToUpdate[idx];
+      }).filter(Boolean);
+      
+      // Actualizar el array correspondiente
+      if (arrayToUpdate === favoriteProducts) {
+        favoriteProducts = newOrder;
+      } else if (arrayToUpdate === defaultProducts) {
+        defaultProducts = newOrder;
+      } else if (arrayToUpdate === categories) {
+        categories = newOrder;
+      } else if (arrayToUpdate === locations) {
+        locations = newOrder;
+      }
+      
+      saveData();
+      renderFn();
     }
   }
 
@@ -231,16 +249,7 @@ function closeModal(modal) {
 if (openFavoritesBtn) {
   openFavoritesBtn.addEventListener('click', () => {
     openModal(favoritesModal, renderFavoritesList, () => {
-      setupDragAndDrop(favoritesListEl, '.favorite-item', (el) => Number(el.dataset.index), () => {
-        const newOrder = Array.from(favoritesListEl.children).map(el => shoppingList[Number(el.dataset.index)]);
-        // Reordenar favoritos en shoppingList
-        const nonFavorites = shoppingList.filter(item => !item.favorite);
-        const favoritesOnly = newOrder;
-        shoppingList = [...nonFavorites, ...favoritesOnly];
-        renderShoppingList();
-        renderFavoritesList();
-        saveData();
-      });
+      setupDragAndDrop(favoritesListEl, '.favorite-item', favoriteProducts, renderFavoritesList);
     });
   });
 }
@@ -248,16 +257,7 @@ if (openFavoritesBtn) {
 if (openDefaultsBtn) {
   openDefaultsBtn.addEventListener('click', () => {
     openModal(defaultsModal, renderDefaultsList, () => {
-      setupDragAndDrop(defaultsListEl, '.default-item', (el) => Number(el.dataset.index), () => {
-        const newOrder = Array.from(defaultsListEl.children).map(el => shoppingList[Number(el.dataset.index)]);
-        // Reordenar predeterminados en shoppingList
-        const nonDefaults = shoppingList.filter(item => !item.isDefault);
-        const defaultsOnly = newOrder;
-        shoppingList = [...nonDefaults, ...defaultsOnly];
-        renderShoppingList();
-        renderDefaultsList();
-        saveData();
-      });
+      setupDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList);
     });
   });
 }
@@ -291,16 +291,12 @@ if (openConfigBtn) {
       renderCategories();
       renderLocations();
     }, () => {
-      setupDragAndDrop(categoriesListEl, '.category-item', (el) => Number(el.dataset.id), () => {
-        const newOrder = Array.from(categoriesListEl.children).map(el => categories.find(c => c.id === Number(el.dataset.id)));
-        categories = newOrder.filter(Boolean);
+      setupDragAndDrop(categoriesListEl, '.category-item', categories, () => {
         renderCategories();
         renderShoppingList();
         saveData();
       });
-      setupDragAndDrop(locationsListEl, '.location-item', (el) => Number(el.dataset.id), () => {
-        const newOrder = Array.from(locationsListEl.children).map(el => locations.find(l => l.id === Number(el.dataset.id)));
-        locations = newOrder.filter(Boolean);
+      setupDragAndDrop(locationsListEl, '.location-item', locations, () => {
         renderLocations();
         renderShoppingList();
         saveData();
@@ -328,21 +324,6 @@ if (categoryForm) {
     renderCategories();
     saveData();
     input.value = '';
-  });
-}
-
-// Botón de limpiar (solo la lista principal, no favoritos ni predeterminados)
-if (clearBtn) {
-  clearBtn.addEventListener('click', () => {
-    if (confirm('¿Seguro que quieres borrar la lista actual?')) {
-      // Filtrar: mantener favoritos y predeterminados en el almacenamiento
-      // Pero limpiar solo la vista actual (eliminar productos no guardados como favoritos/predeterminados)
-      // En este caso, "limpiar lista" significa vaciar la lista visible, pero conservar los datos base
-      shoppingList = [];
-      renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
-    }
   });
 }
 
@@ -375,7 +356,7 @@ if (categoriesListEl) {
     if (!id) return;
 
     if (e.target.classList.contains('delete-category')) {
-      const hasProducts = shoppingList.some(p => p.categoryId === id);
+      const hasProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.categoryId === id);
       if (hasProducts) {
         alert('No se puede eliminar: hay productos en esta categoría.');
         return;
@@ -404,7 +385,7 @@ if (locationsListEl) {
     if (!id) return;
 
     if (e.target.classList.contains('delete-location')) {
-      const hasProducts = shoppingList.some(p => p.locationId === id);
+      const hasProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.locationId === id);
       if (hasProducts) {
         alert('No se puede eliminar: hay productos en esta ubicación.');
         return;
@@ -430,19 +411,17 @@ if (locationsListEl) {
 if (favoritesListEl) {
   favoritesListEl.addEventListener('click', (e) => {
     const index = Number(e.target.dataset.index);
-    if (index < 0 || index >= shoppingList.length) return;
+    if (index < 0 || index >= favoriteProducts.length) return;
 
     if (e.target.classList.contains('delete-favorite')) {
-      shoppingList[index].favorite = false;
-      renderShoppingList();
+      favoriteProducts.splice(index, 1);
       renderFavoritesList();
       saveData();
     } else if (e.target.classList.contains('save-favorite')) {
       const input = e.target.previousElementSibling;
       const newName = input.value.trim();
       if (newName) {
-        shoppingList[index].name = newName;
-        renderShoppingList();
+        favoriteProducts[index].name = newName;
         renderFavoritesList();
         saveData();
       }
@@ -454,19 +433,17 @@ if (favoritesListEl) {
 if (defaultsListEl) {
   defaultsListEl.addEventListener('click', (e) => {
     const index = Number(e.target.dataset.index);
-    if (index < 0 || index >= shoppingList.length) return;
+    if (index < 0 || index >= defaultProducts.length) return;
 
     if (e.target.classList.contains('delete-default')) {
-      shoppingList[index].isDefault = false;
-      renderShoppingList();
+      defaultProducts.splice(index, 1);
       renderDefaultsList();
       saveData();
     } else if (e.target.classList.contains('save-default')) {
       const input = e.target.previousElementSibling;
       const newName = input.value.trim();
       if (newName) {
-        shoppingList[index].name = newName;
-        renderShoppingList();
+        defaultProducts[index].name = newName;
         renderDefaultsList();
         saveData();
       }
@@ -487,15 +464,37 @@ if (productForm) {
     
     if (!name) return;
 
-    shoppingList.push({ name, categoryId, locationId, favorite, isDefault, bought: false });
+    const newItem = { name, categoryId, locationId, favorite, isDefault, bought: false };
+    
+    // Añadir a la lista principal
+    shoppingList.push(newItem);
+    
+    // Si es favorito, añadir a favoritos (sin duplicados)
+    if (favorite) {
+      const exists = favoriteProducts.some(p => p.name === name && p.categoryId === categoryId && p.locationId === locationId);
+      if (!exists) {
+        favoriteProducts.push({...newItem, bought: false});
+      }
+    }
+    
+    // Si es predeterminado, añadir a predeterminados (sin duplicados)
+    if (isDefault) {
+      const exists = defaultProducts.some(p => p.name === name && p.categoryId === categoryId && p.locationId === locationId);
+      if (!exists) {
+        defaultProducts.push({...newItem, bought: false});
+      }
+    }
+    
     renderShoppingList();
+    renderFavoritesList();
+    renderDefaultsList();
     
     productForm.reset();
     document.getElementById('product-default').checked = true;
   });
 }
 
-// Toggle comprado o eliminar
+// Toggle comprado o eliminar (solo en lista principal)
 if (shoppingListEl) {
   shoppingListEl.addEventListener('click', (e) => {
     const index = e.target.dataset.index;
@@ -507,61 +506,46 @@ if (shoppingListEl) {
     } else if (e.target.classList.contains('delete-btn')) {
       shoppingList.splice(index, 1);
       renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
     }
   });
 }
 
+// Botón de limpiar (solo la lista principal)
+if (clearBtn) {
+  clearBtn.addEventListener('click', () => {
+    if (confirm('¿Seguro que quieres borrar la lista actual?')) {
+      shoppingList = [];
+      renderShoppingList();
+      // favoriteProducts y defaultProducts permanecen intactos
+    }
+  });
+}
 
-
-// Precargar favoritos (solo si no están ya)
+// Precargar favoritos
 if (loadFavoritesBtn) {
   loadFavoritesBtn.addEventListener('click', () => {
-    const existingNames = new Set(shoppingList.map(item => item.name));
-    const favoritesToAdd = shoppingList.filter(item => item.favorite && !existingNames.has(item.name));
-    
-    if (favoritesToAdd.length === 0) {
-      // Verificar si hay favoritos marcados pero ya en la lista
-      const hasFavorites = shoppingList.some(item => item.favorite);
-      if (!hasFavorites) {
-        alert('No hay productos marcados como favoritos.');
-        return;
-      }
-      // Verificar si los favoritos ya están en la lista (comprados o no)
-      const favoritesInList = shoppingList.filter(item => item.favorite);
-      if (favoritesInList.length > 0) {
-        alert('Los favoritos ya están en la lista.');
-        return;
-      }
+    if (favoriteProducts.length === 0) {
+      alert('No hay productos marcados como favoritos.');
+      return;
     }
     
-    const newItems = favoritesToAdd.map(fav => ({ ...fav, bought: false }));
+    // Añadir copias de favoritos a la lista principal (no comprados)
+    const newItems = favoriteProducts.map(fav => ({ ...fav, bought: false }));
     shoppingList.push(...newItems);
     renderShoppingList();
   });
 }
 
-// Precargar predeterminados (solo si no están ya)
+// Precargar predeterminados
 if (loadDefaultsBtn) {
   loadDefaultsBtn.addEventListener('click', () => {
-    const existingNames = new Set(shoppingList.map(item => item.name));
-    const defaultsToAdd = shoppingList.filter(item => item.isDefault && !existingNames.has(item.name));
-    
-    if (defaultsToAdd.length === 0) {
-      const hasDefaults = shoppingList.some(item => item.isDefault);
-      if (!hasDefaults) {
-        alert('No hay productos marcados como predeterminados.');
-        return;
-      }
-      const defaultsInList = shoppingList.filter(item => item.isDefault);
-      if (defaultsInList.length > 0) {
-        alert('Los predeterminados ya están en la lista.');
-        return;
-      }
+    if (defaultProducts.length === 0) {
+      alert('No hay productos marcados como predeterminados.');
+      return;
     }
     
-    const newItems = defaultsToAdd.map(def => ({ ...def, bought: false }));
+    // Añadir copias de predeterminados a la lista principal (no comprados)
+    const newItems = defaultProducts.map(def => ({ ...def, bought: false }));
     shoppingList.push(...newItems);
     renderShoppingList();
   });
@@ -571,3 +555,5 @@ if (loadDefaultsBtn) {
 renderCategories();
 renderLocations();
 renderShoppingList();
+renderFavoritesList();
+renderDefaultsList();
