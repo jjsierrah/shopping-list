@@ -48,6 +48,20 @@ input[type="text"], select {
   border-radius: 4px;
 }
 
+.checkbox-group {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
 button {
   padding: 8px 12px;
   background-color: #4CAF50;
@@ -70,8 +84,14 @@ button:hover {
 
 .controls {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
   margin: 20px 0;
+}
+
+.controls button {
+  flex: 1;
+  min-width: 120px;
 }
 
 #shopping-list {
@@ -164,12 +184,16 @@ input[type="checkbox"].bought {
 }
 
 .categories-list,
-.locations-list {
+.locations-list,
+.favorites-list,
+.defaults-list {
   margin-bottom: 16px;
 }
 
 .category-item,
-.location-item {
+.location-item,
+.favorite-item,
+.default-item {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -181,13 +205,17 @@ input[type="checkbox"].bought {
 }
 
 .category-item.dragging,
-.location-item.dragging {
+.location-item.dragging,
+.favorite-item.dragging,
+.default-item.dragging {
   opacity: 0.5;
   background-color: #e8f5e9;
 }
 
 .category-item input,
-.location-item input {
+.location-item input,
+.favorite-item input,
+.default-item input {
   flex: 1;
   padding: 6px;
   border: 1px solid #ddd;
@@ -195,7 +223,9 @@ input[type="checkbox"].bought {
 }
 
 .category-actions button,
-.location-actions button {
+.location-actions button,
+.favorite-actions button,
+.default-actions button {
   padding: 4px 8px;
   font-size: 0.9em;
 }
@@ -221,5 +251,13 @@ h3 {
   .modal-content {
     margin: 20px auto;
     padding: 16px;
+  }
+  
+  .controls {
+    flex-direction: column;
+  }
+  
+  .controls button {
+    width: 100%;
   }
 }
