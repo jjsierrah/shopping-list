@@ -122,19 +122,20 @@ function renderShoppingList() {
 }
 
 function renderFavoritesList() {
-  const favorites = shoppingList.filter(item => item.favorite);
   favoritesListEl.innerHTML = '';
+  const favorites = shoppingList.filter(item => item.favorite);
   
-  favorites.forEach((item, index) => {
+  favorites.forEach(item => {
+    const itemIndex = shoppingList.indexOf(item);
     const div = document.createElement('div');
     div.className = 'favorite-item';
-    div.dataset.index = shoppingList.findIndex(p => p === item);
+    div.dataset.index = itemIndex;
     div.draggable = true;
     div.innerHTML = `
-      <input type="text" value="${item.name}" data-index="${shoppingList.findIndex(p => p === item)}" />
+      <input type="text" value="${item.name}" data-index="${itemIndex}" />
       <div class="favorite-actions">
-        <button type="button" class="save-favorite" data-index="${shoppingList.findIndex(p => p === item)}">💾</button>
-        <button type="button" class="delete-favorite" data-index="${shoppingList.findIndex(p => p === item)}">🗑️</button>
+        <button type="button" class="save-favorite" data-index="${itemIndex}">💾</button>
+        <button type="button" class="delete-favorite" data-index="${itemIndex}">🗑️</button>
       </div>
     `;
     favoritesListEl.appendChild(div);
@@ -142,19 +143,20 @@ function renderFavoritesList() {
 }
 
 function renderDefaultsList() {
-  const defaults = shoppingList.filter(item => item.isDefault);
   defaultsListEl.innerHTML = '';
+  const defaults = shoppingList.filter(item => item.isDefault);
   
-  defaults.forEach((item, index) => {
+  defaults.forEach(item => {
+    const itemIndex = shoppingList.indexOf(item);
     const div = document.createElement('div');
     div.className = 'default-item';
-    div.dataset.index = shoppingList.findIndex(p => p === item);
+    div.dataset.index = itemIndex;
     div.draggable = true;
     div.innerHTML = `
-      <input type="text" value="${item.name}" data-index="${shoppingList.findIndex(p => p === item)}" />
+      <input type="text" value="${item.name}" data-index="${itemIndex}" />
       <div class="default-actions">
-        <button type="button" class="save-default" data-index="${shoppingList.findIndex(p => p === item)}">💾</button>
-        <button type="button" class="delete-default" data-index="${shoppingList.findIndex(p => p === item)}">🗑️</button>
+        <button type="button" class="save-default" data-index="${itemIndex}">💾</button>
+        <button type="button" class="delete-default" data-index="${itemIndex}">🗑️</button>
       </div>
     `;
     defaultsListEl.appendChild(div);
@@ -162,7 +164,7 @@ function renderDefaultsList() {
 }
 
 // Drag & Drop genérico
-function setupDragAndDrop(listEl, getItemFromIndex, updateOrder) {
+function setupDragAndDrop(listEl, itemClass, getItemIndex, updateFunction) {
   let dragSrcEl = null;
 
   function handleDragStart(e) {
@@ -195,13 +197,7 @@ function setupDragAndDrop(listEl, getItemFromIndex, updateOrder) {
     
     if (dragSrcEl) {
       dragSrcEl.classList.remove('dragging');
-      
-      const newOrder = Array.from(listEl.children).map(el => {
-        const index = Number(el.dataset.index);
-        return getItemFromIndex(index);
-      }).filter(Boolean);
-      
-      updateOrder(newOrder);
+      updateFunction();
     }
   }
 
@@ -209,7 +205,7 @@ function setupDragAndDrop(listEl, getItemFromIndex, updateOrder) {
     this.classList.remove('dragging');
   }
 
-  const elements = listEl.querySelectorAll('.category-item, .location-item, .favorite-item, .default-item');
+  const elements = listEl.querySelectorAll(itemClass);
   elements.forEach(item => {
     item.addEventListener('dragstart', handleDragStart, false);
     item.addEventListener('dragover', handleDragOver, false);
@@ -219,77 +215,99 @@ function setupDragAndDrop(listEl, getItemFromIndex, updateOrder) {
 }
 
 // Modal controls
-function setupModal(modal, openBtn, closeBtns, renderFn) {
-  if (openBtn) {
-    openBtn.addEventListener('click', () => {
-      modal.style.display = 'block';
-      renderFn();
-      setTimeout(() => {
-        if (modal.id === 'favorites-modal') {
-          setupDragAndDrop(favoritesListEl, (index) => shoppingList[index], (newOrder) => {
-            // Reordenar en shoppingList
-            const favoriteIndices = shoppingList.map((item, i) => item.favorite ? i : -1).filter(i => i !== -1);
-            favoriteIndices.forEach((oldIndex, newIndex) => {
-              const item = shoppingList[oldIndex];
-              shoppingList.splice(oldIndex, 1);
-              shoppingList.splice(favoriteIndices[newIndex], 0, item);
-            });
-            renderShoppingList();
-            renderFavoritesList();
-          });
-        } else if (modal.id === 'defaults-modal') {
-          setupDragAndDrop(defaultsListEl, (index) => shoppingList[index], (newOrder) => {
-            const defaultIndices = shoppingList.map((item, i) => item.isDefault ? i : -1).filter(i => i !== -1);
-            defaultIndices.forEach((oldIndex, newIndex) => {
-              const item = shoppingList[oldIndex];
-              shoppingList.splice(oldIndex, 1);
-              shoppingList.splice(defaultIndices[newIndex], 0, item);
-            });
-            renderShoppingList();
-            renderDefaultsList();
-          });
-        }
-      }, 100);
-    });
+function openModal(modal, renderFn, dragSetupFn) {
+  modal.style.display = 'block';
+  renderFn();
+  if (dragSetupFn) {
+    setTimeout(dragSetupFn, 100);
   }
+}
 
-  closeBtns.forEach(btn => {
-    if (btn) {
-      btn.addEventListener('click', () => {
-        modal.style.display = 'none';
+function closeModal(modal) {
+  modal.style.display = 'none';
+}
+
+// Event listeners para modales
+if (openFavoritesBtn) {
+  openFavoritesBtn.addEventListener('click', () => {
+    openModal(favoritesModal, renderFavoritesList, () => {
+      setupDragAndDrop(favoritesListEl, '.favorite-item', (el) => Number(el.dataset.index), () => {
+        const newOrder = Array.from(favoritesListEl.children).map(el => shoppingList[Number(el.dataset.index)]);
+        // Reordenar favoritos en shoppingList
+        const nonFavorites = shoppingList.filter(item => !item.favorite);
+        const favoritesOnly = newOrder;
+        shoppingList = [...nonFavorites, ...favoritesOnly];
+        renderShoppingList();
+        renderFavoritesList();
+        saveData();
       });
-    }
-  });
-
-  window.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      modal.style.display = 'none';
-    }
+    });
   });
 }
 
-// Configurar modales
-setupModal(configModal, openConfigBtn, [closeConfigBtn, closeConfigModalBtn], () => {
-  renderCategories();
-  renderLocations();
-  setTimeout(() => {
-    setupDragAndDrop(categoriesListEl, (id) => categories.find(c => c.id === id), (newCategories) => {
-      categories = newCategories;
-      renderCategories();
-      renderShoppingList();
-      saveData();
+if (openDefaultsBtn) {
+  openDefaultsBtn.addEventListener('click', () => {
+    openModal(defaultsModal, renderDefaultsList, () => {
+      setupDragAndDrop(defaultsListEl, '.default-item', (el) => Number(el.dataset.index), () => {
+        const newOrder = Array.from(defaultsListEl.children).map(el => shoppingList[Number(el.dataset.index)]);
+        // Reordenar predeterminados en shoppingList
+        const nonDefaults = shoppingList.filter(item => !item.isDefault);
+        const defaultsOnly = newOrder;
+        shoppingList = [...nonDefaults, ...defaultsOnly];
+        renderShoppingList();
+        renderDefaultsList();
+        saveData();
+      });
     });
-    setupDragAndDrop(locationsListEl, (id) => locations.find(l => l.id === id), (newLocations) => {
-      locations = newLocations;
-      renderLocations();
-      renderShoppingList();
-      saveData();
-    });
-  }, 100);
+  });
+}
+
+// Cerrar modales
+const closeButtons = [
+  {btn: closeConfigBtn, modal: configModal},
+  {btn: closeFavoritesBtn, modal: favoritesModal},
+  {btn: closeDefaultsBtn, modal: defaultsModal},
+  {btn: closeConfigModalBtn, modal: configModal},
+  {btn: closeFavoritesModalBtn, modal: favoritesModal},
+  {btn: closeDefaultsModalBtn, modal: defaultsModal}
+];
+
+closeButtons.forEach(({btn, modal}) => {
+  if (btn) {
+    btn.addEventListener('click', () => closeModal(modal));
+  }
 });
 
-setupModal(favoritesModal, openFavoritesBtn, [closeFavoritesBtn, closeFavoritesModalBtn], renderFavoritesList);
-setupModal(defaultsModal, openDefaultsBtn, [closeDefaultsBtn, closeDefaultsModalBtn], renderDefaultsList);
+window.addEventListener('click', (e) => {
+  if (e.target === configModal) closeModal(configModal);
+  if (e.target === favoritesModal) closeModal(favoritesModal);
+  if (e.target === defaultsModal) closeModal(defaultsModal);
+});
+
+// Configuración modal
+if (openConfigBtn) {
+  openConfigBtn.addEventListener('click', () => {
+    openModal(configModal, () => {
+      renderCategories();
+      renderLocations();
+    }, () => {
+      setupDragAndDrop(categoriesListEl, '.category-item', (el) => Number(el.dataset.id), () => {
+        const newOrder = Array.from(categoriesListEl.children).map(el => categories.find(c => c.id === Number(el.dataset.id)));
+        categories = newOrder.filter(Boolean);
+        renderCategories();
+        renderShoppingList();
+        saveData();
+      });
+      setupDragAndDrop(locationsListEl, '.location-item', (el) => Number(el.dataset.id), () => {
+        const newOrder = Array.from(locationsListEl.children).map(el => locations.find(l => l.id === Number(el.dataset.id)));
+        locations = newOrder.filter(Boolean);
+        renderLocations();
+        renderShoppingList();
+        saveData();
+      });
+    });
+  });
+}
 
 // Añadir categoría
 if (categoryForm) {
@@ -393,11 +411,11 @@ if (locationsListEl) {
   });
 }
 
-// Editar/eliminar favoritos en modal
+// Editar/eliminar favoritos
 if (favoritesListEl) {
   favoritesListEl.addEventListener('click', (e) => {
     const index = Number(e.target.dataset.index);
-    if (index === -1 || index >= shoppingList.length) return;
+    if (index < 0 || index >= shoppingList.length) return;
 
     if (e.target.classList.contains('delete-favorite')) {
       shoppingList[index].favorite = false;
@@ -417,11 +435,11 @@ if (favoritesListEl) {
   });
 }
 
-// Editar/eliminar predeterminados en modal
+// Editar/eliminar predeterminados
 if (defaultsListEl) {
   defaultsListEl.addEventListener('click', (e) => {
     const index = Number(e.target.dataset.index);
-    if (index === -1 || index >= shoppingList.length) return;
+    if (index < 0 || index >= shoppingList.length) return;
 
     if (e.target.classList.contains('delete-default')) {
       shoppingList[index].isDefault = false;
@@ -458,7 +476,7 @@ if (productForm) {
     renderShoppingList();
     
     productForm.reset();
-    document.getElementById('product-default').checked = true; // Mantener marcado por defecto
+    document.getElementById('product-default').checked = true;
   });
 }
 
@@ -492,27 +510,53 @@ if (clearBtn) {
   });
 }
 
+// Precargar favoritos (solo si no están ya)
 if (loadFavoritesBtn) {
   loadFavoritesBtn.addEventListener('click', () => {
-    const favorites = shoppingList.filter(item => item.favorite);
-    if (favorites.length === 0) {
-      alert('No hay productos marcados como favoritos.');
-      return;
+    const existingNames = new Set(shoppingList.map(item => item.name));
+    const favoritesToAdd = shoppingList.filter(item => item.favorite && !existingNames.has(item.name));
+    
+    if (favoritesToAdd.length === 0) {
+      // Verificar si hay favoritos marcados pero ya en la lista
+      const hasFavorites = shoppingList.some(item => item.favorite);
+      if (!hasFavorites) {
+        alert('No hay productos marcados como favoritos.');
+        return;
+      }
+      // Verificar si los favoritos ya están en la lista (comprados o no)
+      const favoritesInList = shoppingList.filter(item => item.favorite);
+      if (favoritesInList.length > 0) {
+        alert('Los favoritos ya están en la lista.');
+        return;
+      }
     }
-    const newItems = favorites.map(fav => ({ ...fav, bought: false }));
+    
+    const newItems = favoritesToAdd.map(fav => ({ ...fav, bought: false }));
     shoppingList.push(...newItems);
     renderShoppingList();
   });
 }
 
+// Precargar predeterminados (solo si no están ya)
 if (loadDefaultsBtn) {
   loadDefaultsBtn.addEventListener('click', () => {
-    const defaults = shoppingList.filter(item => item.isDefault);
-    if (defaults.length === 0) {
-      alert('No hay productos marcados como predeterminados.');
-      return;
+    const existingNames = new Set(shoppingList.map(item => item.name));
+    const defaultsToAdd = shoppingList.filter(item => item.isDefault && !existingNames.has(item.name));
+    
+    if (defaultsToAdd.length === 0) {
+      const hasDefaults = shoppingList.some(item => item.isDefault);
+      if (!hasDefaults) {
+        alert('No hay productos marcados como predeterminados.');
+        return;
+      }
+      const defaultsInList = shoppingList.filter(item => item.isDefault);
+      if (defaultsInList.length > 0) {
+        alert('Los predeterminados ya están en la lista.');
+        return;
+      }
     }
-    const newItems = defaults.map(def => ({ ...def, bought: false }));
+    
+    const newItems = defaultsToAdd.map(def => ({ ...def, bought: false }));
     shoppingList.push(...newItems);
     renderShoppingList();
   });
