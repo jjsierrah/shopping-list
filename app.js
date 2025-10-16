@@ -4,13 +4,15 @@ const shoppingListEl = document.getElementById('shopping-list');
 const clearBtn = document.getElementById('clear-list');
 const loadFavoritesBtn = document.getElementById('load-favorites');
 const categoryForm = document.getElementById('add-category-form');
+const locationForm = document.getElementById('add-location-form');
 const categoriesListEl = document.getElementById('categories-list');
+const locationsListEl = document.getElementById('locations-list');
 const categorySelect = document.getElementById('product-category-select');
-const newCategoryInput = document.getElementById('product-category-new');
-const openCategoriesBtn = document.getElementById('open-categories-btn');
-const closeCategoriesBtn = document.getElementById('close-categories-btn');
-const closeModalBtn = document.getElementById('close-modal-btn');
-const modal = document.getElementById('categories-modal');
+const locationSelect = document.getElementById('product-location-select');
+const openConfigBtn = document.getElementById('open-config-btn');
+const closeConfigBtn = document.getElementById('close-config-btn');
+const closeConfigModalBtn = document.getElementById('close-config-modal-btn');
+const modal = document.getElementById('config-modal');
 
 // Load data
 let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
@@ -19,15 +21,21 @@ let categories = JSON.parse(localStorage.getItem('categories')) || [
   { id: Date.now() + 1, name: 'Frutería' },
   { id: Date.now() + 2, name: 'Carnicería' }
 ];
+let locations = JSON.parse(localStorage.getItem('locations')) || [
+  { id: Date.now() + 3, name: 'Supermercado' },
+  { id: Date.now() + 4, name: 'Mercado' },
+  { id: Date.now() + 5, name: 'Tienda especializada' }
+];
 
 function saveData() {
   localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
   localStorage.setItem('categories', JSON.stringify(categories));
+  localStorage.setItem('locations', JSON.stringify(locations));
 }
 
 function renderCategories() {
   categoriesListEl.innerHTML = '';
-  categorySelect.innerHTML = '<option value="">-- Selecciona categoría --</option>';
+  categorySelect.innerHTML = '<option value="">-- Categoría --</option>';
   
   categories.forEach(cat => {
     const div = document.createElement('div');
@@ -48,18 +56,44 @@ function renderCategories() {
     option.textContent = cat.name;
     categorySelect.appendChild(option);
   });
-  saveData();
+}
+
+function renderLocations() {
+  locationsListEl.innerHTML = '';
+  locationSelect.innerHTML = '<option value="">-- Ubicación --</option>';
+  
+  locations.forEach(loc => {
+    const div = document.createElement('div');
+    div.className = 'location-item';
+    div.dataset.id = loc.id;
+    div.draggable = true;
+    div.innerHTML = `
+      <input type="text" value="${loc.name}" data-id="${loc.id}" />
+      <div class="location-actions">
+        <button type="button" class="save-location" data-id="${loc.id}">💾</button>
+        <button type="button" class="delete-location" data-id="${loc.id}">🗑️</button>
+      </div>
+    `;
+    locationsListEl.appendChild(div);
+
+    const option = document.createElement('option');
+    option.value = loc.id;
+    option.textContent = loc.name;
+    locationSelect.appendChild(option);
+  });
 }
 
 function renderShoppingList() {
   shoppingListEl.innerHTML = '';
   shoppingList.forEach((item, index) => {
     const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
+    const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
     const li = document.createElement('li');
     li.innerHTML = `
       <div class="product-info">
         <h3>${item.name}${item.favorite ? ' ⭐' : ''}</h3>
         <div class="category">${categoryName}</div>
+        <div class="location">${locationName}</div>
       </div>
       <div class="actions">
         <input type="checkbox" class="bought" ${item.bought ? 'checked' : ''} data-index="${index}">
@@ -71,60 +105,58 @@ function renderShoppingList() {
   saveData();
 }
 
-// Drag & Drop mejorado
-let dragSrcEl = null;
+// Drag & Drop para categorías
+function setupDragAndDrop(listEl, items, updateArray) {
+  let dragSrcEl = null;
 
-function handleDragStart(e) {
-  dragSrcEl = this;
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', this.dataset.id);
-  this.classList.add('dragging');
-}
-
-function handleDragOver(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  
-  const draggingOverEl = this;
-  const draggingEl = dragSrcEl;
-  
-  if (draggingOverEl !== draggingEl) {
-    const rect = draggingOverEl.getBoundingClientRect();
-    const nextSibling = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-    
-    draggingOverEl.parentNode.insertBefore(
-      draggingEl,
-      nextSibling ? draggingOverEl.nextSibling : draggingOverEl
-    );
+  function handleDragStart(e) {
+    dragSrcEl = this;
+    e.dataTransfer.effectAllowed = 'move';
+    this.classList.add('dragging');
   }
-}
 
-function handleDrop(e) {
-  e.stopPropagation();
-  e.preventDefault();
-  
-  if (dragSrcEl) {
-    dragSrcEl.classList.remove('dragging');
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
     
-    // Reconstruir el array según el nuevo orden del DOM
-    const newOrder = Array.from(categoriesListEl.children).map(el => {
-      const id = Number(el.dataset.id);
-      return categories.find(c => c.id === id);
-    }).filter(Boolean);
+    const draggingOverEl = this;
+    const draggingEl = dragSrcEl;
     
-    categories = newOrder;
-    renderCategories();
-    renderShoppingList();
+    if (draggingOverEl !== draggingEl) {
+      const rect = draggingOverEl.getBoundingClientRect();
+      const nextSibling = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+      
+      draggingOverEl.parentNode.insertBefore(
+        draggingEl,
+        nextSibling ? draggingOverEl.nextSibling : draggingOverEl
+      );
+    }
   }
-}
 
-function handleDragEnd() {
-  this.classList.remove('dragging');
-}
+  function handleDrop(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (dragSrcEl) {
+      dragSrcEl.classList.remove('dragging');
+      
+      // Reconstruir array desde DOM
+      const newOrder = Array.from(listEl.children).map(el => {
+        const id = Number(el.dataset.id);
+        return items.find(item => item.id === id);
+      }).filter(Boolean);
+      
+      updateArray(newOrder);
+      renderShoppingList();
+    }
+  }
 
-function addDragEvents() {
-  const items = document.querySelectorAll('.category-item');
-  items.forEach(item => {
+  function handleDragEnd() {
+    this.classList.remove('dragging');
+  }
+
+  const elements = listEl.querySelectorAll('.category-item, .location-item');
+  elements.forEach(item => {
     item.addEventListener('dragstart', handleDragStart, false);
     item.addEventListener('dragover', handleDragOver, false);
     item.addEventListener('drop', handleDrop, false);
@@ -133,16 +165,27 @@ function addDragEvents() {
 }
 
 // Modal controls
-openCategoriesBtn.addEventListener('click', () => {
+openConfigBtn.addEventListener('click', () => {
   modal.style.display = 'block';
-  setTimeout(addDragEvents, 100);
+  setTimeout(() => {
+    setupDragAndDrop(categoriesListEl, categories, (newCategories) => {
+      categories = newCategories;
+      renderCategories();
+      saveData();
+    });
+    setupDragAndDrop(locationsListEl, locations, (newLocations) => {
+      locations = newLocations;
+      renderLocations();
+      saveData();
+    });
+  }, 100);
 });
 
-closeCategoriesBtn.addEventListener('click', () => {
+closeConfigBtn.addEventListener('click', () => {
   modal.style.display = 'none';
 });
 
-closeModalBtn.addEventListener('click', () => {
+closeConfigModalBtn.addEventListener('click', () => {
   modal.style.display = 'none';
 });
 
@@ -168,6 +211,27 @@ categoryForm.addEventListener('submit', (e) => {
 
   categories.push({ id: Date.now(), name });
   renderCategories();
+  saveData();
+  input.value = '';
+});
+
+// Añadir ubicación
+locationForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = document.getElementById('new-location');
+  const name = input.value.trim();
+  
+  if (!name) return;
+
+  const exists = locations.some(l => l.name.toLowerCase() === name.toLowerCase());
+  if (exists) {
+    alert('La ubicación ya existe.');
+    return;
+  }
+
+  locations.push({ id: Date.now(), name });
+  renderLocations();
+  saveData();
   input.value = '';
 });
 
@@ -185,6 +249,7 @@ categoriesListEl.addEventListener('click', (e) => {
     categories = categories.filter(c => c.id !== id);
     renderCategories();
     renderShoppingList();
+    saveData();
   } else if (e.target.classList.contains('save-category')) {
     const input = e.target.previousElementSibling;
     const newName = input.value.trim();
@@ -192,24 +257,35 @@ categoriesListEl.addEventListener('click', (e) => {
       const cat = categories.find(c => c.id === id);
       if (cat) cat.name = newName;
       renderCategories();
-      renderShoppingList();
+      saveData();
     }
   }
 });
 
-// Sincronizar select y campo nuevo
-categorySelect.addEventListener('change', () => {
-  if (categorySelect.value) {
-    newCategoryInput.value = '';
-    newCategoryInput.disabled = true;
-  } else {
-    newCategoryInput.disabled = false;
-  }
-});
+// Editar/eliminar ubicaciones
+locationsListEl.addEventListener('click', (e) => {
+  const id = Number(e.target.dataset.id);
+  if (!id) return;
 
-newCategoryInput.addEventListener('input', () => {
-  if (newCategoryInput.value) {
-    categorySelect.value = '';
+  if (e.target.classList.contains('delete-location')) {
+    const hasProducts = shoppingList.some(p => p.locationId === id);
+    if (hasProducts) {
+      alert('No se puede eliminar: hay productos en esta ubicación.');
+      return;
+    }
+    locations = locations.filter(l => l.id !== id);
+    renderLocations();
+    renderShoppingList();
+    saveData();
+  } else if (e.target.classList.contains('save-location')) {
+    const input = e.target.previousElementSibling;
+    const newName = input.value.trim();
+    if (newName) {
+      const loc = locations.find(l => l.id === id);
+      if (loc) loc.name = newName;
+      renderLocations();
+      saveData();
+    }
   }
 });
 
@@ -219,33 +295,15 @@ productForm.addEventListener('submit', (e) => {
   const nameInput = document.getElementById('product-name');
   const name = nameInput.value.trim();
   const favorite = document.getElementById('product-favorite').checked;
+  const categoryId = categorySelect.value ? Number(categorySelect.value) : null;
+  const locationId = locationSelect.value ? Number(locationSelect.value) : null;
   
   if (!name) return;
 
-  let categoryId = null;
-  const selectedCatId = categorySelect.value;
-  const newCatName = newCategoryInput.value.trim();
-
-  if (selectedCatId) {
-    categoryId = Number(selectedCatId);
-  } else if (newCatName) {
-    const existing = categories.find(c => c.name.toLowerCase() === newCatName.toLowerCase());
-    if (existing) {
-      categoryId = existing.id;
-    } else {
-      const newCat = { id: Date.now(), name: newCatName };
-      categories.push(newCat);
-      categoryId = newCat.id;
-      renderCategories();
-    }
-  }
-
-  shoppingList.push({ name, categoryId, favorite, bought: false });
+  shoppingList.push({ name, categoryId, locationId, favorite, bought: false });
   renderShoppingList();
   
   productForm.reset();
-  newCategoryInput.disabled = false;
-  categorySelect.value = '';
 });
 
 // Toggle comprado o eliminar
@@ -283,4 +341,5 @@ loadFavoritesBtn.addEventListener('click', () => {
 
 // Inicializar
 renderCategories();
+renderLocations();
 renderShoppingList();
