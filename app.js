@@ -7,6 +7,10 @@ const categoryForm = document.getElementById('add-category-form');
 const categoriesListEl = document.getElementById('categories-list');
 const categorySelect = document.getElementById('product-category-select');
 const newCategoryInput = document.getElementById('product-category-new');
+const openCategoriesBtn = document.getElementById('open-categories-btn');
+const closeCategoriesBtn = document.getElementById('close-categories-btn');
+const closeModalBtn = document.getElementById('close-modal-btn');
+const modal = document.getElementById('categories-modal');
 
 // Load data
 let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
@@ -64,6 +68,25 @@ function renderShoppingList() {
   });
   saveData();
 }
+
+// Modal controls
+openCategoriesBtn.addEventListener('click', () => {
+  modal.style.display = 'block';
+});
+
+closeCategoriesBtn.addEventListener('click', () => {
+  modal.style.display = 'none';
+});
+
+closeModalBtn.addEventListener('click', () => {
+  modal.style.display = 'none';
+});
+
+window.addEventListener('click', (e) => {
+  if (e.target === modal) {
+    modal.style.display = 'none';
+  }
+});
 
 // Añadir categoría
 categoryForm.addEventListener('submit', (e) => {
