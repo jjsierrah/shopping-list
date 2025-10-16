@@ -85,7 +85,8 @@ button:hover {
   margin-bottom: 4px;
 }
 
-.product-info .category {
+.product-info .category,
+.product-info .location {
   font-size: 0.9em;
   color: #666;
 }
@@ -149,11 +150,13 @@ input[type="checkbox"].bought {
   color: #666;
 }
 
-.categories-list {
+.categories-list,
+.locations-list {
   margin-bottom: 16px;
 }
 
-.category-item {
+.category-item,
+.location-item {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -164,19 +167,22 @@ input[type="checkbox"].bought {
   transition: background-color 0.2s;
 }
 
-.category-item.dragging {
+.category-item.dragging,
+.location-item.dragging {
   opacity: 0.5;
   background-color: #e8f5e9;
 }
 
-.category-item input {
+.category-item input,
+.location-item input {
   flex: 1;
   padding: 6px;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
 
-.category-actions button {
+.category-actions button,
+.location-actions button {
   padding: 4px 8px;
   font-size: 0.9em;
 }
@@ -189,6 +195,12 @@ input[type="checkbox"].bought {
 
 .add-form input {
   flex: 1;
+}
+
+h3 {
+  margin: 16px 0 8px;
+  color: #333;
+  font-size: 1.1em;
 }
 
 /* Responsive */
