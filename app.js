@@ -331,6 +331,21 @@ if (categoryForm) {
   });
 }
 
+// Botón de limpiar (solo la lista principal, no favoritos ni predeterminados)
+if (clearBtn) {
+  clearBtn.addEventListener('click', () => {
+    if (confirm('¿Seguro que quieres borrar la lista actual?')) {
+      // Filtrar: mantener favoritos y predeterminados en el almacenamiento
+      // Pero limpiar solo la vista actual (eliminar productos no guardados como favoritos/predeterminados)
+      // En este caso, "limpiar lista" significa vaciar la lista visible, pero conservar los datos base
+      shoppingList = [];
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+    }
+  });
+}
+
 // Añadir ubicación
 if (locationForm) {
   locationForm.addEventListener('submit', (e) => {
@@ -498,17 +513,7 @@ if (shoppingListEl) {
   });
 }
 
-// Botones de control
-if (clearBtn) {
-  clearBtn.addEventListener('click', () => {
-    if (confirm('¿Seguro que quieres borrar toda la lista?')) {
-      shoppingList = [];
-      renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
-    }
-  });
-}
+
 
 // Precargar favoritos (solo si no están ya)
 if (loadFavoritesBtn) {
