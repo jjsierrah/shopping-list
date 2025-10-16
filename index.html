@@ -20,9 +20,11 @@
       <form id="add-product-form">
         <input type="text" id="product-name" placeholder="Nombre del producto" required />
         <select id="product-category-select">
-          <option value="">-- Selecciona categoría --</option>
+          <option value="">-- Categoría --</option>
         </select>
-        <input type="text" id="product-category-new" placeholder="O escribe una nueva" />
+        <select id="product-location-select">
+          <option value="">-- Ubicación --</option>
+        </select>
         <label>
           <input type="checkbox" id="product-favorite" /> Favorito
         </label>
@@ -40,22 +42,34 @@
     <ul id="shopping-list"></ul>
   </main>
 
-  <!-- Botón flotante para categorías -->
-  <button id="open-categories-btn" class="floating-btn">⚙️</button>
+  <!-- Botón flotante para configuración -->
+  <button id="open-config-btn" class="floating-btn">⚙️</button>
 
-  <!-- Modal de categorías (oculto por defecto) -->
-  <div id="categories-modal" class="modal" style="display: none;">
+  <!-- Modal de configuración -->
+  <div id="config-modal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Gestión de Categorías</h2>
-        <button id="close-categories-btn" class="close-btn">&times;</button>
+        <h2>Configuración</h2>
+        <button id="close-config-btn" class="close-btn">&times;</button>
       </div>
+      
+      <!-- Categorías -->
+      <h3>Categorías</h3>
       <div class="categories-list" id="categories-list"></div>
       <form id="add-category-form" class="add-form">
         <input type="text" id="new-category" placeholder="Nueva categoría" required />
         <button type="submit">➕ Añadir</button>
       </form>
-      <button id="close-modal-btn" class="btn-secondary">Cerrar</button>
+      
+      <!-- Ubicaciones -->
+      <h3>Ubicaciones</h3>
+      <div class="locations-list" id="locations-list"></div>
+      <form id="add-location-form" class="add-form">
+        <input type="text" id="new-location" placeholder="Nueva ubicación" required />
+        <button type="submit">➕ Añadir</button>
+      </form>
+      
+      <button id="close-config-modal-btn" class="btn-secondary">Cerrar</button>
     </div>
   </div>
 
