@@ -105,7 +105,7 @@ function renderShoppingList() {
   saveData();
 }
 
-// Drag & Drop para categorías
+// Drag & Drop genérico
 function setupDragAndDrop(listEl, items, updateArray) {
   let dragSrcEl = null;
 
@@ -140,7 +140,6 @@ function setupDragAndDrop(listEl, items, updateArray) {
     if (dragSrcEl) {
       dragSrcEl.classList.remove('dragging');
       
-      // Reconstruir array desde DOM
       const newOrder = Array.from(listEl.children).map(el => {
         const id = Number(el.dataset.id);
         return items.find(item => item.id === id);
@@ -165,29 +164,35 @@ function setupDragAndDrop(listEl, items, updateArray) {
 }
 
 // Modal controls
-openConfigBtn.addEventListener('click', () => {
-  modal.style.display = 'block';
-  setTimeout(() => {
-    setupDragAndDrop(categoriesListEl, categories, (newCategories) => {
-      categories = newCategories;
-      renderCategories();
-      saveData();
-    });
-    setupDragAndDrop(locationsListEl, locations, (newLocations) => {
-      locations = newLocations;
-      renderLocations();
-      saveData();
-    });
-  }, 100);
-});
+if (openConfigBtn) {
+  openConfigBtn.addEventListener('click', () => {
+    modal.style.display = 'block';
+    setTimeout(() => {
+      setupDragAndDrop(categoriesListEl, categories, (newCategories) => {
+        categories = newCategories;
+        renderCategories();
+        saveData();
+      });
+      setupDragAndDrop(locationsListEl, locations, (newLocations) => {
+        locations = newLocations;
+        renderLocations();
+        saveData();
+      });
+    }, 100);
+  });
+}
 
-closeConfigBtn.addEventListener('click', () => {
-  modal.style.display = 'none';
-});
+if (closeConfigBtn) {
+  closeConfigBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+}
 
-closeConfigModalBtn.addEventListener('click', () => {
-  modal.style.display = 'none';
-});
+if (closeConfigModalBtn) {
+  closeConfigModalBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+}
 
 window.addEventListener('click', (e) => {
   if (e.target === modal) {
@@ -196,148 +201,164 @@ window.addEventListener('click', (e) => {
 });
 
 // Añadir categoría
-categoryForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const input = document.getElementById('new-category');
-  const name = input.value.trim();
-  
-  if (!name) return;
+if (categoryForm) {
+  categoryForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('new-category');
+    const name = input.value.trim();
+    
+    if (!name) return;
 
-  const exists = categories.some(c => c.name.toLowerCase() === name.toLowerCase());
-  if (exists) {
-    alert('La categoría ya existe.');
-    return;
-  }
+    const exists = categories.some(c => c.name.toLowerCase() === name.toLowerCase());
+    if (exists) {
+      alert('La categoría ya existe.');
+      return;
+    }
 
-  categories.push({ id: Date.now(), name });
-  renderCategories();
-  saveData();
-  input.value = '';
-});
+    categories.push({ id: Date.now(), name });
+    renderCategories();
+    saveData();
+    input.value = '';
+  });
+}
 
 // Añadir ubicación
-locationForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const input = document.getElementById('new-location');
-  const name = input.value.trim();
-  
-  if (!name) return;
+if (locationForm) {
+  locationForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = document.getElementById('new-location');
+    const name = input.value.trim();
+    
+    if (!name) return;
 
-  const exists = locations.some(l => l.name.toLowerCase() === name.toLowerCase());
-  if (exists) {
-    alert('La ubicación ya existe.');
-    return;
-  }
+    const exists = locations.some(l => l.name.toLowerCase() === name.toLowerCase());
+    if (exists) {
+      alert('La ubicación ya existe.');
+      return;
+    }
 
-  locations.push({ id: Date.now(), name });
-  renderLocations();
-  saveData();
-  input.value = '';
-});
+    locations.push({ id: Date.now(), name });
+    renderLocations();
+    saveData();
+    input.value = '';
+  });
+}
 
 // Editar/eliminar categorías
-categoriesListEl.addEventListener('click', (e) => {
-  const id = Number(e.target.dataset.id);
-  if (!id) return;
+if (categoriesListEl) {
+  categoriesListEl.addEventListener('click', (e) => {
+    const id = Number(e.target.dataset.id);
+    if (!id) return;
 
-  if (e.target.classList.contains('delete-category')) {
-    const hasProducts = shoppingList.some(p => p.categoryId === id);
-    if (hasProducts) {
-      alert('No se puede eliminar: hay productos en esta categoría.');
-      return;
-    }
-    categories = categories.filter(c => c.id !== id);
-    renderCategories();
-    renderShoppingList();
-    saveData();
-  } else if (e.target.classList.contains('save-category')) {
-    const input = e.target.previousElementSibling;
-    const newName = input.value.trim();
-    if (newName) {
-      const cat = categories.find(c => c.id === id);
-      if (cat) cat.name = newName;
+    if (e.target.classList.contains('delete-category')) {
+      const hasProducts = shoppingList.some(p => p.categoryId === id);
+      if (hasProducts) {
+        alert('No se puede eliminar: hay productos en esta categoría.');
+        return;
+      }
+      categories = categories.filter(c => c.id !== id);
       renderCategories();
+      renderShoppingList();
       saveData();
+    } else if (e.target.classList.contains('save-category')) {
+      const input = e.target.previousElementSibling;
+      const newName = input.value.trim();
+      if (newName) {
+        const cat = categories.find(c => c.id === id);
+        if (cat) cat.name = newName;
+        renderCategories();
+        saveData();
+      }
     }
-  }
-});
+  });
+}
 
 // Editar/eliminar ubicaciones
-locationsListEl.addEventListener('click', (e) => {
-  const id = Number(e.target.dataset.id);
-  if (!id) return;
+if (locationsListEl) {
+  locationsListEl.addEventListener('click', (e) => {
+    const id = Number(e.target.dataset.id);
+    if (!id) return;
 
-  if (e.target.classList.contains('delete-location')) {
-    const hasProducts = shoppingList.some(p => p.locationId === id);
-    if (hasProducts) {
-      alert('No se puede eliminar: hay productos en esta ubicación.');
-      return;
-    }
-    locations = locations.filter(l => l.id !== id);
-    renderLocations();
-    renderShoppingList();
-    saveData();
-  } else if (e.target.classList.contains('save-location')) {
-    const input = e.target.previousElementSibling;
-    const newName = input.value.trim();
-    if (newName) {
-      const loc = locations.find(l => l.id === id);
-      if (loc) loc.name = newName;
+    if (e.target.classList.contains('delete-location')) {
+      const hasProducts = shoppingList.some(p => p.locationId === id);
+      if (hasProducts) {
+        alert('No se puede eliminar: hay productos en esta ubicación.');
+        return;
+      }
+      locations = locations.filter(l => l.id !== id);
       renderLocations();
+      renderShoppingList();
       saveData();
+    } else if (e.target.classList.contains('save-location')) {
+      const input = e.target.previousElementSibling;
+      const newName = input.value.trim();
+      if (newName) {
+        const loc = locations.find(l => l.id === id);
+        if (loc) loc.name = newName;
+        renderLocations();
+        saveData();
+      }
     }
-  }
-});
+  });
+}
 
 // Añadir producto
-productForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const nameInput = document.getElementById('product-name');
-  const name = nameInput.value.trim();
-  const favorite = document.getElementById('product-favorite').checked;
-  const categoryId = categorySelect.value ? Number(categorySelect.value) : null;
-  const locationId = locationSelect.value ? Number(locationSelect.value) : null;
-  
-  if (!name) return;
+if (productForm) {
+  productForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const nameInput = document.getElementById('product-name');
+    const name = nameInput.value.trim();
+    const favorite = document.getElementById('product-favorite').checked;
+    const categoryId = categorySelect.value ? Number(categorySelect.value) : null;
+    const locationId = locationSelect.value ? Number(locationSelect.value) : null;
+    
+    if (!name) return;
 
-  shoppingList.push({ name, categoryId, locationId, favorite, bought: false });
-  renderShoppingList();
-  
-  productForm.reset();
-});
+    shoppingList.push({ name, categoryId, locationId, favorite, bought: false });
+    renderShoppingList();
+    
+    productForm.reset();
+  });
+}
 
 // Toggle comprado o eliminar
-shoppingListEl.addEventListener('click', (e) => {
-  const index = e.target.dataset.index;
-  if (index === undefined) return;
+if (shoppingListEl) {
+  shoppingListEl.addEventListener('click', (e) => {
+    const index = e.target.dataset.index;
+    if (index === undefined) return;
 
-  if (e.target.classList.contains('bought')) {
-    shoppingList[index].bought = e.target.checked;
-    saveData();
-  } else if (e.target.classList.contains('delete-btn')) {
-    shoppingList.splice(index, 1);
-    renderShoppingList();
-  }
-});
+    if (e.target.classList.contains('bought')) {
+      shoppingList[index].bought = e.target.checked;
+      saveData();
+    } else if (e.target.classList.contains('delete-btn')) {
+      shoppingList.splice(index, 1);
+      renderShoppingList();
+    }
+  });
+}
 
 // Botones de control
-clearBtn.addEventListener('click', () => {
-  if (confirm('¿Seguro que quieres borrar toda la lista?')) {
-    shoppingList = [];
-    renderShoppingList();
-  }
-});
+if (clearBtn) {
+  clearBtn.addEventListener('click', () => {
+    if (confirm('¿Seguro que quieres borrar toda la lista?')) {
+      shoppingList = [];
+      renderShoppingList();
+    }
+  });
+}
 
-loadFavoritesBtn.addEventListener('click', () => {
-  const favorites = shoppingList.filter(item => item.favorite);
-  if (favorites.length === 0) {
-    alert('No hay productos marcados como favoritos.');
-    return;
-  }
-  const newItems = favorites.map(fav => ({ ...fav, bought: false }));
-  shoppingList.push(...newItems);
-  renderShoppingList();
-});
+if (loadFavoritesBtn) {
+  loadFavoritesBtn.addEventListener('click', () => {
+    const favorites = shoppingList.filter(item => item.favorite);
+    if (favorites.length === 0) {
+      alert('No hay productos marcados como favoritos.');
+      return;
+    }
+    const newItems = favorites.map(fav => ({ ...fav, bought: false }));
+    shoppingList.push(...newItems);
+    renderShoppingList();
+  });
+}
 
 // Inicializar
 renderCategories();
