@@ -16,41 +16,35 @@ let categories = JSON.parse(localStorage.getItem('categories')) || [
   { id: Date.now() + 2, name: 'Carnicería' }
 ];
 
-// Save to localStorage
 function saveData() {
   localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
   localStorage.setItem('categories', JSON.stringify(categories));
 }
 
-// Render categories
 function renderCategories() {
   categoriesListEl.innerHTML = '';
   categorySelect.innerHTML = '<option value="">-- Selecciona categoría --</option>';
   
   categories.forEach(cat => {
-    // Lista editable
     const div = document.createElement('div');
     div.className = 'category-item';
     div.innerHTML = `
       <input type="text" value="${cat.name}" data-id="${cat.id}" />
       <div class="category-actions">
-        <button class="save-category" data-id="${cat.id}">💾</button>
-        <button class="delete-category" data-id="${cat.id}">🗑️</button>
+        <button type="button" class="save-category" data-id="${cat.id}">💾</button>
+        <button type="button" class="delete-category" data-id="${cat.id}">🗑️</button>
       </div>
     `;
     categoriesListEl.appendChild(div);
 
-    // Opción en select
     const option = document.createElement('option');
     option.value = cat.id;
     option.textContent = cat.name;
     categorySelect.appendChild(option);
   });
-
   saveData();
 }
 
-// Render shopping list
 function renderShoppingList() {
   shoppingListEl.innerHTML = '';
   shoppingList.forEach((item, index) => {
@@ -63,7 +57,7 @@ function renderShoppingList() {
       </div>
       <div class="actions">
         <input type="checkbox" class="bought" ${item.bought ? 'checked' : ''} data-index="${index}">
-        <button class="delete-btn" data-index="${index}">🗑️</button>
+        <button type="button" class="delete-btn" data-index="${index}">🗑️</button>
       </div>
     `;
     shoppingListEl.appendChild(li);
@@ -71,18 +65,26 @@ function renderShoppingList() {
   saveData();
 }
 
-// Add new category
+// Añadir categoría
 categoryForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const name = document.getElementById('new-category').value.trim();
-  if (name && !categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-    categories.push({ id: Date.now(), name });
-    renderCategories();
-    categoryForm.reset();
+  const input = document.getElementById('new-category');
+  const name = input.value.trim();
+  
+  if (!name) return;
+
+  const exists = categories.some(c => c.name.toLowerCase() === name.toLowerCase());
+  if (exists) {
+    alert('La categoría ya existe.');
+    return;
   }
+
+  categories.push({ id: Date.now(), name });
+  renderCategories();
+  input.value = '';
 });
 
-// Edit/delete categories
+// Editar/eliminar categorías
 categoriesListEl.addEventListener('click', (e) => {
   const id = Number(e.target.dataset.id);
   if (!id) return;
@@ -108,7 +110,7 @@ categoriesListEl.addEventListener('click', (e) => {
   }
 });
 
-// Sync category input and select
+// Sincronizar select y campo nuevo
 categorySelect.addEventListener('change', () => {
   if (categorySelect.value) {
     newCategoryInput.value = '';
@@ -124,22 +126,22 @@ newCategoryInput.addEventListener('input', () => {
   }
 });
 
-// Add product
+// Añadir producto
 productForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const name = document.getElementById('product-name').value.trim();
+  const nameInput = document.getElementById('product-name');
+  const name = nameInput.value.trim();
   const favorite = document.getElementById('product-favorite').checked;
   
   if (!name) return;
 
   let categoryId = null;
-  let newCatName = newCategoryInput.value.trim();
-  let selectedCatId = categorySelect.value;
+  const selectedCatId = categorySelect.value;
+  const newCatName = newCategoryInput.value.trim();
 
   if (selectedCatId) {
     categoryId = Number(selectedCatId);
   } else if (newCatName) {
-    // Crear nueva categoría
     const existing = categories.find(c => c.name.toLowerCase() === newCatName.toLowerCase());
     if (existing) {
       categoryId = existing.id;
@@ -153,24 +155,27 @@ productForm.addEventListener('submit', (e) => {
 
   shoppingList.push({ name, categoryId, favorite, bought: false });
   renderShoppingList();
+  
   productForm.reset();
   newCategoryInput.disabled = false;
+  categorySelect.value = '';
 });
 
-// Toggle bought or delete product
+// Toggle comprado o eliminar
 shoppingListEl.addEventListener('click', (e) => {
   const index = e.target.dataset.index;
   if (index === undefined) return;
 
   if (e.target.classList.contains('bought')) {
     shoppingList[index].bought = e.target.checked;
+    saveData();
   } else if (e.target.classList.contains('delete-btn')) {
     shoppingList.splice(index, 1);
+    renderShoppingList();
   }
-  renderShoppingList();
 });
 
-// Clear list
+// Botones de control
 clearBtn.addEventListener('click', () => {
   if (confirm('¿Seguro que quieres borrar toda la lista?')) {
     shoppingList = [];
@@ -178,7 +183,6 @@ clearBtn.addEventListener('click', () => {
   }
 });
 
-// Load favorites
 loadFavoritesBtn.addEventListener('click', () => {
   const favorites = shoppingList.filter(item => item.favorite);
   if (favorites.length === 0) {
@@ -190,6 +194,6 @@ loadFavoritesBtn.addEventListener('click', () => {
   renderShoppingList();
 });
 
-// Initial render
+// Inicializar
 renderCategories();
 renderShoppingList();
