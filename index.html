@@ -11,7 +11,7 @@
 </head>
 <body>
   <header>
-    <h1>🛒 JJ Shopping List <span class="version">v1.2</span></h1>
+    <h1>🛒 JJ Shopping List <span class="version">v1.3</span></h1>
   </header>
 
   <main>
@@ -25,16 +25,24 @@
         <select id="product-location-select">
           <option value="">-- Ubicación --</option>
         </select>
-        <label>
-          <input type="checkbox" id="product-favorite" /> Favorito
-        </label>
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="product-favorite" /> Favorito
+          </label>
+          <label>
+            <input type="checkbox" id="product-default" checked /> Predeterminado
+          </label>
+        </div>
         <button type="submit">Añadir Producto</button>
       </form>
     </section>
 
     <!-- Controles -->
     <div class="controls">
+      <button id="open-favorites-btn">⭐ Favoritos</button>
+      <button id="open-defaults-btn">📌 Predeterminados</button>
       <button id="load-favorites">Precargar favoritos</button>
+      <button id="load-defaults">Precargar predeterminados</button>
       <button id="clear-list">Limpiar lista</button>
     </div>
 
@@ -45,11 +53,35 @@
   <!-- Botón flotante para configuración -->
   <button id="open-config-btn" class="floating-btn">⚙️</button>
 
-  <!-- Modal de configuración -->
+  <!-- Modal de Favoritos -->
+  <div id="favorites-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Productos Favoritos <span class="version">v1.3</span></h2>
+        <button id="close-favorites-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="favorites-list" id="favorites-list"></div>
+      <button id="close-favorites-modal-btn" class="btn-secondary">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Modal de Predeterminados -->
+  <div id="defaults-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Productos Predeterminados <span class="version">v1.3</span></h2>
+        <button id="close-defaults-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="defaults-list" id="defaults-list"></div>
+      <button id="close-defaults-modal-btn" class="btn-secondary">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Modal de configuración (Categorías y Ubicaciones) -->
   <div id="config-modal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Configuración <span class="version">v1.2</span></h2>
+        <h2>Configuración <span class="version">v1.3</span></h2>
         <button id="close-config-btn" class="close-btn">&times;</button>
       </div>
       
