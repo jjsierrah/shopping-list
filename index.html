@@ -15,20 +15,39 @@
   </header>
 
   <main>
-    <form id="add-form">
-      <input type="text" id="product-name" placeholder="Nombre del producto" required />
-      <input type="text" id="product-category" placeholder="Categoría (ej. Frutas)" />
-      <label>
-        <input type="checkbox" id="product-favorite" /> Favorito
-      </label>
-      <button type="submit">Añadir</button>
-    </form>
+    <!-- Sección de categorías -->
+    <section class="categories-section">
+      <h2>Categorías</h2>
+      <div class="categories-list" id="categories-list"></div>
+      <form id="add-category-form" class="add-form">
+        <input type="text" id="new-category" placeholder="Nueva categoría" required />
+        <button type="submit">➕ Añadir</button>
+      </form>
+    </section>
 
+    <!-- Formulario de producto -->
+    <section class="product-section">
+      <h2>Añadir Producto</h2>
+      <form id="add-product-form">
+        <input type="text" id="product-name" placeholder="Nombre del producto" required />
+        <select id="product-category-select">
+          <option value="">-- Selecciona categoría --</option>
+        </select>
+        <input type="text" id="product-category-new" placeholder="O escribe una nueva" />
+        <label>
+          <input type="checkbox" id="product-favorite" /> Favorito
+        </label>
+        <button type="submit">Añadir Producto</button>
+      </form>
+    </section>
+
+    <!-- Controles -->
     <div class="controls">
       <button id="load-favorites">Precargar favoritos</button>
       <button id="clear-list">Limpiar lista</button>
     </div>
 
+    <!-- Lista de productos -->
     <ul id="shopping-list"></ul>
   </main>
 
