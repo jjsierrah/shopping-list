@@ -41,26 +41,6 @@ header h1 {
   margin-bottom: 20px;
 }
 
-.product-form .form-buttons {
-  display: flex;
-  gap: 8px;
-  align-self: flex-end;
-  margin-left: auto;
-}
-
-.product-form button {
-  white-space: nowrap;
-}
-
-.btn-clear {
-  background-color: #f44336;
-  color: white;
-}
-
-.btn-clear:hover {
-  background-color: #d32f2f;
-}
-
 input[type="text"], select {
   flex: 1;
   min-width: 150px;
@@ -84,17 +64,26 @@ input[type="text"], select {
 }
 
 button {
-  padding: 8px 12px;
+  padding: 10px 16px;
   background-color: #4CAF50;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   white-space: nowrap;
+  font-weight: bold;
 }
 
 button:hover {
   background-color: #388E3C;
+}
+
+.btn-clear {
+  background-color: #f44336;
+}
+
+.btn-clear:hover {
+  background-color: #d32f2f;
 }
 
 .btn-secondary {
@@ -103,17 +92,24 @@ button:hover {
   margin-top: 16px;
 }
 
-/* Botones en filas */
+/* Botonera de 3 líneas */
+.button-grid {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .button-row {
   display: flex;
-  gap: 10px;
-  margin: 12px 0;
+  justify-content: space-between;
+  gap: 12px;
   width: 100%;
 }
 
 .button-row button {
   flex: 1;
-  min-width: 160px;
+  min-width: 140px;
 }
 
 #shopping-list {
@@ -273,11 +269,6 @@ h3 {
   .modal-content {
     margin: 20px auto;
     padding: 16px;
-  }
-  
-  .product-form .form-buttons {
-    margin-left: 0;
-    width: 100%;
   }
   
   .button-row {
