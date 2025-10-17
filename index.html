@@ -16,40 +16,38 @@
 
   <main>
     <!-- Formulario de producto con botón limpiar en la misma línea -->
-    <section class="product-section">
-      <div class="form-container">
-        <form id="add-product-form">
-          <input type="text" id="product-name" placeholder="Nombre del producto" required />
-          <select id="product-category-select">
-            <option value="">-- Categoría --</option>
-          </select>
-          <select id="product-location-select">
-            <option value="">-- Ubicación --</option>
-          </select>
-          <div class="checkbox-group">
-            <label>
-              <input type="checkbox" id="product-favorite" /> Favorito
-            </label>
-            <label>
-              <input type="checkbox" id="product-default" checked /> Predeterminado
-            </label>
-          </div>
-          <button type="submit">Añadir Producto</button>
-        </form>
-        <button id="clear-list" class="btn-clear">Limpiar lista</button>
+    <form id="add-product-form" class="product-form">
+      <input type="text" id="product-name" placeholder="Nombre del producto" required />
+      <select id="product-category-select">
+        <option value="">-- Categoría --</option>
+      </select>
+      <select id="product-location-select">
+        <option value="">-- Ubicación --</option>
+      </select>
+      <div class="checkbox-group">
+        <label>
+          <input type="checkbox" id="product-favorite" /> Favorito
+        </label>
+        <label>
+          <input type="checkbox" id="product-default" checked /> Predeterminado
+        </label>
       </div>
-    </section>
+      <div class="form-buttons">
+        <button type="submit">Añadir Producto</button>
+        <button type="button" id="clear-list" class="btn-clear">Limpiar lista</button>
+      </div>
+    </form>
 
-    <!-- Controles en líneas separadas -->
-    <div class="controls-group">
-      <div class="control-row">
-        <button id="open-favorites-btn">⭐ Gestionar Favoritos</button>
-        <button id="load-favorites">➕ Precargar Favoritos</button>
-      </div>
-      <div class="control-row">
-        <button id="open-defaults-btn">📌 Gestionar Predeterminados</button>
-        <button id="load-defaults">➕ Precargar Predeterminados</button>
-      </div>
+    <!-- Botones de Favoritos (misma línea) -->
+    <div class="button-row">
+      <button id="open-favorites-btn">⭐ Gestionar Favoritos</button>
+      <button id="load-favorites">➕ Precargar Favoritos</button>
+    </div>
+    
+    <!-- Botones de Predeterminados (misma línea, debajo de favoritos) -->
+    <div class="button-row">
+      <button id="open-defaults-btn">📌 Gestionar Predeterminados</button>
+      <button id="load-defaults">➕ Precargar Predeterminados</button>
     </div>
 
     <!-- Lista de productos -->
