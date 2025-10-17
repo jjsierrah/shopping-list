@@ -553,22 +553,22 @@ if (clearBtn) {
 // Cargar Favoritos (solo si no hay favoritos en la lista actual)
 if (loadFavoritesBtn) {
   loadFavoritesBtn.addEventListener('click', () => {
-    // Verificar si ya hay favoritos en la lista principal
-    const hasFavoritesInList = shoppingList.some(item => {
-      return favoriteProducts.some(fav => 
-        fav.name === item.name && 
-        fav.categoryId === item.categoryId && 
-        fav.locationId === item.locationId
-      );
-    });
-    
-    if (hasFavoritesInList) {
-      alert('Los favoritos ya están en la lista.');
+    if (favoriteProducts.length === 0) {
+      alert('No hay productos marcados como favoritos.');
       return;
     }
     
-    if (favoriteProducts.length === 0) {
-      alert('No hay productos marcados como favoritos.');
+    // Verificar si ALGÚN favorito ya está en la lista principal
+    const anyFavoriteInList = favoriteProducts.some(fav => {
+      return shoppingList.some(item => 
+        item.name === fav.name && 
+        item.categoryId === fav.categoryId && 
+        item.locationId === fav.locationId
+      );
+    });
+    
+    if (anyFavoriteInList) {
+      alert('Los favoritos ya están en la lista.');
       return;
     }
     
@@ -582,22 +582,22 @@ if (loadFavoritesBtn) {
 // Cargar Predeterminados (solo si no hay predeterminados en la lista actual)
 if (loadDefaultsBtn) {
   loadDefaultsBtn.addEventListener('click', () => {
-    // Verificar si ya hay predeterminados en la lista principal
-    const hasDefaultsInList = shoppingList.some(item => {
-      return defaultProducts.some(def => 
-        def.name === item.name && 
-        def.categoryId === item.categoryId && 
-        def.locationId === item.locationId
-      );
-    });
-    
-    if (hasDefaultsInList) {
-      alert('Los predeterminados ya están en la lista.');
+    if (defaultProducts.length === 0) {
+      alert('No hay productos marcados como predeterminados.');
       return;
     }
     
-    if (defaultProducts.length === 0) {
-      alert('No hay productos marcados como predeterminados.');
+    // Verificar si ALGÚN predeterminado ya está en la lista principal
+    const anyDefaultInList = defaultProducts.some(def => {
+      return shoppingList.some(item => 
+        item.name === def.name && 
+        item.categoryId === def.categoryId && 
+        item.locationId === def.locationId
+      );
+    });
+    
+    if (anyDefaultInList) {
+      alert('Los predeterminados ya están en la lista.');
       return;
     }
     
@@ -611,4 +611,4 @@ if (loadDefaultsBtn) {
 // Inicializar
 renderCategories();
 renderLocations();
-renderShoppingList(
+renderShopp
