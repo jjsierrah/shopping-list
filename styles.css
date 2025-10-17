@@ -33,36 +33,36 @@ header h1 {
   font-weight: bold;
 }
 
-/* Formulario de producto */
-.product-section {
-  position: relative;
+/* Formulario de producto con botón limpiar en la misma línea */
+.form-container {
+  display: flex;
+  gap: 12px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
-.product-section form {
+#add-product-form {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 0;
+  flex: 1;
+  min-width: 300px;
 }
 
-.product-section .btn-add {
-  flex: 0 0 auto;
+#add-product-form button {
   align-self: flex-end;
+  white-space: nowrap;
 }
 
-/* Botón limpiar pegado a la derecha */
 .btn-clear {
-  position: absolute;
-  top: 0;
-  right: 0;
   background-color: #f44336;
-  padding: 8px 12px;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  padding: 8px 12px;
   white-space: nowrap;
+  align-self: flex-end;
   height: fit-content;
 }
 
@@ -112,17 +112,23 @@ button:hover {
   margin-top: 16px;
 }
 
-/* Controles en filas horizontales */
-.controls-row {
+/* Controles en filas */
+.controls-group {
+  margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.control-row {
   display: flex;
   gap: 10px;
-  margin: 12px 0;
   width: 100%;
 }
 
-.controls-row button {
+.control-row button {
   flex: 1;
-  min-width: 180px;
+  min-width: 160px;
 }
 
 #shopping-list {
@@ -284,18 +290,21 @@ h3 {
     padding: 16px;
   }
   
-  .controls-row {
+  .form-container {
     flex-direction: column;
   }
   
-  .controls-row button {
+  .btn-clear {
+    align-self: stretch;
     width: 100%;
-    min-width: auto;
   }
   
-  .btn-clear {
-    position: static;
+  .control-row {
+    flex-direction: column;
+  }
+  
+  .control-row button {
     width: 100%;
-    margin-top: 10px;
+    min-width: auto;
   }
 }
