@@ -378,9 +378,12 @@ if (categoriesListEl) {
       const newName = input.value.trim();
       if (newName) {
         const cat = categories.find(c => c.id === id);
-        if (cat) cat.name = newName;
-        renderCategories();
-        saveData();
+        if (cat) {
+          cat.name = newName;
+          renderCategories();
+          renderShoppingList();
+          saveData();
+        }
       }
     }
   });
@@ -408,9 +411,12 @@ if (locationsListEl) {
       const newName = input.value.trim();
       if (newName) {
         const loc = locations.find(l => l.id === id);
-        if (loc) loc.name = newName;
-        renderLocations();
-        saveData();
+        if (loc) {
+          loc.name = newName;
+          renderLocations();
+          renderShoppingList();
+          saveData();
+        }
       }
     }
   });
@@ -458,8 +464,7 @@ if (defaultsListEl) {
       }
     }
   });
-}
-
+                           }
 // Añadir producto (con nuevo botón)
 const addProductBtn = document.getElementById('add-product-btn');
 
