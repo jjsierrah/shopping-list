@@ -66,20 +66,23 @@ input[type="text"], select {
 /* Botonera de 3 líneas - SIEMPRE 3 líneas con 2 botones */
 .button-grid {
   margin: 20px 0;
-  display: grid;
-  grid-template-rows: repeat(3, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   width: 100%;
 }
 
 .button-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  justify-content: space-between;
   gap: 12px;
   width: 100%;
 }
 
 .button-row button {
+  flex: 1;
+  min-width: 45%;
+  max-width: 48%;
   padding: 12px;
   border-radius: 8px;
   font-weight: bold;
@@ -87,6 +90,7 @@ input[type="text"], select {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 /* Estilos específicos */
@@ -268,19 +272,19 @@ h3 {
     padding: 16px;
   }
   
-  /* Forzar 3 líneas con 2 botones incluso en móviles pequeños */
-  .button-grid {
-    grid-template-rows: repeat(3, auto);
-  }
-  
   .button-row {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    flex-wrap: nowrap; /* Nunca envolver */
   }
   
   .button-row button {
+    flex: 1;
+    min-width: 45%;
+    max-width: 48%;
     padding: 10px 4px;
     font-size: 0.85em;
-    min-height: 44px; /* Tamaño táctil mínimo */
+    min-height: 44px;
+    white-space: normal; /* Permitir salto de línea si es necesario */
+    text-align: center;
+    word-break: break-word;
   }
 }
