@@ -101,10 +101,18 @@ function renderLocations() {
 function renderProductItem(item, index) {
   const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
   const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
+  // Verificar si el producto está en las listas persistentes
+  const isFavorite = favoriteProducts.some(p => 
+    p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
+  );
+  const isDefault = defaultProducts.some(p => 
+    p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
+  );
+  
   const li = document.createElement('li');
   li.innerHTML = `
     <div class="product-info">
-      <h3>${item.name}${item.favorite ? ' ⭐' : ''}${item.isDefault ? ' 📌' : ''}</h3>
+      <h3>${item.name}${isFavorite ? ' ⭐' : ''}${isDefault ? ' 📌' : ''}</h3>
       <div class="category">${categoryName}</div>
       <div class="location">${locationName}</div>
     </div>
@@ -203,7 +211,6 @@ function setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn) {
         return arrayToUpdate[idx];
       }).filter(Boolean);
       
-      // Actualizar el array correspondiente
       if (arrayToUpdate === favoriteProducts) {
         favoriteProducts = newOrder;
       } else if (arrayToUpdate === defaultProducts) {
@@ -356,7 +363,8 @@ if (categoriesListEl) {
     if (!id) return;
 
     if (e.target.classList.contains('delete-category')) {
-      const hasProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.categoryId === id);
+      const allProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts];
+      const hasProducts = allProducts.some(p => p.categoryId === id);
       if (hasProducts) {
         alert('No se puede eliminar: hay productos en esta categoría.');
         return;
@@ -385,7 +393,8 @@ if (locationsListEl) {
     if (!id) return;
 
     if (e.target.classList.contains('delete-location')) {
-      const hasProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.locationId === id);
+      const allProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts];
+      const hasProducts = allProducts.some(p => p.locationId === id);
       if (hasProducts) {
         alert('No se puede eliminar: hay productos en esta ubicación.');
         return;
@@ -464,25 +473,46 @@ if (productForm) {
     
     if (!name) return;
 
-    const newItem = { name, categoryId, locationId, favorite, isDefault, bought: false };
+    const newItem = { name, categoryId, locationId, bought: false };
     
     // Añadir a la lista principal
     shoppingList.push(newItem);
     
-    // Si es favorito, añadir a favoritos (sin duplicados)
+    // Gestionar listas persistentes
+    const productKey = `${name}-${categoryId || ''}-${locationId || ''}`;
+    
     if (favorite) {
-      const exists = favoriteProducts.some(p => p.name === name && p.categoryId === categoryId && p.locationId === locationId);
+      // Añadir a favoritos si no existe
+      const exists = favoriteProducts.some(p => {
+        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
+        return key === productKey;
+      });
       if (!exists) {
-        favoriteProducts.push({...newItem, bought: false});
+        favoriteProducts.push({...newItem});
       }
+    } else {
+      // Eliminar de favoritos si estaba y ahora no lo está
+      favoriteProducts = favoriteProducts.filter(p => {
+        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
+        return key !== productKey;
+      });
     }
     
-    // Si es predeterminado, añadir a predeterminados (sin duplicados)
     if (isDefault) {
-      const exists = defaultProducts.some(p => p.name === name && p.categoryId === categoryId && p.locationId === locationId);
+      // Añadir a predeterminados si no existe
+      const exists = defaultProducts.some(p => {
+        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
+        return key === productKey;
+      });
       if (!exists) {
-        defaultProducts.push({...newItem, bought: false});
+        defaultProducts.push({...newItem});
       }
+    } else {
+      // Eliminar de predeterminados si estaba y ahora no lo está
+      defaultProducts = defaultProducts.filter(p => {
+        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
+        return key !== productKey;
+      });
     }
     
     renderShoppingList();
@@ -516,7 +546,7 @@ if (clearBtn) {
     if (confirm('¿Seguro que quieres borrar la lista actual?')) {
       shoppingList = [];
       renderShoppingList();
-      // favoriteProducts y defaultProducts permanecen intactos
+      // ¡favoriteProducts y defaultProducts permanecen intactos!
     }
   });
 }
