@@ -63,30 +63,30 @@ input[type="text"], select {
   white-space: nowrap;
 }
 
-/* Botonera de 3 líneas */
+/* Botonera de 3 líneas - SIEMPRE 3 líneas con 2 botones */
 .button-grid {
   margin: 20px 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
   gap: 12px;
   width: 100%;
 }
 
 .button-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
   width: 100%;
 }
 
 .button-row button {
-  flex: 1;
-  min-width: 140px;
   padding: 12px;
   border-radius: 8px;
   font-weight: bold;
   text-align: center;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Estilos específicos */
@@ -106,42 +106,6 @@ input[type="text"], select {
 #load-defaults {
   background-color: #4CAF50;
   color: white;
-}
-
-#open-favorites-btn::before {
-  content: "⭐ ";
-  font-weight: bold;
-}
-
-#load-favorites::before {
-  content: "+ ";
-  font-weight: bold;
-}
-
-#open-defaults-btn::before {
-  content: "📌 ";
-  font-weight: bold;
-}
-
-#load-defaults::before {
-  content: "+ ";
-  font-weight: bold;
-}
-
-#open-favorites-btn,
-#open-defaults-btn {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-}
-
-#load-favorites,
-#load-defaults {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
 }
 
 /* Lista de productos */
@@ -297,19 +261,26 @@ h3 {
   font-size: 1.1em;
 }
 
-/* Responsive */
+/* Responsive - mantener 3 líneas SIEMPRE */
 @media (max-width: 480px) {
   .modal-content {
     margin: 20px auto;
     padding: 16px;
   }
   
+  /* Forzar 3 líneas con 2 botones incluso en móviles pequeños */
+  .button-grid {
+    grid-template-rows: repeat(3, auto);
+  }
+  
   .button-row {
-    flex-direction: column;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
   
   .button-row button {
-    width: 100%;
-    min-width: auto;
+    padding: 10px 4px;
+    font-size: 0.85em;
+    min-height: 44px; /* Tamaño táctil mínimo */
   }
 }
