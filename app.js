@@ -611,4 +611,6 @@ if (loadDefaultsBtn) {
 // Inicializar
 renderCategories();
 renderLocations();
-renderShopp
+renderShoppingList();
+renderFavoritesList();
+renderDefaultsList();
