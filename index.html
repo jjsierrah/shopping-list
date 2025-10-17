@@ -15,7 +15,7 @@
   </header>
 
   <main>
-    <!-- Formulario de producto con botón limpiar a la derecha -->
+    <!-- Formulario de producto -->
     <section class="product-section">
       <form id="add-product-form">
         <input type="text" id="product-name" placeholder="Nombre del producto" required />
@@ -33,20 +33,19 @@
             <input type="checkbox" id="product-default" checked /> Predeterminado
           </label>
         </div>
-        <div class="form-actions">
-          <button type="submit">Añadir Producto</button>
-          <button type="button" id="clear-list" class="btn-clear">Limpiar lista</button>
-        </div>
+        <button type="submit" class="btn-add">Añadir Producto</button>
       </form>
+      <!-- Botón limpiar pegado a la derecha -->
+      <button id="clear-list" class="btn-clear">Limpiar lista</button>
     </section>
 
-    <!-- Controles - Favoritos en misma línea -->
-    <div class="controls favorites-controls">
+    <!-- Controles en líneas separadas pero con botones horizontales -->
+    <div class="controls-row">
       <button id="open-favorites-btn">⭐ Gestionar Favoritos</button>
       <button id="load-favorites">➕ Precargar Favoritos</button>
     </div>
     
-    <div class="controls defaults-controls">
+    <div class="controls-row">
       <button id="open-defaults-btn">📌 Gestionar Predeterminados</button>
       <button id="load-defaults">➕ Precargar Predeterminados</button>
     </div>
