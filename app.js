@@ -459,12 +459,12 @@ if (defaultsListEl) {
     }
   });
 }
+
 // Añadir producto (con nuevo botón)
 const addProductBtn = document.getElementById('add-product-btn');
 
 if (addProductBtn) {
-  addProductBtn.addEventListener('click', (e) => {
-    e.preventDefault();
+  addProductBtn.addEventListener('click', () => {
     const nameInput = document.getElementById('product-name');
     const name = nameInput.value.trim();
     if (!name) {
@@ -550,9 +550,23 @@ if (clearBtn) {
   });
 }
 
-// Precargar favoritos
+// Cargar Favoritos (solo si no hay favoritos en la lista actual)
 if (loadFavoritesBtn) {
   loadFavoritesBtn.addEventListener('click', () => {
+    // Verificar si ya hay favoritos en la lista principal
+    const hasFavoritesInList = shoppingList.some(item => {
+      return favoriteProducts.some(fav => 
+        fav.name === item.name && 
+        fav.categoryId === item.categoryId && 
+        fav.locationId === item.locationId
+      );
+    });
+    
+    if (hasFavoritesInList) {
+      alert('Los favoritos ya están en la lista.');
+      return;
+    }
+    
     if (favoriteProducts.length === 0) {
       alert('No hay productos marcados como favoritos.');
       return;
@@ -565,9 +579,23 @@ if (loadFavoritesBtn) {
   });
 }
 
-// Precargar predeterminados
+// Cargar Predeterminados (solo si no hay predeterminados en la lista actual)
 if (loadDefaultsBtn) {
   loadDefaultsBtn.addEventListener('click', () => {
+    // Verificar si ya hay predeterminados en la lista principal
+    const hasDefaultsInList = shoppingList.some(item => {
+      return defaultProducts.some(def => 
+        def.name === item.name && 
+        def.categoryId === item.categoryId && 
+        def.locationId === item.locationId
+      );
+    });
+    
+    if (hasDefaultsInList) {
+      alert('Los predeterminados ya están en la lista.');
+      return;
+    }
+    
     if (defaultProducts.length === 0) {
       alert('No hay productos marcados como predeterminados.');
       return;
@@ -583,6 +611,4 @@ if (loadDefaultsBtn) {
 // Inicializar
 renderCategories();
 renderLocations();
-renderShoppingList();
-renderFavoritesList();
-renderDefaultsList();
+renderShoppingList(
