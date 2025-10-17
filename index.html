@@ -15,39 +15,41 @@
   </header>
 
   <main>
-    <!-- Formulario de producto -->
+    <!-- Formulario de producto con botón limpiar en la misma línea -->
     <section class="product-section">
-      <form id="add-product-form">
-        <input type="text" id="product-name" placeholder="Nombre del producto" required />
-        <select id="product-category-select">
-          <option value="">-- Categoría --</option>
-        </select>
-        <select id="product-location-select">
-          <option value="">-- Ubicación --</option>
-        </select>
-        <div class="checkbox-group">
-          <label>
-            <input type="checkbox" id="product-favorite" /> Favorito
-          </label>
-          <label>
-            <input type="checkbox" id="product-default" checked /> Predeterminado
-          </label>
-        </div>
-        <button type="submit" class="btn-add">Añadir Producto</button>
-      </form>
-      <!-- Botón limpiar pegado a la derecha -->
-      <button id="clear-list" class="btn-clear">Limpiar lista</button>
+      <div class="form-container">
+        <form id="add-product-form">
+          <input type="text" id="product-name" placeholder="Nombre del producto" required />
+          <select id="product-category-select">
+            <option value="">-- Categoría --</option>
+          </select>
+          <select id="product-location-select">
+            <option value="">-- Ubicación --</option>
+          </select>
+          <div class="checkbox-group">
+            <label>
+              <input type="checkbox" id="product-favorite" /> Favorito
+            </label>
+            <label>
+              <input type="checkbox" id="product-default" checked /> Predeterminado
+            </label>
+          </div>
+          <button type="submit">Añadir Producto</button>
+        </form>
+        <button id="clear-list" class="btn-clear">Limpiar lista</button>
+      </div>
     </section>
 
-    <!-- Controles en líneas separadas pero con botones horizontales -->
-    <div class="controls-row">
-      <button id="open-favorites-btn">⭐ Gestionar Favoritos</button>
-      <button id="load-favorites">➕ Precargar Favoritos</button>
-    </div>
-    
-    <div class="controls-row">
-      <button id="open-defaults-btn">📌 Gestionar Predeterminados</button>
-      <button id="load-defaults">➕ Precargar Predeterminados</button>
+    <!-- Controles en líneas separadas -->
+    <div class="controls-group">
+      <div class="control-row">
+        <button id="open-favorites-btn">⭐ Gestionar Favoritos</button>
+        <button id="load-favorites">➕ Precargar Favoritos</button>
+      </div>
+      <div class="control-row">
+        <button id="open-defaults-btn">📌 Gestionar Predeterminados</button>
+        <button id="load-defaults">➕ Precargar Predeterminados</button>
+      </div>
     </div>
 
     <!-- Lista de productos -->
