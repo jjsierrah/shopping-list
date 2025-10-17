@@ -459,30 +459,31 @@ if (defaultsListEl) {
     }
   });
 }
+// Añadir producto (con nuevo botón)
+const addProductBtn = document.getElementById('add-product-btn');
 
-// Añadir producto
-if (productForm) {
-  productForm.addEventListener('submit', (e) => {
+if (addProductBtn) {
+  addProductBtn.addEventListener('click', (e) => {
     e.preventDefault();
     const nameInput = document.getElementById('product-name');
     const name = nameInput.value.trim();
+    if (!name) {
+      nameInput.focus();
+      return;
+    }
+    
     const favorite = document.getElementById('product-favorite').checked;
     const isDefault = document.getElementById('product-default').checked;
     const categoryId = categorySelect.value ? Number(categorySelect.value) : null;
     const locationId = locationSelect.value ? Number(locationSelect.value) : null;
-    
-    if (!name) return;
 
     const newItem = { name, categoryId, locationId, bought: false };
     
-    // Añadir a la lista principal
     shoppingList.push(newItem);
     
-    // Gestionar listas persistentes
     const productKey = `${name}-${categoryId || ''}-${locationId || ''}`;
     
     if (favorite) {
-      // Añadir a favoritos si no existe
       const exists = favoriteProducts.some(p => {
         const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
         return key === productKey;
@@ -491,7 +492,6 @@ if (productForm) {
         favoriteProducts.push({...newItem});
       }
     } else {
-      // Eliminar de favoritos si estaba y ahora no lo está
       favoriteProducts = favoriteProducts.filter(p => {
         const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
         return key !== productKey;
@@ -499,7 +499,6 @@ if (productForm) {
     }
     
     if (isDefault) {
-      // Añadir a predeterminados si no existe
       const exists = defaultProducts.some(p => {
         const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
         return key === productKey;
@@ -508,7 +507,6 @@ if (productForm) {
         defaultProducts.push({...newItem});
       }
     } else {
-      // Eliminar de predeterminados si estaba y ahora no lo está
       defaultProducts = defaultProducts.filter(p => {
         const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
         return key !== productKey;
@@ -519,7 +517,8 @@ if (productForm) {
     renderFavoritesList();
     renderDefaultsList();
     
-    productForm.reset();
+    // Resetear formulario
+    document.getElementById('add-product-form').reset();
     document.getElementById('product-default').checked = true;
   });
 }
