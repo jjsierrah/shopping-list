@@ -15,7 +15,7 @@
   </header>
 
   <main>
-    <!-- Formulario de producto con botón limpiar en la misma línea -->
+    <!-- Formulario de producto -->
     <form id="add-product-form" class="product-form">
       <input type="text" id="product-name" placeholder="Nombre del producto" required />
       <select id="product-category-select">
@@ -32,22 +32,27 @@
           <input type="checkbox" id="product-default" checked /> Predeterminado
         </label>
       </div>
-      <div class="form-buttons">
-        <button type="submit">Añadir Producto</button>
-        <button type="button" id="clear-list" class="btn-clear">Limpiar lista</button>
-      </div>
     </form>
 
-    <!-- Botones de Favoritos (misma línea) -->
-    <div class="button-row">
-      <button id="open-favorites-btn">⭐ Gestionar Favoritos</button>
-      <button id="load-favorites">➕ Precargar Favoritos</button>
-    </div>
-    
-    <!-- Botones de Predeterminados (misma línea, debajo de favoritos) -->
-    <div class="button-row">
-      <button id="open-defaults-btn">📌 Gestionar Predeterminados</button>
-      <button id="load-defaults">➕ Precargar Predeterminados</button>
+    <!-- Botonera de 3 líneas -->
+    <div class="button-grid">
+      <!-- Línea 1: Añadir Producto y Limpiar lista -->
+      <div class="button-row">
+        <button id="add-product-btn">Añadir Producto</button>
+        <button id="clear-list" class="btn-clear">Limpiar lista</button>
+      </div>
+      
+      <!-- Línea 2: Favoritos -->
+      <div class="button-row">
+        <button id="open-favorites-btn">⭐ Gestionar Favoritos</button>
+        <button id="load-favorites">➕ Precargar Favoritos</button>
+      </div>
+      
+      <!-- Línea 3: Predeterminados -->
+      <div class="button-row">
+        <button id="open-defaults-btn">📌 Gestionar Predeterminados</button>
+        <button id="load-defaults">➕ Precargar Predeterminados</button>
+      </div>
     </div>
 
     <!-- Lista de productos -->
