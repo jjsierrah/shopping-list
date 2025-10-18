@@ -45,6 +45,11 @@ function generateId() {
   return Date.now() + Math.floor(Math.random() * 1000000);
 }
 
+// Función para crear clave única de producto (nombre + categoría + ubicación)
+function getProductKey(item) {
+  return `${item.name}-${item.categoryId || ''}-${item.locationId || ''}`;
+}
+
 function saveData() {
   localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
   localStorage.setItem('favoriteProducts', JSON.stringify(favoriteProducts));
@@ -106,12 +111,11 @@ function renderLocations() {
 function renderProductItem(item, index) {
   const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
   const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
-  const isFavorite = favoriteProducts.some(p => 
-    p.id === item.id
-  );
-  const isDefault = defaultProducts.some(p => 
-    p.id === item.id
-  );
+  
+  // Verificar si el producto está en favoritos o predeterminados por clave
+  const itemKey = getProductKey(item);
+  const isFavorite = favoriteProducts.some(p => getProductKey(p) === itemKey);
+  const isDefault = defaultProducts.some(p => getProductKey(p) === itemKey);
   
   const li = document.createElement('li');
   li.innerHTML = `
@@ -146,7 +150,7 @@ function renderFavoritesList() {
     
     const div = document.createElement('div');
     div.className = 'favorite-item';
-    div.dataset.id = item.id; // Usar ID único en lugar de índice
+    div.dataset.id = item.id;
     div.draggable = true;
     div.innerHTML = `
       <div class="product-edit">
@@ -182,7 +186,7 @@ function renderDefaultsList() {
     
     const div = document.createElement('div');
     div.className = 'default-item';
-    div.dataset.id = item.id; // Usar ID único en lugar de índice
+    div.dataset.id = item.id;
     div.draggable = true;
     div.innerHTML = `
       <div class="product-edit">
@@ -478,9 +482,8 @@ if (locationForm) {
     saveData();
     input.value = '';
   });
-                   }
-
-// DELEGACIÓN DE EVENTOS - usando IDs en lugar de índices
+}
+// DELEGACIÓN DE EVENTOS - usando IDs y verificación por clave
 document.addEventListener('click', (e) => {
   // Categorías
   if (e.target.classList.contains('save-category')) {
@@ -578,15 +581,16 @@ document.addEventListener('click', (e) => {
     const id = Number(e.target.dataset.id);
     const itemToAdd = favoriteProducts.find(p => p.id === id);
     if (itemToAdd) {
-      // Verificar si ya existe en la lista principal
-      const existsInList = shoppingList.some(item => item.id === itemToAdd.id);
+      // Verificar si ya existe en la lista principal por clave
+      const itemKey = getProductKey(itemToAdd);
+      const existsInList = shoppingList.some(item => getProductKey(item) === itemKey);
       
       if (existsInList) {
         alert('Este producto ya está en la lista.');
         return;
       }
       
-      // Crear copia con nuevo ID para la lista principal
+      // Crear copia para la lista principal
       const newItem = { ...itemToAdd, id: generateId(), bought: false };
       shoppingList.push(newItem);
       renderShoppingList();
@@ -624,15 +628,16 @@ document.addEventListener('click', (e) => {
     const id = Number(e.target.dataset.id);
     const itemToAdd = defaultProducts.find(p => p.id === id);
     if (itemToAdd) {
-      // Verificar si ya existe en la lista principal
-      const existsInList = shoppingList.some(item => item.id === itemToAdd.id);
+      // Verificar si ya existe en la lista principal por clave
+      const itemKey = getProductKey(itemToAdd);
+      const existsInList = shoppingList.some(item => getProductKey(item) === itemKey);
       
       if (existsInList) {
         alert('Este producto ya está en la lista.');
         return;
       }
       
-      // Crear copia con nuevo ID para la lista principal
+      // Crear copia para la lista principal
       const newItem = { ...itemToAdd, id: generateId(), bought: false };
       shoppingList.push(newItem);
       renderShoppingList();
@@ -658,18 +663,6 @@ if (addProductBtn) {
     const categoryId = categorySelect.value ? Number(categorySelect.value) : null;
     const locationId = locationSelect.value ? Number(locationSelect.value) : null;
 
-    // Verificar si ya existe en la lista principal
-    const existsInList = shoppingList.some(item => 
-      item.name === name && 
-      item.categoryId === categoryId && 
-      item.locationId === locationId
-    );
-    
-    if (existsInList) {
-      alert('Este producto ya está en la lista.');
-      return;
-    }
-    
     const newItem = { 
       id: generateId(), 
       name, 
@@ -678,38 +671,33 @@ if (addProductBtn) {
       bought: false 
     };
     
+    // Verificar si ya existe en la lista principal por clave
+    const itemKey = getProductKey(newItem);
+    const existsInList = shoppingList.some(item => getProductKey(item) === itemKey);
+    
+    if (existsInList) {
+      alert('Este producto ya está en la lista.');
+      return;
+    }
+    
     shoppingList.push(newItem);
     
-    const productKey = `${name}-${categoryId || ''}-${locationId || ''}`;
-    
     if (favorite) {
-      const exists = favoriteProducts.some(p => {
-        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
-        return key === productKey;
-      });
-      if (!exists) {
+      const existsInFavorites = favoriteProducts.some(p => getProductKey(p) === itemKey);
+      if (!existsInFavorites) {
         favoriteProducts.push({...newItem, id: generateId()});
       }
     } else {
-      favoriteProducts = favoriteProducts.filter(p => {
-        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
-        return key !== productKey;
-      });
+      favoriteProducts = favoriteProducts.filter(p => getProductKey(p) !== itemKey);
     }
     
     if (isDefault) {
-      const exists = defaultProducts.some(p => {
-        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
-        return key === productKey;
-      });
-      if (!exists) {
+      const existsInDefaults = defaultProducts.some(p => getProductKey(p) === itemKey);
+      if (!existsInDefaults) {
         defaultProducts.push({...newItem, id: generateId()});
       }
     } else {
-      defaultProducts = defaultProducts.filter(p => {
-        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
-        return key !== productKey;
-      });
+      defaultProducts = defaultProducts.filter(p => getProductKey(p) !== itemKey);
     }
     
     renderShoppingList();
@@ -757,11 +745,8 @@ if (loadFavoritesBtn) {
     
     // Filtrar solo los que NO están en la lista principal
     const favoritesToAdd = favoriteProducts.filter(fav => {
-      return !shoppingList.some(item => 
-        item.name === fav.name && 
-        item.categoryId === fav.categoryId && 
-        item.locationId === fav.locationId
-      );
+      const favKey = getProductKey(fav);
+      return !shoppingList.some(item => getProductKey(item) === favKey);
     });
     
     if (favoritesToAdd.length === 0) {
@@ -792,8 +777,13 @@ if (copyListBtn) {
     const listText = pendingItems.map((item, index) => {
       const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
       const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
-      const prefix = favoriteProducts.some(p => p.id === item.id) ? '⭐ ' : 
-                    defaultProducts.some(p => p.id === item.id) ? '📌 ' : '';
+      
+      // Verificar por clave si es favorito o predeterminado
+      const itemKey = getProductKey(item);
+      const isFavorite = favoriteProducts.some(p => getProductKey(p) === itemKey);
+      const isDefault = defaultProducts.some(p => getProductKey(p) === itemKey);
+      
+      const prefix = isFavorite ? '⭐ ' : isDefault ? '📌 ' : '';
       return `${index + 1}. ${prefix}${item.name} [${categoryName} - ${locationName}]`;
     }).join('\n');
     
