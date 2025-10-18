@@ -569,8 +569,21 @@ document.addEventListener('click', (e) => {
   if (e.target.classList.contains('add-to-list')) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < favoriteProducts.length) {
-      const item = { ...favoriteProducts[index], bought: false };
-      shoppingList.push(item);
+      const itemToAdd = { ...favoriteProducts[index], bought: false };
+      
+      // Verificar si ya existe en la lista principal
+      const existsInList = shoppingList.some(item => 
+        item.name === itemToAdd.name && 
+        item.categoryId === itemToAdd.categoryId && 
+        item.locationId === itemToAdd.locationId
+      );
+      
+      if (existsInList) {
+        alert('Este producto ya está en la lista.');
+        return;
+      }
+      
+      shoppingList.push(itemToAdd);
       renderShoppingList();
       alert('Producto añadido a la lista!');
     }
@@ -606,8 +619,21 @@ document.addEventListener('click', (e) => {
   if (e.target.classList.contains('add-to-list')) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < defaultProducts.length) {
-      const item = { ...defaultProducts[index], bought: false };
-      shoppingList.push(item);
+      const itemToAdd = { ...defaultProducts[index], bought: false };
+      
+      // Verificar si ya existe en la lista principal
+      const existsInList = shoppingList.some(item => 
+        item.name === itemToAdd.name && 
+        item.categoryId === itemToAdd.categoryId && 
+        item.locationId === itemToAdd.locationId
+      );
+      
+      if (existsInList) {
+        alert('Este producto ya está en la lista.');
+        return;
+      }
+      
+      shoppingList.push(itemToAdd);
       renderShoppingList();
       alert('Producto añadido a la lista!');
     }
@@ -632,6 +658,18 @@ if (addProductBtn) {
     const locationId = locationSelect.value ? Number(locationSelect.value) : null;
 
     const newItem = { name, categoryId, locationId, bought: false };
+    
+    // Verificar si ya existe en la lista principal
+    const existsInList = shoppingList.some(item => 
+      item.name === name && 
+      item.categoryId === categoryId && 
+      item.locationId === locationId
+    );
+    
+    if (existsInList) {
+      alert('Este producto ya está en la lista.');
+      return;
+    }
     
     shoppingList.push(newItem);
     
@@ -710,20 +748,21 @@ if (loadFavoritesBtn) {
       return;
     }
     
-    const anyFavoriteInList = favoriteProducts.some(fav => {
-      return shoppingList.some(item => 
+    // Filtrar solo los que NO están en la lista principal
+    const favoritesToAdd = favoriteProducts.filter(fav => {
+      return !shoppingList.some(item => 
         item.name === fav.name && 
         item.categoryId === fav.categoryId && 
         item.locationId === fav.locationId
       );
     });
     
-    if (anyFavoriteInList) {
+    if (favoritesToAdd.length === 0) {
       alert('Los favoritos ya están en la lista.');
       return;
     }
     
-    const newItems = favoriteProducts.map(fav => ({ ...fav, bought: false }));
+    const newItems = favoritesToAdd.map(fav => ({ ...fav, bought: false }));
     shoppingList.push(...newItems);
     renderShoppingList();
   });
