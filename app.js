@@ -101,7 +101,6 @@ function renderLocations() {
 function renderProductItem(item, index) {
   const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
   const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
-  // Verificar si el producto está en las listas persistentes
   const isFavorite = favoriteProducts.some(p => 
     p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
   );
@@ -137,37 +136,115 @@ function renderFavoritesList() {
   favoritesListEl.innerHTML = '';
   
   favoriteProducts.forEach((item, idx) => {
+    const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
+    const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
+    
     const div = document.createElement('div');
     div.className = 'favorite-item';
     div.dataset.index = idx;
     div.draggable = true;
     div.innerHTML = `
-      <input type="text" value="${item.name}" data-index="${idx}" />
+      <div class="product-edit">
+        <input type="text" value="${item.name}" data-index="${idx}" class="product-name" />
+        <select class="product-category" data-index="${idx}">
+          <option value="">-- Categoría --</option>
+          ${categories.map(cat => `<option value="${cat.id}" ${cat.id === item.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
+        </select>
+        <select class="product-location" data-index="${idx}">
+          <option value="">-- Ubicación --</option>
+          ${locations.map(loc => `<option value="${loc.id}" ${loc.id === item.locationId ? 'selected' : ''}>${loc.name}</option>`).join('')}
+        </select>
+      </div>
       <div class="favorite-actions">
+        <button type="button" class="add-to-list" data-index="${idx}">➕ Añadir</button>
         <button type="button" class="save-favorite" data-index="${idx}">💾</button>
         <button type="button" class="delete-favorite" data-index="${idx}">🗑️</button>
       </div>
     `;
     favoritesListEl.appendChild(div);
   });
+  
+  // Vincular eventos para selects
+  bindFavoriteSelectEvents();
 }
 
 function renderDefaultsList() {
   defaultsListEl.innerHTML = '';
   
   defaultProducts.forEach((item, idx) => {
+    const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
+    const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
+    
     const div = document.createElement('div');
     div.className = 'default-item';
     div.dataset.index = idx;
     div.draggable = true;
     div.innerHTML = `
-      <input type="text" value="${item.name}" data-index="${idx}" />
+      <div class="product-edit">
+        <input type="text" value="${item.name}" data-index="${idx}" class="product-name" />
+        <select class="product-category" data-index="${idx}">
+          <option value="">-- Categoría --</option>
+          ${categories.map(cat => `<option value="${cat.id}" ${cat.id === item.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
+        </select>
+        <select class="product-location" data-index="${idx}">
+          <option value="">-- Ubicación --</option>
+          ${locations.map(loc => `<option value="${loc.id}" ${loc.id === item.locationId ? 'selected' : ''}>${loc.name}</option>`).join('')}
+        </select>
+      </div>
       <div class="default-actions">
+        <button type="button" class="add-to-list" data-index="${idx}">➕ Añadir</button>
         <button type="button" class="save-default" data-index="${idx}">💾</button>
         <button type="button" class="delete-default" data-index="${idx}">🗑️</button>
       </div>
     `;
     defaultsListEl.appendChild(div);
+  });
+  
+  // Vincular eventos para selects
+  bindDefaultSelectEvents();
+}
+
+function bindFavoriteSelectEvents() {
+  document.querySelectorAll('.favorite-item .product-category').forEach(select => {
+    select.addEventListener('change', (e) => {
+      const index = Number(e.target.dataset.index);
+      if (index >= 0 && index < favoriteProducts.length) {
+        favoriteProducts[index].categoryId = e.target.value ? Number(e.target.value) : null;
+        saveData();
+      }
+    });
+  });
+  
+  document.querySelectorAll('.favorite-item .product-location').forEach(select => {
+    select.addEventListener('change', (e) => {
+      const index = Number(e.target.dataset.index);
+      if (index >= 0 && index < favoriteProducts.length) {
+        favoriteProducts[index].locationId = e.target.value ? Number(e.target.value) : null;
+        saveData();
+      }
+    });
+  });
+}
+
+function bindDefaultSelectEvents() {
+  document.querySelectorAll('.default-item .product-category').forEach(select => {
+    select.addEventListener('change', (e) => {
+      const index = Number(e.target.dataset.index);
+      if (index >= 0 && index < defaultProducts.length) {
+        defaultProducts[index].categoryId = e.target.value ? Number(e.target.value) : null;
+        saveData();
+      }
+    });
+  });
+  
+  document.querySelectorAll('.default-item .product-location').forEach(select => {
+    select.addEventListener('change', (e) => {
+      const index = Number(e.target.dataset.index);
+      if (index >= 0 && index < defaultProducts.length) {
+        defaultProducts[index].locationId = e.target.value ? Number(e.target.value) : null;
+        saveData();
+      }
+    });
   });
 }
 
@@ -248,6 +325,8 @@ function setupCategoryDragAndDrop() {
     () => {
       renderCategories();
       renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
     }
   );
 }
@@ -261,6 +340,8 @@ function setupLocationDragAndDrop() {
     () => {
       renderLocations();
       renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
     }
   );
 }
@@ -403,6 +484,8 @@ document.addEventListener('click', (e) => {
         cat.name = newName;
         renderCategories();
         renderShoppingList();
+        renderFavoritesList();
+        renderDefaultsList();
         saveData();
       }
     }
@@ -418,6 +501,8 @@ document.addEventListener('click', (e) => {
     categories = categories.filter(c => c.id !== id);
     renderCategories();
     renderShoppingList();
+    renderFavoritesList();
+    renderDefaultsList();
     saveData();
   }
   
@@ -432,6 +517,8 @@ document.addEventListener('click', (e) => {
         loc.name = newName;
         renderLocations();
         renderShoppingList();
+        renderFavoritesList();
+        renderDefaultsList();
         saveData();
       }
     }
@@ -447,14 +534,16 @@ document.addEventListener('click', (e) => {
     locations = locations.filter(l => l.id !== id);
     renderLocations();
     renderShoppingList();
+    renderFavoritesList();
+    renderDefaultsList();
     saveData();
   }
   
-  // Favoritos
+  // Favoritos - Guardar nombre
   if (e.target.classList.contains('save-favorite')) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < favoriteProducts.length) {
-      const input = e.target.closest('.favorite-item').querySelector('input');
+      const input = e.target.closest('.favorite-item').querySelector('.product-name');
       const newName = input.value.trim();
       if (newName) {
         favoriteProducts[index].name = newName;
@@ -465,6 +554,7 @@ document.addEventListener('click', (e) => {
     }
   }
   
+  // Favoritos - Eliminar
   if (e.target.classList.contains('delete-favorite')) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < favoriteProducts.length) {
@@ -475,11 +565,22 @@ document.addEventListener('click', (e) => {
     }
   }
   
-  // Predeterminados
+  // Favoritos - Añadir a lista
+  if (e.target.classList.contains('add-to-list')) {
+    const index = Number(e.target.dataset.index);
+    if (index >= 0 && index < favoriteProducts.length) {
+      const item = { ...favoriteProducts[index], bought: false };
+      shoppingList.push(item);
+      renderShoppingList();
+      alert('Producto añadido a la lista!');
+    }
+  }
+  
+  // Predeterminados - Guardar nombre
   if (e.target.classList.contains('save-default')) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < defaultProducts.length) {
-      const input = e.target.closest('.default-item').querySelector('input');
+      const input = e.target.closest('.default-item').querySelector('.product-name');
       const newName = input.value.trim();
       if (newName) {
         defaultProducts[index].name = newName;
@@ -490,6 +591,7 @@ document.addEventListener('click', (e) => {
     }
   }
   
+  // Predeterminados - Eliminar
   if (e.target.classList.contains('delete-default')) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < defaultProducts.length) {
@@ -497,6 +599,17 @@ document.addEventListener('click', (e) => {
       renderDefaultsList();
       renderShoppingList();
       saveData();
+    }
+  }
+  
+  // Predeterminados - Añadir a lista
+  if (e.target.classList.contains('add-to-list')) {
+    const index = Number(e.target.dataset.index);
+    if (index >= 0 && index < defaultProducts.length) {
+      const item = { ...defaultProducts[index], bought: false };
+      shoppingList.push(item);
+      renderShoppingList();
+      alert('Producto añadido a la lista!');
     }
   }
 });
@@ -624,14 +737,12 @@ if (copyListBtn) {
       return;
     }
     
-    // Solo productos no comprados
     const pendingItems = shoppingList.filter(item => !item.bought);
     if (pendingItems.length === 0) {
       alert('No hay productos pendientes en la lista.');
       return;
     }
     
-    // Formatear la lista
     const listText = pendingItems.map((item, index) => {
       const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
       const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
@@ -639,7 +750,6 @@ if (copyListBtn) {
       return `${index + 1}. ${prefix}${item.name} [${categoryName} - ${locationName}]`;
     }).join('\n');
     
-    // Intentar copiar con clipboard API
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(listText).then(() => {
         alert('Lista copiada al portapapeles!');
@@ -647,7 +757,6 @@ if (copyListBtn) {
         fallbackCopyTextToClipboard(listText);
       });
     } else {
-      // Fallback para HTTP o navegadores antiguos
       fallbackCopyTextToClipboard(listText);
     }
   });
