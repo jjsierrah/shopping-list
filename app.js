@@ -40,6 +40,11 @@ let locations = JSON.parse(localStorage.getItem('locations')) || [
   { id: Date.now() + 5, name: 'Tienda especializada' }
 ];
 
+// Función para generar ID único
+function generateId() {
+  return Date.now() + Math.floor(Math.random() * 1000000);
+}
+
 function saveData() {
   localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
   localStorage.setItem('favoriteProducts', JSON.stringify(favoriteProducts));
@@ -102,10 +107,10 @@ function renderProductItem(item, index) {
   const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
   const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
   const isFavorite = favoriteProducts.some(p => 
-    p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
+    p.id === item.id
   );
   const isDefault = defaultProducts.some(p => 
-    p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
+    p.id === item.id
   );
   
   const li = document.createElement('li');
@@ -135,30 +140,30 @@ function renderShoppingList() {
 function renderFavoritesList() {
   favoritesListEl.innerHTML = '';
   
-  favoriteProducts.forEach((item, idx) => {
+  favoriteProducts.forEach((item) => {
     const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
     const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
     
     const div = document.createElement('div');
     div.className = 'favorite-item';
-    div.dataset.index = idx;
+    div.dataset.id = item.id; // Usar ID único en lugar de índice
     div.draggable = true;
     div.innerHTML = `
       <div class="product-edit">
-        <input type="text" value="${item.name}" data-index="${idx}" class="product-name" />
-        <select class="product-category" data-index="${idx}">
+        <input type="text" value="${item.name}" data-id="${item.id}" class="product-name" />
+        <select class="product-category" data-id="${item.id}">
           <option value="">-- Categoría --</option>
           ${categories.map(cat => `<option value="${cat.id}" ${cat.id === item.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
         </select>
-        <select class="product-location" data-index="${idx}">
+        <select class="product-location" data-id="${item.id}">
           <option value="">-- Ubicación --</option>
           ${locations.map(loc => `<option value="${loc.id}" ${loc.id === item.locationId ? 'selected' : ''}>${loc.name}</option>`).join('')}
         </select>
       </div>
       <div class="favorite-actions">
-        <button type="button" class="add-to-list" data-index="${idx}">➕ Añadir</button>
-        <button type="button" class="save-favorite" data-index="${idx}">💾</button>
-        <button type="button" class="delete-favorite" data-index="${idx}">🗑️</button>
+        <button type="button" class="add-to-list" data-id="${item.id}">➕ Añadir</button>
+        <button type="button" class="save-favorite" data-id="${item.id}">💾</button>
+        <button type="button" class="delete-favorite" data-id="${item.id}">🗑️</button>
       </div>
     `;
     favoritesListEl.appendChild(div);
@@ -171,30 +176,30 @@ function renderFavoritesList() {
 function renderDefaultsList() {
   defaultsListEl.innerHTML = '';
   
-  defaultProducts.forEach((item, idx) => {
+  defaultProducts.forEach((item) => {
     const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
     const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
     
     const div = document.createElement('div');
     div.className = 'default-item';
-    div.dataset.index = idx;
+    div.dataset.id = item.id; // Usar ID único en lugar de índice
     div.draggable = true;
     div.innerHTML = `
       <div class="product-edit">
-        <input type="text" value="${item.name}" data-index="${idx}" class="product-name" />
-        <select class="product-category" data-index="${idx}">
+        <input type="text" value="${item.name}" data-id="${item.id}" class="product-name" />
+        <select class="product-category" data-id="${item.id}">
           <option value="">-- Categoría --</option>
           ${categories.map(cat => `<option value="${cat.id}" ${cat.id === item.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
         </select>
-        <select class="product-location" data-index="${idx}">
+        <select class="product-location" data-id="${item.id}">
           <option value="">-- Ubicación --</option>
           ${locations.map(loc => `<option value="${loc.id}" ${loc.id === item.locationId ? 'selected' : ''}>${loc.name}</option>`).join('')}
         </select>
       </div>
       <div class="default-actions">
-        <button type="button" class="add-to-list" data-index="${idx}">➕ Añadir</button>
-        <button type="button" class="save-default" data-index="${idx}">💾</button>
-        <button type="button" class="delete-default" data-index="${idx}">🗑️</button>
+        <button type="button" class="add-to-list" data-id="${item.id}">➕ Añadir</button>
+        <button type="button" class="save-default" data-id="${item.id}">💾</button>
+        <button type="button" class="delete-default" data-id="${item.id}">🗑️</button>
       </div>
     `;
     defaultsListEl.appendChild(div);
@@ -207,9 +212,10 @@ function renderDefaultsList() {
 function bindFavoriteSelectEvents() {
   document.querySelectorAll('.favorite-item .product-category').forEach(select => {
     select.addEventListener('change', (e) => {
-      const index = Number(e.target.dataset.index);
-      if (index >= 0 && index < favoriteProducts.length) {
-        favoriteProducts[index].categoryId = e.target.value ? Number(e.target.value) : null;
+      const id = Number(e.target.dataset.id);
+      const item = favoriteProducts.find(p => p.id === id);
+      if (item) {
+        item.categoryId = e.target.value ? Number(e.target.value) : null;
         saveData();
       }
     });
@@ -217,9 +223,10 @@ function bindFavoriteSelectEvents() {
   
   document.querySelectorAll('.favorite-item .product-location').forEach(select => {
     select.addEventListener('change', (e) => {
-      const index = Number(e.target.dataset.index);
-      if (index >= 0 && index < favoriteProducts.length) {
-        favoriteProducts[index].locationId = e.target.value ? Number(e.target.value) : null;
+      const id = Number(e.target.dataset.id);
+      const item = favoriteProducts.find(p => p.id === id);
+      if (item) {
+        item.locationId = e.target.value ? Number(e.target.value) : null;
         saveData();
       }
     });
@@ -229,9 +236,10 @@ function bindFavoriteSelectEvents() {
 function bindDefaultSelectEvents() {
   document.querySelectorAll('.default-item .product-category').forEach(select => {
     select.addEventListener('change', (e) => {
-      const index = Number(e.target.dataset.index);
-      if (index >= 0 && index < defaultProducts.length) {
-        defaultProducts[index].categoryId = e.target.value ? Number(e.target.value) : null;
+      const id = Number(e.target.dataset.id);
+      const item = defaultProducts.find(p => p.id === id);
+      if (item) {
+        item.categoryId = e.target.value ? Number(e.target.value) : null;
         saveData();
       }
     });
@@ -239,16 +247,17 @@ function bindDefaultSelectEvents() {
   
   document.querySelectorAll('.default-item .product-location').forEach(select => {
     select.addEventListener('change', (e) => {
-      const index = Number(e.target.dataset.index);
-      if (index >= 0 && index < defaultProducts.length) {
-        defaultProducts[index].locationId = e.target.value ? Number(e.target.value) : null;
+      const id = Number(e.target.dataset.id);
+      const item = defaultProducts.find(p => p.id === id);
+      if (item) {
+        item.locationId = e.target.value ? Number(e.target.value) : null;
         saveData();
       }
     });
   });
 }
 
-// Drag & Drop SIN acumulación de eventos
+// Drag & Drop SIN acumulación de eventos - usando IDs
 function setupDragAndDrop(listEl, itemClass, getItemFromElement, updateArray, renderFn) {
   // Limpiar eventos anteriores
   const existingItems = listEl.querySelectorAll(itemClass);
@@ -350,7 +359,7 @@ function setupFavoritesDragAndDrop() {
   setupDragAndDrop(
     favoritesListEl, 
     '.favorite-item',
-    (el) => favoriteProducts[Number(el.dataset.index)],
+    (el) => favoriteProducts.find(item => item.id === Number(el.dataset.id)),
     (newFavorites) => { favoriteProducts = newFavorites; },
     renderFavoritesList
   );
@@ -360,7 +369,7 @@ function setupDefaultsDragAndDrop() {
   setupDragAndDrop(
     defaultsListEl, 
     '.default-item',
-    (el) => defaultProducts[Number(el.dataset.index)],
+    (el) => defaultProducts.find(item => item.id === Number(el.dataset.id)),
     (newDefaults) => { defaultProducts = newDefaults; },
     renderDefaultsList
   );
@@ -469,9 +478,9 @@ if (locationForm) {
     saveData();
     input.value = '';
   });
-}
+                   }
 
-// DELEGACIÓN DE EVENTOS
+// DELEGACIÓN DE EVENTOS - usando IDs en lugar de índices
 document.addEventListener('click', (e) => {
   // Categorías
   if (e.target.classList.contains('save-category')) {
@@ -541,12 +550,13 @@ document.addEventListener('click', (e) => {
   
   // Favoritos - Guardar nombre
   if (e.target.classList.contains('save-favorite')) {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < favoriteProducts.length) {
+    const id = Number(e.target.dataset.id);
+    const item = favoriteProducts.find(p => p.id === id);
+    if (item) {
       const input = e.target.closest('.favorite-item').querySelector('.product-name');
       const newName = input.value.trim();
       if (newName) {
-        favoriteProducts[index].name = newName;
+        item.name = newName;
         renderFavoritesList();
         renderShoppingList();
         saveData();
@@ -556,34 +566,29 @@ document.addEventListener('click', (e) => {
   
   // Favoritos - Eliminar
   if (e.target.classList.contains('delete-favorite')) {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < favoriteProducts.length) {
-      favoriteProducts.splice(index, 1);
-      renderFavoritesList();
-      renderShoppingList();
-      saveData();
-    }
+    const id = Number(e.target.dataset.id);
+    favoriteProducts = favoriteProducts.filter(p => p.id !== id);
+    renderFavoritesList();
+    renderShoppingList();
+    saveData();
   }
   
   // Favoritos - Añadir a lista
   if (e.target.classList.contains('add-to-list')) {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < favoriteProducts.length) {
-      const itemToAdd = { ...favoriteProducts[index], bought: false };
-      
+    const id = Number(e.target.dataset.id);
+    const itemToAdd = favoriteProducts.find(p => p.id === id);
+    if (itemToAdd) {
       // Verificar si ya existe en la lista principal
-      const existsInList = shoppingList.some(item => 
-        item.name === itemToAdd.name && 
-        item.categoryId === itemToAdd.categoryId && 
-        item.locationId === itemToAdd.locationId
-      );
+      const existsInList = shoppingList.some(item => item.id === itemToAdd.id);
       
       if (existsInList) {
         alert('Este producto ya está en la lista.');
         return;
       }
       
-      shoppingList.push(itemToAdd);
+      // Crear copia con nuevo ID para la lista principal
+      const newItem = { ...itemToAdd, id: generateId(), bought: false };
+      shoppingList.push(newItem);
       renderShoppingList();
       alert('Producto añadido a la lista!');
     }
@@ -591,12 +596,13 @@ document.addEventListener('click', (e) => {
   
   // Predeterminados - Guardar nombre
   if (e.target.classList.contains('save-default')) {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < defaultProducts.length) {
+    const id = Number(e.target.dataset.id);
+    const item = defaultProducts.find(p => p.id === id);
+    if (item) {
       const input = e.target.closest('.default-item').querySelector('.product-name');
       const newName = input.value.trim();
       if (newName) {
-        defaultProducts[index].name = newName;
+        item.name = newName;
         renderDefaultsList();
         renderShoppingList();
         saveData();
@@ -606,34 +612,29 @@ document.addEventListener('click', (e) => {
   
   // Predeterminados - Eliminar
   if (e.target.classList.contains('delete-default')) {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < defaultProducts.length) {
-      defaultProducts.splice(index, 1);
-      renderDefaultsList();
-      renderShoppingList();
-      saveData();
-    }
+    const id = Number(e.target.dataset.id);
+    defaultProducts = defaultProducts.filter(p => p.id !== id);
+    renderDefaultsList();
+    renderShoppingList();
+    saveData();
   }
   
   // Predeterminados - Añadir a lista
   if (e.target.classList.contains('add-to-list')) {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < defaultProducts.length) {
-      const itemToAdd = { ...defaultProducts[index], bought: false };
-      
+    const id = Number(e.target.dataset.id);
+    const itemToAdd = defaultProducts.find(p => p.id === id);
+    if (itemToAdd) {
       // Verificar si ya existe en la lista principal
-      const existsInList = shoppingList.some(item => 
-        item.name === itemToAdd.name && 
-        item.categoryId === itemToAdd.categoryId && 
-        item.locationId === itemToAdd.locationId
-      );
+      const existsInList = shoppingList.some(item => item.id === itemToAdd.id);
       
       if (existsInList) {
         alert('Este producto ya está en la lista.');
         return;
       }
       
-      shoppingList.push(itemToAdd);
+      // Crear copia con nuevo ID para la lista principal
+      const newItem = { ...itemToAdd, id: generateId(), bought: false };
+      shoppingList.push(newItem);
       renderShoppingList();
       alert('Producto añadido a la lista!');
     }
@@ -657,8 +658,6 @@ if (addProductBtn) {
     const categoryId = categorySelect.value ? Number(categorySelect.value) : null;
     const locationId = locationSelect.value ? Number(locationSelect.value) : null;
 
-    const newItem = { name, categoryId, locationId, bought: false };
-    
     // Verificar si ya existe en la lista principal
     const existsInList = shoppingList.some(item => 
       item.name === name && 
@@ -671,6 +670,14 @@ if (addProductBtn) {
       return;
     }
     
+    const newItem = { 
+      id: generateId(), 
+      name, 
+      categoryId, 
+      locationId, 
+      bought: false 
+    };
+    
     shoppingList.push(newItem);
     
     const productKey = `${name}-${categoryId || ''}-${locationId || ''}`;
@@ -681,7 +688,7 @@ if (addProductBtn) {
         return key === productKey;
       });
       if (!exists) {
-        favoriteProducts.push({...newItem});
+        favoriteProducts.push({...newItem, id: generateId()});
       }
     } else {
       favoriteProducts = favoriteProducts.filter(p => {
@@ -696,7 +703,7 @@ if (addProductBtn) {
         return key === productKey;
       });
       if (!exists) {
-        defaultProducts.push({...newItem});
+        defaultProducts.push({...newItem, id: generateId()});
       }
     } else {
       defaultProducts = defaultProducts.filter(p => {
@@ -762,7 +769,7 @@ if (loadFavoritesBtn) {
       return;
     }
     
-    const newItems = favoritesToAdd.map(fav => ({ ...fav, bought: false }));
+    const newItems = favoritesToAdd.map(fav => ({ ...fav, id: generateId(), bought: false }));
     shoppingList.push(...newItems);
     renderShoppingList();
   });
@@ -785,7 +792,8 @@ if (copyListBtn) {
     const listText = pendingItems.map((item, index) => {
       const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
       const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
-      const prefix = item.favorite ? '⭐ ' : item.isDefault ? '📌 ' : '';
+      const prefix = favoriteProducts.some(p => p.id === item.id) ? '⭐ ' : 
+                    defaultProducts.some(p => p.id === item.id) ? '📌 ' : '';
       return `${index + 1}. ${prefix}${item.name} [${categoryName} - ${locationName}]`;
     }).join('\n');
     
