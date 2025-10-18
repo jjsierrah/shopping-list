@@ -3,7 +3,7 @@ const productForm = document.getElementById('add-product-form');
 const shoppingListEl = document.getElementById('shopping-list');
 const clearBtn = document.getElementById('clear-list');
 const loadFavoritesBtn = document.getElementById('load-favorites');
-const loadDefaultsBtn = document.getElementById('load-defaults');
+const copyListBtn = document.getElementById('copy-list');
 const categoryForm = document.getElementById('add-category-form');
 const locationForm = document.getElementById('add-location-form');
 const categoriesListEl = document.getElementById('categories-list');
@@ -171,8 +171,17 @@ function renderDefaultsList() {
   });
 }
 
-// Drag & Drop corregido para categorías y ubicaciones
-function setupCategoryDragAndDrop() {
+// Drag & Drop corregido - ahora se reconfigura correctamente
+function setupDragAndDrop(listEl, itemClass, getItemFromElement, updateArray) {
+  // Primero, eliminar eventos anteriores si existen
+  const existingItems = listEl.querySelectorAll(itemClass);
+  existingItems.forEach(item => {
+    item.removeEventListener('dragstart', handleDragStart);
+    item.removeEventListener('dragover', handleDragOver);
+    item.removeEventListener('drop', handleDrop);
+    item.removeEventListener('dragend', handleDragEnd);
+  });
+
   let dragSrcEl = null;
 
   function handleDragStart(e) {
@@ -206,23 +215,26 @@ function setupCategoryDragAndDrop() {
     if (dragSrcEl) {
       dragSrcEl.classList.remove('dragging');
       
-      // Reconstruir el array de categorías en el nuevo orden
-      const newCategories = Array.from(categoriesListEl.children).map(el => {
-        const id = Number(el.dataset.id);
-        return categories.find(cat => cat.id === id);
-      }).filter(Boolean);
-      
-      // Actualizar el array global
-      categories = newCategories;
-      
-      // Actualizar referencias en todos los productos
-      updateProductReferences();
+      const newOrder = Array.from(listEl.children).map(el => getItemFromElement(el));
+      updateArray(newOrder.filter(Boolean));
       
       saveData();
-      renderCategories();
-      renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
+      // Re-renderizar y reconfigurar drag & drop
+      if (listEl === categoriesListEl) {
+        renderCategories();
+        renderShoppingList();
+        setTimeout(() => setupCategoryDragAndDrop(), 100);
+      } else if (listEl === locationsListEl) {
+        renderLocations();
+        renderShoppingList();
+        setTimeout(() => setupLocationDragAndDrop(), 100);
+      } else if (listEl === favoritesListEl) {
+        renderFavoritesList();
+        setTimeout(() => setupFavoritesDragAndDrop(), 100);
+      } else if (listEl === defaultsListEl) {
+        renderDefaultsList();
+        setTimeout(() => setupDefaultsDragAndDrop(), 100);
+      }
     }
   }
 
@@ -230,205 +242,49 @@ function setupCategoryDragAndDrop() {
     this.classList.remove('dragging');
   }
 
-  const elements = categoriesListEl.querySelectorAll('.category-item');
+  const elements = listEl.querySelectorAll(itemClass);
   elements.forEach(item => {
     item.addEventListener('dragstart', handleDragStart, false);
     item.addEventListener('dragover', handleDragOver, false);
     item.addEventListener('drop', handleDrop, false);
     item.addEventListener('dragend', handleDragEnd, false);
   });
+}
+
+function setupCategoryDragAndDrop() {
+  setupDragAndDrop(
+    categoriesListEl, 
+    '.category-item',
+    (el) => categories.find(cat => cat.id === Number(el.dataset.id)),
+    (newCategories) => { categories = newCategories; }
+  );
 }
 
 function setupLocationDragAndDrop() {
-  let dragSrcEl = null;
-
-  function handleDragStart(e) {
-    dragSrcEl = this;
-    e.dataTransfer.effectAllowed = 'move';
-    this.classList.add('dragging');
-  }
-
-  function handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    
-    const draggingOverEl = this;
-    const draggingEl = dragSrcEl;
-    
-    if (draggingOverEl !== draggingEl) {
-      const rect = draggingOverEl.getBoundingClientRect();
-      const nextSibling = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-      
-      draggingOverEl.parentNode.insertBefore(
-        draggingEl,
-        nextSibling ? draggingOverEl.nextSibling : draggingOverEl
-      );
-    }
-  }
-
-  function handleDrop(e) {
-    e.stopPropagation();
-    e.preventDefault();
-    
-    if (dragSrcEl) {
-      dragSrcEl.classList.remove('dragging');
-      
-      // Reconstruir el array de ubicaciones en el nuevo orden
-      const newLocations = Array.from(locationsListEl.children).map(el => {
-        const id = Number(el.dataset.id);
-        return locations.find(loc => loc.id === id);
-      }).filter(Boolean);
-      
-      // Actualizar el array global
-      locations = newLocations;
-      
-      // Actualizar referencias en todos los productos
-      updateProductReferences();
-      
-      saveData();
-      renderLocations();
-      renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
-    }
-  }
-
-  function handleDragEnd() {
-    this.classList.remove('dragging');
-  }
-
-  const elements = locationsListEl.querySelectorAll('.location-item');
-  elements.forEach(item => {
-    item.addEventListener('dragstart', handleDragStart, false);
-    item.addEventListener('dragover', handleDragOver, false);
-    item.addEventListener('drop', handleDrop, false);
-    item.addEventListener('dragend', handleDragEnd, false);
-  });
+  setupDragAndDrop(
+    locationsListEl, 
+    '.location-item',
+    (el) => locations.find(loc => loc.id === Number(el.dataset.id)),
+    (newLocations) => { locations = newLocations; }
+  );
 }
 
-// Función para actualizar referencias (mantener integridad de datos)
-function updateProductReferences() {
-  // Las referencias categoryId y locationId ya son correctas
-  // porque solo reordenamos los arrays, no cambiamos los IDs
-  // Así que no necesitamos actualizar nada en los productos
-  // Los productos siguen apuntando a los mismos IDs
-}
-
-// Drag & Drop para favoritos y predeterminados
 function setupFavoritesDragAndDrop() {
-  let dragSrcEl = null;
-
-  function handleDragStart(e) {
-    dragSrcEl = this;
-    e.dataTransfer.effectAllowed = 'move';
-    this.classList.add('dragging');
-  }
-
-  function handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    
-    const draggingOverEl = this;
-    const draggingEl = dragSrcEl;
-    
-    if (draggingOverEl !== draggingEl) {
-      const rect = draggingOverEl.getBoundingClientRect();
-      const nextSibling = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-      
-      draggingOverEl.parentNode.insertBefore(
-        draggingEl,
-        nextSibling ? draggingOverEl.nextSibling : draggingOverEl
-      );
-    }
-  }
-
-  function handleDrop(e) {
-    e.stopPropagation();
-    e.preventDefault();
-    
-    if (dragSrcEl) {
-      dragSrcEl.classList.remove('dragging');
-      
-      const newFavorites = Array.from(favoritesListEl.children).map(el => {
-        const index = Number(el.dataset.index);
-        return favoriteProducts[index];
-      }).filter(Boolean);
-      
-      favoriteProducts = newFavorites;
-      saveData();
-      renderFavoritesList();
-    }
-  }
-
-  function handleDragEnd() {
-    this.classList.remove('dragging');
-  }
-
-  const elements = favoritesListEl.querySelectorAll('.favorite-item');
-  elements.forEach(item => {
-    item.addEventListener('dragstart', handleDragStart, false);
-    item.addEventListener('dragover', handleDragOver, false);
-    item.addEventListener('drop', handleDrop, false);
-    item.addEventListener('dragend', handleDragEnd, false);
-  });
+  setupDragAndDrop(
+    favoritesListEl, 
+    '.favorite-item',
+    (el) => favoriteProducts[Number(el.dataset.index)],
+    (newFavorites) => { favoriteProducts = newFavorites; }
+  );
 }
 
 function setupDefaultsDragAndDrop() {
-  let dragSrcEl = null;
-
-  function handleDragStart(e) {
-    dragSrcEl = this;
-    e.dataTransfer.effectAllowed = 'move';
-    this.classList.add('dragging');
-  }
-
-  function handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    
-    const draggingOverEl = this;
-    const draggingEl = dragSrcEl;
-    
-    if (draggingOverEl !== draggingEl) {
-      const rect = draggingOverEl.getBoundingClientRect();
-      const nextSibling = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-      
-      draggingOverEl.parentNode.insertBefore(
-        draggingEl,
-        nextSibling ? draggingOverEl.nextSibling : draggingOverEl
-      );
-    }
-  }
-
-  function handleDrop(e) {
-    e.stopPropagation();
-    e.preventDefault();
-    
-    if (dragSrcEl) {
-      dragSrcEl.classList.remove('dragging');
-      
-      const newDefaults = Array.from(defaultsListEl.children).map(el => {
-        const index = Number(el.dataset.index);
-        return defaultProducts[index];
-      }).filter(Boolean);
-      
-      defaultProducts = newDefaults;
-      saveData();
-      renderDefaultsList();
-    }
-  }
-
-  function handleDragEnd() {
-    this.classList.remove('dragging');
-  }
-
-  const elements = defaultsListEl.querySelectorAll('.default-item');
-  elements.forEach(item => {
-    item.addEventListener('dragstart', handleDragStart, false);
-    item.addEventListener('dragover', handleDragOver, false);
-    item.addEventListener('drop', handleDrop, false);
-    item.addEventListener('dragend', handleDragEnd, false);
-  });
+  setupDragAndDrop(
+    defaultsListEl, 
+    '.default-item',
+    (el) => defaultProducts[Number(el.dataset.index)],
+    (newDefaults) => { defaultProducts = newDefaults; }
+  );
 }
 
 // Modal controls
@@ -534,7 +390,7 @@ if (locationForm) {
     saveData();
     input.value = '';
   });
-}
+                                }
 
 // DELEGACIÓN DE EVENTOS - Solución definitiva para botones de guardar
 document.addEventListener('click', (e) => {
@@ -550,6 +406,10 @@ document.addEventListener('click', (e) => {
         renderCategories();
         renderShoppingList();
         saveData();
+        // Reconfigurar drag & drop
+        if (configModal.style.display === 'block') {
+          setTimeout(setupCategoryDragAndDrop, 100);
+        }
       }
     }
   }
@@ -565,6 +425,10 @@ document.addEventListener('click', (e) => {
     renderCategories();
     renderShoppingList();
     saveData();
+    // Reconfigurar drag & drop
+    if (configModal.style.display === 'block') {
+      setTimeout(setupCategoryDragAndDrop, 100);
+    }
   }
   
   // Ubicaciones
@@ -579,6 +443,10 @@ document.addEventListener('click', (e) => {
         renderLocations();
         renderShoppingList();
         saveData();
+        // Reconfigurar drag & drop
+        if (configModal.style.display === 'block') {
+          setTimeout(setupLocationDragAndDrop, 100);
+        }
       }
     }
   }
@@ -594,6 +462,10 @@ document.addEventListener('click', (e) => {
     renderLocations();
     renderShoppingList();
     saveData();
+    // Reconfigurar drag & drop
+    if (configModal.style.display === 'block') {
+      setTimeout(setupLocationDragAndDrop, 100);
+    }
   }
   
   // Favoritos
@@ -607,6 +479,10 @@ document.addEventListener('click', (e) => {
         renderFavoritesList();
         renderShoppingList();
         saveData();
+        // Reconfigurar drag & drop
+        if (favoritesModal.style.display === 'block') {
+          setTimeout(setupFavoritesDragAndDrop, 100);
+        }
       }
     }
   }
@@ -618,6 +494,10 @@ document.addEventListener('click', (e) => {
       renderFavoritesList();
       renderShoppingList();
       saveData();
+      // Reconfigurar drag & drop
+      if (favoritesModal.style.display === 'block') {
+        setTimeout(setupFavoritesDragAndDrop, 100);
+      }
     }
   }
   
@@ -632,6 +512,10 @@ document.addEventListener('click', (e) => {
         renderDefaultsList();
         renderShoppingList();
         saveData();
+        // Reconfigurar drag & drop
+        if (defaultsModal.style.display === 'block') {
+          setTimeout(setupDefaultsDragAndDrop, 100);
+        }
       }
     }
   }
@@ -643,6 +527,10 @@ document.addEventListener('click', (e) => {
       renderDefaultsList();
       renderShoppingList();
       saveData();
+      // Reconfigurar drag & drop
+      if (defaultsModal.style.display === 'block') {
+        setTimeout(setupDefaultsDragAndDrop, 100);
+      }
     }
   }
 });
@@ -766,32 +654,50 @@ if (loadFavoritesBtn) {
   });
 }
 
-// Cargar Predeterminados (solo si no hay predeterminados en la lista actual)
-if (loadDefaultsBtn) {
-  loadDefaultsBtn.addEventListener('click', () => {
-    if (defaultProducts.length === 0) {
-      alert('No hay productos marcados como predeterminados.');
+// Copiar lista al portapapeles
+if (copyListBtn) {
+  copyListBtn.addEventListener('click', async () => {
+    if (shoppingList.length === 0) {
+      alert('La lista está vacía.');
       return;
     }
     
-    // Verificar si ALGÚN predeterminado ya está en la lista principal
-    const anyDefaultInList = defaultProducts.some(def => {
-      return shoppingList.some(item => 
-        item.name === def.name && 
-        item.categoryId === def.categoryId && 
-        item.locationId === def.locationId
-      );
-    });
-    
-    if (anyDefaultInList) {
-      alert('Los predeterminados ya están en la lista.');
-      return;
+    try {
+      // Formatear la lista para copiar
+      const listText = shoppingList
+        .filter(item => !item.bought) // Solo productos no comprados
+        .map((item, index) => {
+          const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
+          const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
+          const prefix = item.favorite ? '⭐ ' : item.isDefault ? '📌 ' : '';
+          return `${index + 1}. ${prefix}${item.name} [${categoryName} - ${locationName}]`;
+        })
+        .join('\n');
+      
+      if (listText.trim() === '') {
+        alert('No hay productos pendientes en la lista.');
+        return;
+      }
+      
+      // Copiar al portapapeles
+      await navigator.clipboard.writeText(listText);
+      alert('Lista copiada al portapapeles!');
+    } catch (err) {
+      // Fallback para navegadores antiguos
+      const textArea = document.createElement('textarea');
+      textArea.value = listText;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        alert('Lista copiada al portapapeles!');
+      } catch (err) {
+        alert('Error al copiar al portapapeles.');
+      }
+      document.body.removeChild(textArea);
     }
-    
-    // Añadir copias de predeterminados a la lista principal (no comprados)
-    const newItems = defaultProducts.map(def => ({ ...def, bought: false }));
-    shoppingList.push(...newItems);
-    renderShoppingList();
   });
 }
 
