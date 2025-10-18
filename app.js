@@ -171,8 +171,8 @@ function renderDefaultsList() {
   });
 }
 
-// Drag & Drop genérico
-function setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn) {
+// Drag & Drop corregido para categorías y ubicaciones
+function setupCategoryDragAndDrop() {
   let dragSrcEl = null;
 
   function handleDragStart(e) {
@@ -206,23 +206,23 @@ function setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn) {
     if (dragSrcEl) {
       dragSrcEl.classList.remove('dragging');
       
-      const newOrder = Array.from(listEl.children).map(el => {
-        const idx = Number(el.dataset.index !== undefined ? el.dataset.index : el.dataset.id);
-        return arrayToUpdate[idx];
+      // Reconstruir el array de categorías en el nuevo orden
+      const newCategories = Array.from(categoriesListEl.children).map(el => {
+        const id = Number(el.dataset.id);
+        return categories.find(cat => cat.id === id);
       }).filter(Boolean);
       
-      if (arrayToUpdate === favoriteProducts) {
-        favoriteProducts = newOrder;
-      } else if (arrayToUpdate === defaultProducts) {
-        defaultProducts = newOrder;
-      } else if (arrayToUpdate === categories) {
-        categories = newOrder;
-      } else if (arrayToUpdate === locations) {
-        locations = newOrder;
-      }
+      // Actualizar el array global
+      categories = newCategories;
+      
+      // Actualizar referencias en todos los productos
+      updateProductReferences();
       
       saveData();
-      renderFn();
+      renderCategories();
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
     }
   }
 
@@ -230,7 +230,199 @@ function setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn) {
     this.classList.remove('dragging');
   }
 
-  const elements = listEl.querySelectorAll(itemClass);
+  const elements = categoriesListEl.querySelectorAll('.category-item');
+  elements.forEach(item => {
+    item.addEventListener('dragstart', handleDragStart, false);
+    item.addEventListener('dragover', handleDragOver, false);
+    item.addEventListener('drop', handleDrop, false);
+    item.addEventListener('dragend', handleDragEnd, false);
+  });
+}
+
+function setupLocationDragAndDrop() {
+  let dragSrcEl = null;
+
+  function handleDragStart(e) {
+    dragSrcEl = this;
+    e.dataTransfer.effectAllowed = 'move';
+    this.classList.add('dragging');
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    
+    const draggingOverEl = this;
+    const draggingEl = dragSrcEl;
+    
+    if (draggingOverEl !== draggingEl) {
+      const rect = draggingOverEl.getBoundingClientRect();
+      const nextSibling = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+      
+      draggingOverEl.parentNode.insertBefore(
+        draggingEl,
+        nextSibling ? draggingOverEl.nextSibling : draggingOverEl
+      );
+    }
+  }
+
+  function handleDrop(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (dragSrcEl) {
+      dragSrcEl.classList.remove('dragging');
+      
+      // Reconstruir el array de ubicaciones en el nuevo orden
+      const newLocations = Array.from(locationsListEl.children).map(el => {
+        const id = Number(el.dataset.id);
+        return locations.find(loc => loc.id === id);
+      }).filter(Boolean);
+      
+      // Actualizar el array global
+      locations = newLocations;
+      
+      // Actualizar referencias en todos los productos
+      updateProductReferences();
+      
+      saveData();
+      renderLocations();
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+    }
+  }
+
+  function handleDragEnd() {
+    this.classList.remove('dragging');
+  }
+
+  const elements = locationsListEl.querySelectorAll('.location-item');
+  elements.forEach(item => {
+    item.addEventListener('dragstart', handleDragStart, false);
+    item.addEventListener('dragover', handleDragOver, false);
+    item.addEventListener('drop', handleDrop, false);
+    item.addEventListener('dragend', handleDragEnd, false);
+  });
+}
+
+// Función para actualizar referencias (mantener integridad de datos)
+function updateProductReferences() {
+  // Las referencias categoryId y locationId ya son correctas
+  // porque solo reordenamos los arrays, no cambiamos los IDs
+  // Así que no necesitamos actualizar nada en los productos
+  // Los productos siguen apuntando a los mismos IDs
+}
+
+// Drag & Drop para favoritos y predeterminados
+function setupFavoritesDragAndDrop() {
+  let dragSrcEl = null;
+
+  function handleDragStart(e) {
+    dragSrcEl = this;
+    e.dataTransfer.effectAllowed = 'move';
+    this.classList.add('dragging');
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    
+    const draggingOverEl = this;
+    const draggingEl = dragSrcEl;
+    
+    if (draggingOverEl !== draggingEl) {
+      const rect = draggingOverEl.getBoundingClientRect();
+      const nextSibling = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+      
+      draggingOverEl.parentNode.insertBefore(
+        draggingEl,
+        nextSibling ? draggingOverEl.nextSibling : draggingOverEl
+      );
+    }
+  }
+
+  function handleDrop(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (dragSrcEl) {
+      dragSrcEl.classList.remove('dragging');
+      
+      const newFavorites = Array.from(favoritesListEl.children).map(el => {
+        const index = Number(el.dataset.index);
+        return favoriteProducts[index];
+      }).filter(Boolean);
+      
+      favoriteProducts = newFavorites;
+      saveData();
+      renderFavoritesList();
+    }
+  }
+
+  function handleDragEnd() {
+    this.classList.remove('dragging');
+  }
+
+  const elements = favoritesListEl.querySelectorAll('.favorite-item');
+  elements.forEach(item => {
+    item.addEventListener('dragstart', handleDragStart, false);
+    item.addEventListener('dragover', handleDragOver, false);
+    item.addEventListener('drop', handleDrop, false);
+    item.addEventListener('dragend', handleDragEnd, false);
+  });
+}
+
+function setupDefaultsDragAndDrop() {
+  let dragSrcEl = null;
+
+  function handleDragStart(e) {
+    dragSrcEl = this;
+    e.dataTransfer.effectAllowed = 'move';
+    this.classList.add('dragging');
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    
+    const draggingOverEl = this;
+    const draggingEl = dragSrcEl;
+    
+    if (draggingOverEl !== draggingEl) {
+      const rect = draggingOverEl.getBoundingClientRect();
+      const nextSibling = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+      
+      draggingOverEl.parentNode.insertBefore(
+        draggingEl,
+        nextSibling ? draggingOverEl.nextSibling : draggingOverEl
+      );
+    }
+  }
+
+  function handleDrop(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (dragSrcEl) {
+      dragSrcEl.classList.remove('dragging');
+      
+      const newDefaults = Array.from(defaultsListEl.children).map(el => {
+        const index = Number(el.dataset.index);
+        return defaultProducts[index];
+      }).filter(Boolean);
+      
+      defaultProducts = newDefaults;
+      saveData();
+      renderDefaultsList();
+    }
+  }
+
+  function handleDragEnd() {
+    this.classList.remove('dragging');
+  }
+
+  const elements = defaultsListEl.querySelectorAll('.default-item');
   elements.forEach(item => {
     item.addEventListener('dragstart', handleDragStart, false);
     item.addEventListener('dragover', handleDragOver, false);
@@ -255,17 +447,13 @@ function closeModal(modal) {
 // Event listeners para modales
 if (openFavoritesBtn) {
   openFavoritesBtn.addEventListener('click', () => {
-    openModal(favoritesModal, renderFavoritesList, () => {
-      setupDragAndDrop(favoritesListEl, '.favorite-item', favoriteProducts, renderFavoritesList);
-    });
+    openModal(favoritesModal, renderFavoritesList, setupFavoritesDragAndDrop);
   });
 }
 
 if (openDefaultsBtn) {
   openDefaultsBtn.addEventListener('click', () => {
-    openModal(defaultsModal, renderDefaultsList, () => {
-      setupDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList);
-    });
+    openModal(defaultsModal, renderDefaultsList, setupDefaultsDragAndDrop);
   });
 }
 
@@ -298,16 +486,8 @@ if (openConfigBtn) {
       renderCategories();
       renderLocations();
     }, () => {
-      setupDragAndDrop(categoriesListEl, '.category-item', categories, () => {
-        renderCategories();
-        renderShoppingList();
-        saveData();
-      });
-      setupDragAndDrop(locationsListEl, '.location-item', locations, () => {
-        renderLocations();
-        renderShoppingList();
-        saveData();
-      });
+      setupCategoryDragAndDrop();
+      setupLocationDragAndDrop();
     });
   });
 }
