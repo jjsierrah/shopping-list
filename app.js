@@ -71,9 +71,6 @@ function renderCategories() {
     option.textContent = cat.name;
     categorySelect.appendChild(option);
   });
-  
-  // Re-vincular eventos después de renderizar
-  bindCategoryEvents();
 }
 
 function renderLocations() {
@@ -99,9 +96,6 @@ function renderLocations() {
     option.textContent = loc.name;
     locationSelect.appendChild(option);
   });
-  
-  // Re-vincular eventos después de renderizar
-  bindLocationEvents();
 }
 
 function renderProductItem(item, index) {
@@ -156,9 +150,6 @@ function renderFavoritesList() {
     `;
     favoritesListEl.appendChild(div);
   });
-  
-  // Re-vincular eventos después de renderizar
-  bindFavoriteEvents();
 }
 
 function renderDefaultsList() {
@@ -178,142 +169,10 @@ function renderDefaultsList() {
     `;
     defaultsListEl.appendChild(div);
   });
-  
-  // Re-vincular eventos después de renderizar
-  bindDefaultEvents();
-}
-
-// Funciones para vincular eventos (solución al problema de drag & drop)
-function bindCategoryEvents() {
-  document.querySelectorAll('.save-category').forEach(btn => {
-    btn.onclick = (e) => {
-      const id = Number(e.target.dataset.id);
-      const input = e.target.previousElementSibling;
-      const newName = input.value.trim();
-      if (newName) {
-        const cat = categories.find(c => c.id === id);
-        if (cat) {
-          cat.name = newName;
-          renderCategories();
-          renderShoppingList();
-          saveData();
-        }
-      }
-    };
-  });
-  
-  document.querySelectorAll('.delete-category').forEach(btn => {
-    btn.onclick = (e) => {
-      const id = Number(e.target.dataset.id);
-      const hasProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.categoryId === id);
-      if (hasProducts) {
-        alert('No se puede eliminar: hay productos en esta categoría.');
-        return;
-      }
-      categories = categories.filter(c => c.id !== id);
-      renderCategories();
-      renderShoppingList();
-      saveData();
-    };
-  });
-}
-
-function bindLocationEvents() {
-  document.querySelectorAll('.save-location').forEach(btn => {
-    btn.onclick = (e) => {
-      const id = Number(e.target.dataset.id);
-      const input = e.target.previousElementSibling;
-      const newName = input.value.trim();
-      if (newName) {
-        const loc = locations.find(l => l.id === id);
-        if (loc) {
-          loc.name = newName;
-          renderLocations();
-          renderShoppingList();
-          saveData();
-        }
-      }
-    };
-  });
-  
-  document.querySelectorAll('.delete-location').forEach(btn => {
-    btn.onclick = (e) => {
-      const id = Number(e.target.dataset.id);
-      const hasProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.locationId === id);
-      if (hasProducts) {
-        alert('No se puede eliminar: hay productos en esta ubicación.');
-        return;
-      }
-      locations = locations.filter(l => l.id !== id);
-      renderLocations();
-      renderShoppingList();
-      saveData();
-    };
-  });
-}
-
-function bindFavoriteEvents() {
-  document.querySelectorAll('.save-favorite').forEach(btn => {
-    btn.onclick = (e) => {
-      const index = Number(e.target.dataset.index);
-      if (index >= 0 && index < favoriteProducts.length) {
-        const input = e.target.previousElementSibling;
-        const newName = input.value.trim();
-        if (newName) {
-          favoriteProducts[index].name = newName;
-          renderFavoritesList();
-          renderShoppingList();
-          saveData();
-        }
-      }
-    };
-  });
-  
-  document.querySelectorAll('.delete-favorite').forEach(btn => {
-    btn.onclick = (e) => {
-      const index = Number(e.target.dataset.index);
-      if (index >= 0 && index < favoriteProducts.length) {
-        favoriteProducts.splice(index, 1);
-        renderFavoritesList();
-        renderShoppingList();
-        saveData();
-      }
-    };
-  });
-}
-
-function bindDefaultEvents() {
-  document.querySelectorAll('.save-default').forEach(btn => {
-    btn.onclick = (e) => {
-      const index = Number(e.target.dataset.index);
-      if (index >= 0 && index < defaultProducts.length) {
-        const input = e.target.previousElementSibling;
-        const newName = input.value.trim();
-        if (newName) {
-          defaultProducts[index].name = newName;
-          renderDefaultsList();
-          renderShoppingList();
-          saveData();
-        }
-      }
-    };
-  });
-  
-  document.querySelectorAll('.delete-default').forEach(btn => {
-    btn.onclick = (e) => {
-      const index = Number(e.target.dataset.index);
-      if (index >= 0 && index < defaultProducts.length) {
-        defaultProducts.splice(index, 1);
-        renderDefaultsList();
-        renderShoppingList();
-        saveData();
-      }
-    };
-  });
 }
 
 // Drag & Drop genérico
-function setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn, bindEventsFn) {
+function setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn) {
   let dragSrcEl = null;
 
   function handleDragStart(e) {
@@ -364,7 +223,6 @@ function setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn, bindEvents
       
       saveData();
       renderFn();
-      if (bindEventsFn) bindEventsFn();
     }
   }
 
@@ -398,7 +256,7 @@ function closeModal(modal) {
 if (openFavoritesBtn) {
   openFavoritesBtn.addEventListener('click', () => {
     openModal(favoritesModal, renderFavoritesList, () => {
-      setupDragAndDrop(favoritesListEl, '.favorite-item', favoriteProducts, renderFavoritesList, bindFavoriteEvents);
+      setupDragAndDrop(favoritesListEl, '.favorite-item', favoriteProducts, renderFavoritesList);
     });
   });
 }
@@ -406,7 +264,7 @@ if (openFavoritesBtn) {
 if (openDefaultsBtn) {
   openDefaultsBtn.addEventListener('click', () => {
     openModal(defaultsModal, renderDefaultsList, () => {
-      setupDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList, bindDefaultEvents);
+      setupDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList);
     });
   });
 }
@@ -444,12 +302,12 @@ if (openConfigBtn) {
         renderCategories();
         renderShoppingList();
         saveData();
-      }, bindCategoryEvents);
+      });
       setupDragAndDrop(locationsListEl, '.location-item', locations, () => {
         renderLocations();
         renderShoppingList();
         saveData();
-      }, bindLocationEvents);
+      });
     });
   });
 }
@@ -497,6 +355,118 @@ if (locationForm) {
     input.value = '';
   });
 }
+
+// DELEGACIÓN DE EVENTOS - Solución definitiva para botones de guardar
+document.addEventListener('click', (e) => {
+  // Categorías
+  if (e.target.classList.contains('save-category')) {
+    const id = Number(e.target.dataset.id);
+    const input = e.target.closest('.category-item').querySelector('input');
+    const newName = input.value.trim();
+    if (newName) {
+      const cat = categories.find(c => c.id === id);
+      if (cat) {
+        cat.name = newName;
+        renderCategories();
+        renderShoppingList();
+        saveData();
+      }
+    }
+  }
+  
+  if (e.target.classList.contains('delete-category')) {
+    const id = Number(e.target.dataset.id);
+    const hasProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.categoryId === id);
+    if (hasProducts) {
+      alert('No se puede eliminar: hay productos en esta categoría.');
+      return;
+    }
+    categories = categories.filter(c => c.id !== id);
+    renderCategories();
+    renderShoppingList();
+    saveData();
+  }
+  
+  // Ubicaciones
+  if (e.target.classList.contains('save-location')) {
+    const id = Number(e.target.dataset.id);
+    const input = e.target.closest('.location-item').querySelector('input');
+    const newName = input.value.trim();
+    if (newName) {
+      const loc = locations.find(l => l.id === id);
+      if (loc) {
+        loc.name = newName;
+        renderLocations();
+        renderShoppingList();
+        saveData();
+      }
+    }
+  }
+  
+  if (e.target.classList.contains('delete-location')) {
+    const id = Number(e.target.dataset.id);
+    const hasProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.locationId === id);
+    if (hasProducts) {
+      alert('No se puede eliminar: hay productos en esta ubicación.');
+      return;
+    }
+    locations = locations.filter(l => l.id !== id);
+    renderLocations();
+    renderShoppingList();
+    saveData();
+  }
+  
+  // Favoritos
+  if (e.target.classList.contains('save-favorite')) {
+    const index = Number(e.target.dataset.index);
+    if (index >= 0 && index < favoriteProducts.length) {
+      const input = e.target.closest('.favorite-item').querySelector('input');
+      const newName = input.value.trim();
+      if (newName) {
+        favoriteProducts[index].name = newName;
+        renderFavoritesList();
+        renderShoppingList();
+        saveData();
+      }
+    }
+  }
+  
+  if (e.target.classList.contains('delete-favorite')) {
+    const index = Number(e.target.dataset.index);
+    if (index >= 0 && index < favoriteProducts.length) {
+      favoriteProducts.splice(index, 1);
+      renderFavoritesList();
+      renderShoppingList();
+      saveData();
+    }
+  }
+  
+  // Predeterminados
+  if (e.target.classList.contains('save-default')) {
+    const index = Number(e.target.dataset.index);
+    if (index >= 0 && index < defaultProducts.length) {
+      const input = e.target.closest('.default-item').querySelector('input');
+      const newName = input.value.trim();
+      if (newName) {
+        defaultProducts[index].name = newName;
+        renderDefaultsList();
+        renderShoppingList();
+        saveData();
+      }
+    }
+  }
+  
+  if (e.target.classList.contains('delete-default')) {
+    const index = Number(e.target.dataset.index);
+    if (index >= 0 && index < defaultProducts.length) {
+      defaultProducts.splice(index, 1);
+      renderDefaultsList();
+      renderShoppingList();
+      saveData();
+    }
+  }
+});
+
 // Añadir producto (con nuevo botón)
 const addProductBtn = document.getElementById('add-product-btn');
 
@@ -651,4 +621,3 @@ renderLocations();
 renderShoppingList();
 renderFavoritesList();
 renderDefaultsList();
-
