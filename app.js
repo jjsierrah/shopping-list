@@ -171,15 +171,13 @@ function renderDefaultsList() {
   });
 }
 
-// Drag & Drop corregido - ahora se reconfigura correctamente
-function setupDragAndDrop(listEl, itemClass, getItemFromElement, updateArray) {
-  // Primero, eliminar eventos anteriores si existen
+// Drag & Drop SIN acumulación de eventos
+function setupDragAndDrop(listEl, itemClass, getItemFromElement, updateArray, renderFn) {
+  // Limpiar eventos anteriores
   const existingItems = listEl.querySelectorAll(itemClass);
   existingItems.forEach(item => {
-    item.removeEventListener('dragstart', handleDragStart);
-    item.removeEventListener('dragover', handleDragOver);
-    item.removeEventListener('drop', handleDrop);
-    item.removeEventListener('dragend', handleDragEnd);
+    const clone = item.cloneNode(true);
+    item.parentNode.replaceChild(clone, item);
   });
 
   let dragSrcEl = null;
@@ -219,22 +217,12 @@ function setupDragAndDrop(listEl, itemClass, getItemFromElement, updateArray) {
       updateArray(newOrder.filter(Boolean));
       
       saveData();
-      // Re-renderizar y reconfigurar drag & drop
-      if (listEl === categoriesListEl) {
-        renderCategories();
-        renderShoppingList();
-        setTimeout(() => setupCategoryDragAndDrop(), 100);
-      } else if (listEl === locationsListEl) {
-        renderLocations();
-        renderShoppingList();
-        setTimeout(() => setupLocationDragAndDrop(), 100);
-      } else if (listEl === favoritesListEl) {
-        renderFavoritesList();
-        setTimeout(() => setupFavoritesDragAndDrop(), 100);
-      } else if (listEl === defaultsListEl) {
-        renderDefaultsList();
-        setTimeout(() => setupDefaultsDragAndDrop(), 100);
-      }
+      renderFn();
+      
+      // Reconfigurar drag & drop después de un corto retraso
+      setTimeout(() => {
+        setupDragAndDrop(listEl, itemClass, getItemFromElement, updateArray, renderFn);
+      }, 50);
     }
   }
 
@@ -256,7 +244,11 @@ function setupCategoryDragAndDrop() {
     categoriesListEl, 
     '.category-item',
     (el) => categories.find(cat => cat.id === Number(el.dataset.id)),
-    (newCategories) => { categories = newCategories; }
+    (newCategories) => { categories = newCategories; },
+    () => {
+      renderCategories();
+      renderShoppingList();
+    }
   );
 }
 
@@ -265,7 +257,11 @@ function setupLocationDragAndDrop() {
     locationsListEl, 
     '.location-item',
     (el) => locations.find(loc => loc.id === Number(el.dataset.id)),
-    (newLocations) => { locations = newLocations; }
+    (newLocations) => { locations = newLocations; },
+    () => {
+      renderLocations();
+      renderShoppingList();
+    }
   );
 }
 
@@ -274,7 +270,8 @@ function setupFavoritesDragAndDrop() {
     favoritesListEl, 
     '.favorite-item',
     (el) => favoriteProducts[Number(el.dataset.index)],
-    (newFavorites) => { favoriteProducts = newFavorites; }
+    (newFavorites) => { favoriteProducts = newFavorites; },
+    renderFavoritesList
   );
 }
 
@@ -283,7 +280,8 @@ function setupDefaultsDragAndDrop() {
     defaultsListEl, 
     '.default-item',
     (el) => defaultProducts[Number(el.dataset.index)],
-    (newDefaults) => { defaultProducts = newDefaults; }
+    (newDefaults) => { defaultProducts = newDefaults; },
+    renderDefaultsList
   );
 }
 
@@ -390,9 +388,9 @@ if (locationForm) {
     saveData();
     input.value = '';
   });
-                                }
+}
 
-// DELEGACIÓN DE EVENTOS - Solución definitiva para botones de guardar
+// DELEGACIÓN DE EVENTOS
 document.addEventListener('click', (e) => {
   // Categorías
   if (e.target.classList.contains('save-category')) {
@@ -406,10 +404,6 @@ document.addEventListener('click', (e) => {
         renderCategories();
         renderShoppingList();
         saveData();
-        // Reconfigurar drag & drop
-        if (configModal.style.display === 'block') {
-          setTimeout(setupCategoryDragAndDrop, 100);
-        }
       }
     }
   }
@@ -425,10 +419,6 @@ document.addEventListener('click', (e) => {
     renderCategories();
     renderShoppingList();
     saveData();
-    // Reconfigurar drag & drop
-    if (configModal.style.display === 'block') {
-      setTimeout(setupCategoryDragAndDrop, 100);
-    }
   }
   
   // Ubicaciones
@@ -443,10 +433,6 @@ document.addEventListener('click', (e) => {
         renderLocations();
         renderShoppingList();
         saveData();
-        // Reconfigurar drag & drop
-        if (configModal.style.display === 'block') {
-          setTimeout(setupLocationDragAndDrop, 100);
-        }
       }
     }
   }
@@ -462,10 +448,6 @@ document.addEventListener('click', (e) => {
     renderLocations();
     renderShoppingList();
     saveData();
-    // Reconfigurar drag & drop
-    if (configModal.style.display === 'block') {
-      setTimeout(setupLocationDragAndDrop, 100);
-    }
   }
   
   // Favoritos
@@ -479,10 +461,6 @@ document.addEventListener('click', (e) => {
         renderFavoritesList();
         renderShoppingList();
         saveData();
-        // Reconfigurar drag & drop
-        if (favoritesModal.style.display === 'block') {
-          setTimeout(setupFavoritesDragAndDrop, 100);
-        }
       }
     }
   }
@@ -494,10 +472,6 @@ document.addEventListener('click', (e) => {
       renderFavoritesList();
       renderShoppingList();
       saveData();
-      // Reconfigurar drag & drop
-      if (favoritesModal.style.display === 'block') {
-        setTimeout(setupFavoritesDragAndDrop, 100);
-      }
     }
   }
   
@@ -512,10 +486,6 @@ document.addEventListener('click', (e) => {
         renderDefaultsList();
         renderShoppingList();
         saveData();
-        // Reconfigurar drag & drop
-        if (defaultsModal.style.display === 'block') {
-          setTimeout(setupDefaultsDragAndDrop, 100);
-        }
       }
     }
   }
@@ -527,15 +497,11 @@ document.addEventListener('click', (e) => {
       renderDefaultsList();
       renderShoppingList();
       saveData();
-      // Reconfigurar drag & drop
-      if (defaultsModal.style.display === 'block') {
-        setTimeout(setupDefaultsDragAndDrop, 100);
-      }
     }
   }
 });
 
-// Añadir producto (con nuevo botón)
+// Añadir producto
 const addProductBtn = document.getElementById('add-product-btn');
 
 if (addProductBtn) {
@@ -592,13 +558,12 @@ if (addProductBtn) {
     renderFavoritesList();
     renderDefaultsList();
     
-    // Resetear formulario
     document.getElementById('add-product-form').reset();
     document.getElementById('product-default').checked = true;
   });
 }
 
-// Toggle comprado o eliminar (solo en lista principal)
+// Toggle comprado o eliminar
 if (shoppingListEl) {
   shoppingListEl.addEventListener('click', (e) => {
     const index = e.target.dataset.index;
@@ -614,18 +579,17 @@ if (shoppingListEl) {
   });
 }
 
-// Botón de limpiar (solo la lista principal)
+// Botón de limpiar
 if (clearBtn) {
   clearBtn.addEventListener('click', () => {
     if (confirm('¿Seguro que quieres borrar la lista actual?')) {
       shoppingList = [];
       renderShoppingList();
-      // ¡favoriteProducts y defaultProducts permanecen intactos!
     }
   });
 }
 
-// Cargar Favoritos (solo si no hay favoritos en la lista actual)
+// Cargar Favoritos
 if (loadFavoritesBtn) {
   loadFavoritesBtn.addEventListener('click', () => {
     if (favoriteProducts.length === 0) {
@@ -633,7 +597,6 @@ if (loadFavoritesBtn) {
       return;
     }
     
-    // Verificar si ALGÚN favorito ya está en la lista principal
     const anyFavoriteInList = favoriteProducts.some(fav => {
       return shoppingList.some(item => 
         item.name === fav.name && 
@@ -647,58 +610,68 @@ if (loadFavoritesBtn) {
       return;
     }
     
-    // Añadir copias de favoritos a la lista principal (no comprados)
     const newItems = favoriteProducts.map(fav => ({ ...fav, bought: false }));
     shoppingList.push(...newItems);
     renderShoppingList();
   });
 }
 
-// Copiar lista al portapapeles
+// Copiar lista al portapapeles - VERSIÓN ROBUSTA
 if (copyListBtn) {
-  copyListBtn.addEventListener('click', async () => {
+  copyListBtn.addEventListener('click', () => {
     if (shoppingList.length === 0) {
       alert('La lista está vacía.');
       return;
     }
     
-    try {
-      // Formatear la lista para copiar
-      const listText = shoppingList
-        .filter(item => !item.bought) // Solo productos no comprados
-        .map((item, index) => {
-          const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
-          const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
-          const prefix = item.favorite ? '⭐ ' : item.isDefault ? '📌 ' : '';
-          return `${index + 1}. ${prefix}${item.name} [${categoryName} - ${locationName}]`;
-        })
-        .join('\n');
-      
-      if (listText.trim() === '') {
-        alert('No hay productos pendientes en la lista.');
-        return;
-      }
-      
-      // Copiar al portapapeles
-      await navigator.clipboard.writeText(listText);
-      alert('Lista copiada al portapapeles!');
-    } catch (err) {
-      // Fallback para navegadores antiguos
-      const textArea = document.createElement('textarea');
-      textArea.value = listText;
-      textArea.style.position = 'fixed';
-      textArea.style.opacity = '0';
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
+    // Solo productos no comprados
+    const pendingItems = shoppingList.filter(item => !item.bought);
+    if (pendingItems.length === 0) {
+      alert('No hay productos pendientes en la lista.');
+      return;
+    }
+    
+    // Formatear la lista
+    const listText = pendingItems.map((item, index) => {
+      const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
+      const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
+      const prefix = item.favorite ? '⭐ ' : item.isDefault ? '📌 ' : '';
+      return `${index + 1}. ${prefix}${item.name} [${categoryName} - ${locationName}]`;
+    }).join('\n');
+    
+    // Intentar copiar con clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(listText).then(() => {
         alert('Lista copiada al portapapeles!');
-      } catch (err) {
-        alert('Error al copiar al portapapeles.');
-      }
-      document.body.removeChild(textArea);
+      }).catch(() => {
+        fallbackCopyTextToClipboard(listText);
+      });
+    } else {
+      // Fallback para HTTP o navegadores antiguos
+      fallbackCopyTextToClipboard(listText);
     }
   });
+}
+
+function fallbackCopyTextToClipboard(text) {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-9999px';
+  textArea.style.top = '-9999px';
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  
+  try {
+    const successful = document.execCommand('copy');
+    const msg = successful ? 'Lista copiada al portapapeles!' : 'Error al copiar.';
+    alert(msg);
+  } catch (err) {
+    alert('Tu navegador no permite copiar al portapapeles.');
+  }
+  
+  document.body.removeChild(textArea);
 }
 
 // Inicializar
