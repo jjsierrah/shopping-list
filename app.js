@@ -45,34 +45,62 @@ function generateId() {
   return Date.now() + Math.floor(Math.random() * 1000000);
 }
 
-// Función de alerta personalizada
-function showAlert(message) {
+// Función de alerta personalizada mejorada
+function showAlert(message, isConfirm = false, onConfirm = null) {
   // Crear un modal de alerta personalizado
   const alertDiv = document.createElement('div');
   alertDiv.className = 'custom-alert';
-  alertDiv.innerHTML = `
-    <div class="alert-content">
-      <h3>Atención:</h3>
-      <p>${message}</p>
-      <button class="alert-ok">OK</button>
-    </div>
-  `;
+  
+  if (isConfirm) {
+    alertDiv.innerHTML = `
+      <div class="alert-content">
+        <h3>Atención:</h3>
+        <p>${message}</p>
+        <div class="alert-buttons">
+          <button class="alert-cancel">Cancelar</button>
+          <button class="alert-confirm">Aceptar</button>
+        </div>
+      </div>
+    `;
+    
+    const cancelBtn = alertDiv.querySelector('.alert-cancel');
+    const confirmBtn = alertDiv.querySelector('.alert-confirm');
+    
+    cancelBtn.addEventListener('click', () => {
+      document.body.removeChild(alertDiv);
+    });
+    
+    confirmBtn.addEventListener('click', () => {
+      document.body.removeChild(alertDiv);
+      if (onConfirm) onConfirm();
+    });
+  } else {
+    alertDiv.innerHTML = `
+      <div class="alert-content">
+        <h3>Atención:</h3>
+        <p>${message}</p>
+        <button class="alert-ok">OK</button>
+      </div>
+    `;
+    
+    const okBtn = alertDiv.querySelector('.alert-ok');
+    okBtn.addEventListener('click', () => {
+      document.body.removeChild(alertDiv);
+    });
+  }
+  
+  // También permitir cerrar con Escape (excepto en confirmaciones)
+  if (!isConfirm) {
+    const closeOnEscape = (e) => {
+      if (e.key === 'Escape') {
+        document.body.removeChild(alertDiv);
+        document.removeEventListener('keydown', closeOnEscape);
+      }
+    };
+    document.addEventListener('keydown', closeOnEscape);
+  }
   
   document.body.appendChild(alertDiv);
-  
-  const okBtn = alertDiv.querySelector('.alert-ok');
-  okBtn.addEventListener('click', () => {
-    document.body.removeChild(alertDiv);
-  });
-  
-  // También permitir cerrar con Escape
-  const closeOnEscape = (e) => {
-    if (e.key === 'Escape') {
-      document.body.removeChild(alertDiv);
-      document.removeEventListener('keydown', closeOnEscape);
-    }
-  };
-  document.addEventListener('keydown', closeOnEscape);
 }
 
 function saveData() {
@@ -422,12 +450,8 @@ document.addEventListener('click', function(e) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < favoriteProducts.length) {
       const itemToAdd = favoriteProducts[index];
-      // Verificar si ya existe en la lista principal
-      const existsInList = shoppingList.some(item => 
-        item.name === itemToAdd.name && 
-        item.categoryId === itemToAdd.categoryId && 
-        item.locationId === itemToAdd.locationId
-      );
+      // Verificar si ya existe en la lista principal (solo por nombre)
+      const existsInList = shoppingList.some(item => item.name === itemToAdd.name);
       if (existsInList) {
         showAlert('Este producto ya está en la lista.');
         return;
@@ -446,12 +470,8 @@ document.addEventListener('click', function(e) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < defaultProducts.length) {
       const itemToAdd = defaultProducts[index];
-      // Verificar si ya existe en la lista principal
-      const existsInList = shoppingList.some(item => 
-        item.name === itemToAdd.name && 
-        item.categoryId === itemToAdd.categoryId && 
-        item.locationId === itemToAdd.locationId
-      );
+      // Verificar si ya existe en la lista principal (solo por nombre)
+      const existsInList = shoppingList.some(item => item.name === itemToAdd.name);
       if (existsInList) {
         showAlert('Este producto ya está en la lista.');
         return;
@@ -628,6 +648,13 @@ if (addProductBtn) {
       return;
     }
     
+    // Validar duplicados por nombre solamente
+    const existsInList = shoppingList.some(item => item.name === name);
+    if (existsInList) {
+      showAlert('Este producto ya está en la lista.');
+      return;
+    }
+    
     const favorite = document.getElementById('product-favorite').checked;
     const isDefault = document.getElementById('product-default').checked;
     const categoryId = categorySelect.value ? Number(categorySelect.value) : null;
@@ -641,39 +668,22 @@ if (addProductBtn) {
       bought: false 
     };
     
-    // Verificar duplicados en la lista principal
-    const existsInList = shoppingList.some(item => 
-      item.name === name && 
-      item.categoryId === categoryId && 
-      item.locationId === locationId
-    );
-    if (existsInList) {
-      showAlert('Este producto ya está en la lista.');
-      return;
-    }
-    
     shoppingList.push(newItem);
     
-    const productExistsInFavorites = favoriteProducts.some(p => 
-      p.name === name && p.categoryId === categoryId && p.locationId === locationId
-    );
+    // Gestionar favoritos
+    const productExistsInFavorites = favoriteProducts.some(p => p.name === name);
     if (favorite && !productExistsInFavorites) {
       favoriteProducts.push({...newItem, id: generateId()});
     } else if (!favorite) {
-      favoriteProducts = favoriteProducts.filter(p => 
-        !(p.name === name && p.categoryId === categoryId && p.locationId === locationId)
-      );
+      favoriteProducts = favoriteProducts.filter(p => p.name !== name);
     }
     
-    const productExistsInDefaults = defaultProducts.some(p => 
-      p.name === name && p.categoryId === categoryId && p.locationId === locationId
-    );
+    // Gestionar predeterminados
+    const productExistsInDefaults = defaultProducts.some(p => p.name === name);
     if (isDefault && !productExistsInDefaults) {
       defaultProducts.push({...newItem, id: generateId()});
     } else if (!isDefault) {
-      defaultProducts = defaultProducts.filter(p => 
-        !(p.name === name && p.categoryId === categoryId && p.locationId === locationId)
-      );
+      defaultProducts = defaultProducts.filter(p => p.name !== name);
     }
     
     renderShoppingList();
@@ -704,10 +714,10 @@ if (shoppingListEl) {
 // Botón de limpiar
 if (clearBtn) {
   clearBtn.addEventListener('click', () => {
-    if (confirm('¿Seguro que quieres borrar la lista actual?')) {
+    showAlert('¿Seguro que quieres borrar la lista actual?', true, () => {
       shoppingList = [];
       renderShoppingList();
-    }
+    });
   });
 }
 
@@ -720,11 +730,7 @@ if (loadFavoritesBtn) {
     }
     
     const favoritesToAdd = favoriteProducts.filter(fav => {
-      return !shoppingList.some(item => 
-        item.name === fav.name && 
-        item.categoryId === fav.categoryId && 
-        item.locationId === fav.locationId
-      );
+      return !shoppingList.some(item => item.name === fav.name);
     });
     
     if (favoritesToAdd.length === 0) {
@@ -832,7 +838,13 @@ style.textContent = `
     margin-bottom: 15px;
   }
   
-  .alert-ok {
+  .alert-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  
+  .alert-ok, .alert-cancel, .alert-confirm {
     background-color: #4CAF50;
     color: white;
     border: none;
@@ -841,8 +853,16 @@ style.textContent = `
     cursor: pointer;
   }
   
-  .alert-ok:hover {
+  .alert-cancel {
+    background-color: #6c757d;
+  }
+  
+  .alert-ok:hover, .alert-confirm:hover {
     background-color: #388E3C;
+  }
+  
+  .alert-cancel:hover {
+    background-color: #5a6268;
   }
 `;
 document.head.appendChild(style);
