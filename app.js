@@ -443,6 +443,7 @@ if (locationForm) {
     input.value = '';
   });
 }
+
 // DELEGACIÓN DE EVENTOS CORREGIDA
 document.addEventListener('click', function(e) {
   // Favoritos - Añadir a lista
@@ -640,7 +641,8 @@ document.addEventListener('change', (e) => {
 const addProductBtn = document.getElementById('add-product-btn');
 
 if (addProductBtn) {
-  addProductBtn.addEventListener('click', () => {
+  addProductBtn.addEventListener('click', (e) => {
+    e.preventDefault(); // Evitar recarga si está dentro de <form>
     const nameInput = document.getElementById('product-name');
     const name = nameInput.value.trim();
     if (!name) {
@@ -680,9 +682,10 @@ if (addProductBtn) {
     
     // Gestionar predeterminados
     const productExistsInDefaults = defaultProducts.some(p => p.name === name);
-    if (isDefault && !productExistsInDefaults) {
+    const currentDefaultChecked = isDefault;
+    if (currentDefaultChecked && !productExistsInDefaults) {
       defaultProducts.push({...newItem, id: generateId()});
-    } else if (!isDefault) {
+    } else if (!currentDefaultChecked) {
       defaultProducts = defaultProducts.filter(p => p.name !== name);
     }
     
@@ -721,9 +724,13 @@ if (clearBtn) {
   });
 }
 
-// Cargar Favoritos
+// Cargar Favoritos - CORREGIDO según preferencia
 if (loadFavoritesBtn) {
   loadFavoritesBtn.addEventListener('click', () => {
+    if (shoppingList.length > 0) {
+      showAlert('La lista ya contiene productos. No se puede cargar favoritos.');
+      return;
+    }
     if (favoriteProducts.length === 0) {
       showAlert('No hay productos marcados como favoritos.');
       return;
@@ -741,6 +748,7 @@ if (loadFavoritesBtn) {
     const newItems = favoritesToAdd.map(fav => ({ ...fav, id: generateId(), bought: false }));
     shoppingList.push(...newItems);
     renderShoppingList();
+    showAlert('Favoritos cargados correctamente.');
   });
 }
 
@@ -788,20 +796,19 @@ if (copyListBtn) {
 function fallbackCopyTextToClipboard(text) {
   const textArea = document.createElement('textarea');
   textArea.value = text;
-  textArea.style.position = 'fixed';
-  textArea.style.left = '-9999px';
-  textArea.style.top = '-9999px';
+  textArea.setAttribute('readonly', '');
+  textArea.style.cssText = 'position:fixed; left:-9999px; top:-9999px;';
   document.body.appendChild(textArea);
-  textArea.focus();
   textArea.select();
-  
   try {
-    const successful = document.execCommand('copy');
-    showAlert('Lista copiada al portapapeles!');
+    if (document.execCommand('copy')) {
+      showAlert('Lista copiada al portapapeles!');
+    } else {
+      showAlert('No se pudo copiar. Intenta manualmente.');
+    }
   } catch (err) {
     showAlert('Tu navegador no permite copiar al portapapeles.');
   }
-  
   document.body.removeChild(textArea);
 }
 
