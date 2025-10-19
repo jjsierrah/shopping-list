@@ -12,47 +12,50 @@
 <body>
   <header>
     <h1>🛒 JJ Shopping List</h1>
-    <button id="open-help-btn" class="floating-help-btn">❓</button>
+    <button id="open-help-btn" class="header-help-btn">?</button>
   </header>
 
   <main>
-    <!-- Formulario de producto -->
-    <form id="add-product-form" class="product-form">
-      <input type="text" id="product-name" placeholder="Nombre del producto" required />
-      <select id="product-category-select">
-        <option value="">-- Categoría --</option>
-      </select>
-      <select id="product-location-select">
-        <option value="">-- Ubicación --</option>
-      </select>
-      <div class="checkbox-group">
-        <label>
-          <input type="checkbox" id="product-favorite" /> Favorito
-        </label>
-        <label>
-          <input type="checkbox" id="product-default" checked /> Predeterminado
-        </label>
-      </div>
-    </form>
+    <!-- Formulario de producto con marco visual -->
+    <div class="product-input-group">
+      <form id="add-product-form" class="product-form">
+        <input type="text" id="product-name" placeholder="Nombre del producto" required />
+        <select id="product-category-select">
+          <option value="">-- Categoría --</option>
+        </select>
+        <select id="product-location-select">
+          <option value="">-- Ubicación --</option>
+        </select>
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="product-favorite" /> Favorito
+          </label>
+          <label>
+            <input type="checkbox" id="product-default" checked /> Predeterminado
+          </label>
+        </div>
+        <button type="submit" id="add-product-btn">Añadir Producto</button>
+      </form>
+    </div>
 
-    <!-- Botonera de 3 líneas con 2 botones cada una -->
+    <!-- Botonera de 6 botones en 3 líneas fijas -->
     <div class="button-grid">
-      <!-- Línea 1 -->
+      <!-- Línea 1: Copiar y Limpiar -->
       <div class="button-row">
-        <button id="add-product-btn">Añadir Producto</button>
+        <button id="copy-list">📋 Copiar lista</button>
         <button id="clear-list" class="btn-clear">Limpiar lista</button>
       </div>
       
-      <!-- Línea 2 -->
+      <!-- Línea 2: Favoritos -->
       <div class="button-row">
         <button id="open-favorites-btn">⭐ Gestionar Favoritos</button>
         <button id="load-favorites">➕ Cargar Favoritos</button>
       </div>
       
-      <!-- Línea 3 -->
+      <!-- Línea 3: Predeterminados y Configuración -->
       <div class="button-row">
         <button id="open-defaults-btn">📌 Gestionar Predeterminados</button>
-        <button id="copy-list">📋 Copiar lista</button>
+        <button id="open-config-btn">⚙️ Configuración</button>
       </div>
     </div>
 
@@ -60,9 +63,7 @@
     <ul id="shopping-list"></ul>
   </main>
 
-  <!-- Botón flotante para configuración -->
-  <button id="open-config-btn" class="floating-btn">⚙️</button>
-
+  <!-- Modales -->
   <!-- Modal de Ayuda -->
   <div id="help-modal" class="modal" style="display: none;">
     <div class="modal-content">
@@ -112,7 +113,7 @@
     </div>
   </div>
 
-  <!-- Modal de configuración (Categorías y Ubicaciones) -->
+  <!-- Modal de configuración -->
   <div id="config-modal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
@@ -120,18 +121,16 @@
         <button id="close-config-btn" class="close-btn">&times;</button>
       </div>
       
-      <!-- Categorías -->
       <h3>Categorías</h3>
       <div class="categories-list" id="categories-list"></div>
-      <form id="add-category-form">
+      <form id="add-category-form" class="add-form">
         <input type="text" id="new-category" placeholder="Nueva categoría" required />
         <button type="submit">➕ Añadir</button>
       </form>
       
-      <!-- Ubicaciones -->
       <h3>Ubicaciones</h3>
       <div class="locations-list" id="locations-list"></div>
-      <form id="add-location-form">
+      <form id="add-location-form" class="add-form">
         <input type="text" id="new-location" placeholder="Nueva ubicación" required />
         <button type="submit">➕ Añadir</button>
       </form>
@@ -140,6 +139,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.5"></script>
+  <script src="app.js?v=3.6"></script>
 </body>
 </html>
