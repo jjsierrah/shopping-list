@@ -485,7 +485,7 @@ document.addEventListener('click', function(e) {
     return;
   }
   
-  // Resto de eventos
+  // Resto de eventos (sin cambios)
   if (e.target.classList.contains('save-category')) {
     const id = Number(e.target.dataset.id);
     const input = e.target.closest('.category-item').querySelector('input');
@@ -636,7 +636,7 @@ document.addEventListener('change', (e) => {
   }
 });
 
-// Añadir producto
+// Añadir producto - CORREGIDO
 const addProductBtn = document.getElementById('add-product-btn');
 
 if (addProductBtn) {
@@ -648,7 +648,7 @@ if (addProductBtn) {
       return;
     }
     
-    // Validar duplicados por nombre solamente
+    // Validar duplicados por nombre solamente - CORREGIDO
     const existsInList = shoppingList.some(item => item.name === name);
     if (existsInList) {
       showAlert('Este producto ya está en la lista.');
@@ -804,6 +804,33 @@ function fallbackCopyTextToClipboard(text) {
   
   document.body.removeChild(textArea);
 }
+
+// Modal de Ayuda
+const openHelpBtn = document.getElementById('open-help-btn');
+const closeHelpBtn = document.getElementById('close-help-btn');
+const closeHelpModalBtn = document.getElementById('close-help-modal-btn');
+const helpModal = document.getElementById('help-modal');
+
+if (openHelpBtn) {
+  openHelpBtn.addEventListener('click', () => {
+    helpModal.style.display = 'block';
+  });
+}
+
+const closeHelpButtons = [closeHelpBtn, closeHelpModalBtn];
+closeHelpButtons.forEach(btn => {
+  if (btn) {
+    btn.addEventListener('click', () => {
+      helpModal.style.display = 'none';
+    });
+  }
+});
+
+window.addEventListener('click', (e) => {
+  if (e.target === helpModal) {
+    helpModal.style.display = 'none';
+  }
+});
 
 // Estilos para alertas personalizadas
 const style = document.createElement('style');
