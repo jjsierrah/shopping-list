@@ -45,6 +45,36 @@ function generateId() {
   return Date.now() + Math.floor(Math.random() * 1000000);
 }
 
+// Función de alerta personalizada
+function showAlert(message) {
+  // Crear un modal de alerta personalizado
+  const alertDiv = document.createElement('div');
+  alertDiv.className = 'custom-alert';
+  alertDiv.innerHTML = `
+    <div class="alert-content">
+      <h3>Atención:</h3>
+      <p>${message}</p>
+      <button class="alert-ok">OK</button>
+    </div>
+  `;
+  
+  document.body.appendChild(alertDiv);
+  
+  const okBtn = alertDiv.querySelector('.alert-ok');
+  okBtn.addEventListener('click', () => {
+    document.body.removeChild(alertDiv);
+  });
+  
+  // También permitir cerrar con Escape
+  const closeOnEscape = (e) => {
+    if (e.key === 'Escape') {
+      document.body.removeChild(alertDiv);
+      document.removeEventListener('keydown', closeOnEscape);
+    }
+  };
+  document.addEventListener('keydown', closeOnEscape);
+}
+
 function saveData() {
   localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
   localStorage.setItem('favoriteProducts', JSON.stringify(favoriteProducts));
@@ -148,7 +178,7 @@ function renderFavoritesList() {
     const div = document.createElement('div');
     div.className = 'favorite-item';
     div.dataset.index = index;
-    div.draggable = true; // Activar drag & drop
+    div.draggable = true;
     div.innerHTML = `
       <div class="product-edit">
         <input type="text" value="${item.name}" data-index="${index}" class="product-name" />
@@ -181,7 +211,7 @@ function renderDefaultsList() {
     const div = document.createElement('div');
     div.className = 'default-item';
     div.dataset.index = index;
-    div.draggable = true; // Activar drag & drop
+    div.draggable = true;
     div.innerHTML = `
       <div class="product-edit">
         <input type="text" value="${item.name}" data-index="${index}" class="product-name" />
@@ -204,8 +234,15 @@ function renderDefaultsList() {
   });
 }
 
-// Drag & Drop genérico
+// Drag & Drop genérico con re-vinculación
 function setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn) {
+  // Primero, eliminar eventos anteriores
+  const existingItems = listEl.querySelectorAll(itemClass);
+  existingItems.forEach(item => {
+    const clone = item.cloneNode(true);
+    item.parentNode.replaceChild(clone, item);
+  });
+
   let dragSrcEl = null;
 
   function handleDragStart(e) {
@@ -241,6 +278,11 @@ function setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn) {
         arrayToUpdate.splice(targetIndex, 0, movedItem);
         renderFn();
         saveData();
+        
+        // Re-vincular eventos después de reordenar
+        setTimeout(() => {
+          setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn);
+        }, 50);
       }
     }
     
@@ -341,7 +383,7 @@ if (categoryForm) {
 
     const exists = categories.some(c => c.name.toLowerCase() === name.toLowerCase());
     if (exists) {
-      alert('La categoría ya existe.');
+      showAlert('La categoría ya existe.');
       return;
     }
 
@@ -363,7 +405,7 @@ if (locationForm) {
 
     const exists = locations.some(l => l.name.toLowerCase() === name.toLowerCase());
     if (exists) {
-      alert('La ubicación ya existe.');
+      showAlert('La ubicación ya existe.');
       return;
     }
 
@@ -387,14 +429,14 @@ document.addEventListener('click', function(e) {
         item.locationId === itemToAdd.locationId
       );
       if (existsInList) {
-        alert('Este producto ya está en la lista.');
+        showAlert('Este producto ya está en la lista.');
         return;
       }
       
       const newItem = { ...itemToAdd, id: generateId(), bought: false };
       shoppingList.push(newItem);
       renderShoppingList();
-      alert('Producto añadido a la lista!');
+      showAlert('Producto añadido a la lista!');
     }
     return;
   }
@@ -411,19 +453,19 @@ document.addEventListener('click', function(e) {
         item.locationId === itemToAdd.locationId
       );
       if (existsInList) {
-        alert('Este producto ya está en la lista.');
+        showAlert('Este producto ya está en la lista.');
         return;
       }
       
       const newItem = { ...itemToAdd, id: generateId(), bought: false };
       shoppingList.push(newItem);
       renderShoppingList();
-      alert('Producto añadido a la lista!');
+      showAlert('Producto añadido a la lista!');
     }
     return;
   }
   
-  // Resto de eventos (sin cambios)
+  // Resto de eventos
   if (e.target.classList.contains('save-category')) {
     const id = Number(e.target.dataset.id);
     const input = e.target.closest('.category-item').querySelector('input');
@@ -445,7 +487,7 @@ document.addEventListener('click', function(e) {
     const id = Number(e.target.dataset.id);
     const hasProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.categoryId === id);
     if (hasProducts) {
-      alert('No se puede eliminar: hay productos en esta categoría.');
+      showAlert('No se puede eliminar: hay productos en esta categoría.');
       return;
     }
     categories = categories.filter(c => c.id !== id);
@@ -477,7 +519,7 @@ document.addEventListener('click', function(e) {
     const id = Number(e.target.dataset.id);
     const hasProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.locationId === id);
     if (hasProducts) {
-      alert('No se puede eliminar: hay productos en esta ubicación.');
+      showAlert('No se puede eliminar: hay productos en esta ubicación.');
       return;
     }
     locations = locations.filter(l => l.id !== id);
@@ -606,7 +648,7 @@ if (addProductBtn) {
       item.locationId === locationId
     );
     if (existsInList) {
-      alert('Este producto ya está en la lista.');
+      showAlert('Este producto ya está en la lista.');
       return;
     }
     
@@ -673,7 +715,7 @@ if (clearBtn) {
 if (loadFavoritesBtn) {
   loadFavoritesBtn.addEventListener('click', () => {
     if (favoriteProducts.length === 0) {
-      alert('No hay productos marcados como favoritos.');
+      showAlert('No hay productos marcados como favoritos.');
       return;
     }
     
@@ -686,7 +728,7 @@ if (loadFavoritesBtn) {
     });
     
     if (favoritesToAdd.length === 0) {
-      alert('Los favoritos ya están en la lista.');
+      showAlert('Los favoritos ya están en la lista.');
       return;
     }
     
@@ -700,13 +742,13 @@ if (loadFavoritesBtn) {
 if (copyListBtn) {
   copyListBtn.addEventListener('click', () => {
     if (shoppingList.length === 0) {
-      alert('La lista está vacía.');
+      showAlert('La lista está vacía.');
       return;
     }
     
     const pendingItems = shoppingList.filter(item => !item.bought);
     if (pendingItems.length === 0) {
-      alert('No hay productos pendientes en la lista.');
+      showAlert('No hay productos pendientes en la lista.');
       return;
     }
     
@@ -727,7 +769,7 @@ if (copyListBtn) {
     
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(listText).then(() => {
-        alert('Lista copiada al portapapeles!');
+        showAlert('Lista copiada al portapapeles!');
       }).catch(() => {
         fallbackCopyTextToClipboard(listText);
       });
@@ -749,14 +791,61 @@ function fallbackCopyTextToClipboard(text) {
   
   try {
     const successful = document.execCommand('copy');
-    const msg = successful ? 'Lista copiada al portapapeles!' : 'Error al copiar.';
-    alert(msg);
+    showAlert('Lista copiada al portapapeles!');
   } catch (err) {
-    alert('Tu navegador no permite copiar al portapapeles.');
+    showAlert('Tu navegador no permite copiar al portapapeles.');
   }
   
   document.body.removeChild(textArea);
 }
+
+// Estilos para alertas personalizadas
+const style = document.createElement('style');
+style.textContent = `
+  .custom-alert {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+  }
+  
+  .alert-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    min-width: 250px;
+  }
+  
+  .alert-content h3 {
+    color: #2e7d32;
+    margin-bottom: 10px;
+  }
+  
+  .alert-content p {
+    margin-bottom: 15px;
+  }
+  
+  .alert-ok {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .alert-ok:hover {
+    background-color: #388E3C;
+  }
+`;
+document.head.appendChild(style);
 
 // Inicializar
 renderCategories();
