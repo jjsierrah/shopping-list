@@ -76,10 +76,6 @@ function renderCategories() {
     option.textContent = cat.name;
     categorySelect.appendChild(option);
   });
-  
-  if (configModal.style.display === 'block') {
-    setTimeout(setupCategoryDragAndDrop, 100);
-  }
 }
 
 function renderLocations() {
@@ -105,10 +101,6 @@ function renderLocations() {
     option.textContent = loc.name;
     locationSelect.appendChild(option);
   });
-  
-  if (configModal.style.display === 'block') {
-    setTimeout(setupLocationDragAndDrop, 100);
-  }
 }
 
 function renderProductItem(item, index) {
@@ -156,6 +148,7 @@ function renderFavoritesList() {
     const div = document.createElement('div');
     div.className = 'favorite-item';
     div.dataset.index = index;
+    div.draggable = true; // Activar drag & drop
     div.innerHTML = `
       <div class="product-edit">
         <input type="text" value="${item.name}" data-index="${index}" class="product-name" />
@@ -188,6 +181,7 @@ function renderDefaultsList() {
     const div = document.createElement('div');
     div.className = 'default-item';
     div.dataset.index = index;
+    div.draggable = true; // Activar drag & drop
     div.innerHTML = `
       <div class="product-edit">
         <input type="text" value="${item.name}" data-index="${index}" class="product-name" />
@@ -210,8 +204,8 @@ function renderDefaultsList() {
   });
 }
 
-// Drag & Drop para categorías y ubicaciones
-function setupCategoryDragAndDrop() {
+// Drag & Drop genérico
+function setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn) {
   let dragSrcEl = null;
 
   function handleDragStart(e) {
@@ -239,17 +233,13 @@ function setupCategoryDragAndDrop() {
     e.stopPropagation();
     
     if (dragSrcEl !== this) {
-      const srcId = Number(dragSrcEl.dataset.id);
-      const targetId = Number(this.dataset.id);
-
-      const srcIndex = categories.findIndex(c => c.id === srcId);
-      const targetIndex = categories.findIndex(c => c.id === targetId);
+      const srcIndex = Array.from(listEl.children).indexOf(dragSrcEl);
+      const targetIndex = Array.from(listEl.children).indexOf(this);
 
       if (srcIndex !== -1 && targetIndex !== -1) {
-        const [movedItem] = categories.splice(srcIndex, 1);
-        categories.splice(targetIndex, 0, movedItem);
-        renderCategories();
-        renderShoppingList();
+        const [movedItem] = arrayToUpdate.splice(srcIndex, 1);
+        arrayToUpdate.splice(targetIndex, 0, movedItem);
+        renderFn();
         saveData();
       }
     }
@@ -259,76 +249,12 @@ function setupCategoryDragAndDrop() {
 
   function handleDragEnd() {
     this.classList.remove('dragging');
-    document.querySelectorAll('.category-item').forEach(item => {
+    document.querySelectorAll(itemClass).forEach(item => {
       item.classList.remove('drag-over');
     });
   }
 
-  const items = document.querySelectorAll('.category-item');
-  items.forEach(item => {
-    item.addEventListener('dragstart', handleDragStart, false);
-    item.addEventListener('dragover', handleDragOver, false);
-    item.addEventListener('dragenter', handleDragEnter, false);
-    item.addEventListener('dragleave', handleDragLeave, false);
-    item.addEventListener('drop', handleDrop, false);
-    item.addEventListener('dragend', handleDragEnd, false);
-  });
-}
-
-function setupLocationDragAndDrop() {
-  let dragSrcEl = null;
-
-  function handleDragStart(e) {
-    dragSrcEl = this;
-    e.dataTransfer.effectAllowed = 'move';
-    this.classList.add('dragging');
-  }
-
-  function handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  }
-
-  function handleDragEnter(e) {
-    e.preventDefault();
-    this.classList.add('drag-over');
-  }
-
-  function handleDragLeave() {
-    this.classList.remove('drag-over');
-  }
-
-  function handleDrop(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (dragSrcEl !== this) {
-      const srcId = Number(dragSrcEl.dataset.id);
-      const targetId = Number(this.dataset.id);
-
-      const srcIndex = locations.findIndex(l => l.id === srcId);
-      const targetIndex = locations.findIndex(l => l.id === targetId);
-
-      if (srcIndex !== -1 && targetIndex !== -1) {
-        const [movedItem] = locations.splice(srcIndex, 1);
-        locations.splice(targetIndex, 0, movedItem);
-        renderLocations();
-        renderShoppingList();
-        saveData();
-      }
-    }
-    
-    this.classList.remove('drag-over');
-  }
-
-  function handleDragEnd() {
-    this.classList.remove('dragging');
-    document.querySelectorAll('.location-item').forEach(item => {
-      item.classList.remove('drag-over');
-    });
-  }
-
-  const items = document.querySelectorAll('.location-item');
+  const items = listEl.querySelectorAll(itemClass);
   items.forEach(item => {
     item.addEventListener('dragstart', handleDragStart, false);
     item.addEventListener('dragover', handleDragOver, false);
@@ -355,13 +281,17 @@ function closeModal(modal) {
 // Event listeners para modales
 if (openFavoritesBtn) {
   openFavoritesBtn.addEventListener('click', () => {
-    openModal(favoritesModal, renderFavoritesList, null);
+    openModal(favoritesModal, renderFavoritesList, () => {
+      setupDragAndDrop(favoritesListEl, '.favorite-item', favoriteProducts, renderFavoritesList);
+    });
   });
 }
 
 if (openDefaultsBtn) {
   openDefaultsBtn.addEventListener('click', () => {
-    openModal(defaultsModal, renderDefaultsList, null);
+    openModal(defaultsModal, renderDefaultsList, () => {
+      setupDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList);
+    });
   });
 }
 
@@ -394,8 +324,8 @@ if (openConfigBtn) {
       renderCategories();
       renderLocations();
     }, () => {
-      setupCategoryDragAndDrop();
-      setupLocationDragAndDrop();
+      setupDragAndDrop(categoriesListEl, '.category-item', categories, renderCategories);
+      setupDragAndDrop(locationsListEl, '.location-item', locations, renderLocations);
     });
   });
 }
@@ -442,7 +372,7 @@ if (locationForm) {
     saveData();
     input.value = '';
   });
-        }
+}
 // DELEGACIÓN DE EVENTOS CORREGIDA
 document.addEventListener('click', function(e) {
   // Favoritos - Añadir a lista
