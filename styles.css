@@ -14,23 +14,35 @@ body {
   min-height: 100vh;
 }
 
-header h1 {
+header {
   text-align: center;
   margin-bottom: 20px;
   color: #2e7d32;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
-.version {
+header h1 {
+  margin: 0;
+}
+
+.floating-help-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floating-help-btn:hover {
   background-color: #e8f5e9;
-  color: #2e7d32;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.85em;
-  font-weight: bold;
 }
 
 /* Formulario de producto */
@@ -63,7 +75,36 @@ input[type="text"], select {
   white-space: nowrap;
 }
 
-/* Botonera de 3 líneas - SIEMPRE 3 líneas con 2 botones */
+button {
+  padding: 10px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: bold;
+}
+
+button:hover {
+  background-color: #388E3C;
+}
+
+.btn-clear {
+  background-color: #f44336;
+}
+
+.btn-clear:hover {
+  background-color: #d32f2f;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  width: 100%;
+  margin-top: 16px;
+}
+
+/* Botonera de 3 líneas */
 .button-grid {
   margin: 20px 0;
   display: flex;
@@ -81,35 +122,7 @@ input[type="text"], select {
 
 .button-row button {
   flex: 1;
-  min-width: 45%;
-  max-width: 48%;
-  padding: 12px;
-  border-radius: 8px;
-  font-weight: bold;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  word-break: break-word;
-}
-
-/* Estilos específicos */
-#add-product-btn {
-  background-color: #4CAF50;
-  color: white;
-}
-
-.btn-clear {
-  background-color: #f44336;
-  color: white;
-}
-
-#open-favorites-btn,
-#load-favorites,
-#open-defaults-btn,
-#load-defaults {
-  background-color: #4CAF50;
-  color: white;
+  min-width: 140px;
 }
 
 /* Lista de productos */
@@ -202,6 +215,19 @@ input[type="checkbox"].bought {
   color: #666;
 }
 
+.help-content {
+  margin-bottom: 16px;
+}
+
+.help-content ul {
+  margin-left: 20px;
+  margin-bottom: 16px;
+}
+
+.help-content li {
+  margin-bottom: 8px;
+}
+
 .categories-list,
 .locations-list,
 .favorites-list,
@@ -265,7 +291,7 @@ h3 {
   font-size: 1.1em;
 }
 
-/* Responsive - mantener 3 líneas SIEMPRE */
+/* Responsive */
 @media (max-width: 480px) {
   .modal-content {
     margin: 20px auto;
@@ -273,18 +299,23 @@ h3 {
   }
   
   .button-row {
-    flex-wrap: nowrap; /* Nunca envolver */
+    flex-wrap: nowrap;
   }
   
   .button-row button {
-    flex: 1;
     min-width: 45%;
     max-width: 48%;
     padding: 10px 4px;
     font-size: 0.85em;
     min-height: 44px;
-    white-space: normal; /* Permitir salto de línea si es necesario */
+    white-space: normal;
     text-align: center;
     word-break: break-word;
+  }
+  
+  .btn-clear {
+    position: static;
+    width: 100%;
+    margin-top: 10px;
   }
 }
