@@ -87,7 +87,8 @@ header h1 {
   white-space: nowrap;
 }
 
-.product-form button {
+/* Botón "Añadir Producto" DENTRO del formulario */
+#add-product-btn {
   width: 100%;
   padding: 10px 16px;
   background-color: #4CAF50;
@@ -99,12 +100,12 @@ header h1 {
   margin-top: 8px;
 }
 
-.product-form button:hover {
+#add-product-btn:hover {
   background-color: #388E3C;
 }
 
-/* Botones generales */
-button {
+/* Botones generales (botonera, modales, etc.) */
+button:not(#add-product-btn) {
   padding: 10px 16px;
   background-color: #4CAF50;
   color: white;
@@ -113,9 +114,10 @@ button {
   cursor: pointer;
   white-space: nowrap;
   font-weight: bold;
+  min-height: 44px;
 }
 
-button:hover {
+button:not(#add-product-btn):hover {
   background-color: #388E3C;
 }
 
