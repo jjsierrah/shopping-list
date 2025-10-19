@@ -45,6 +45,13 @@ function generateId() {
   return Date.now() + Math.floor(Math.random() * 1000000);
 }
 
+// Función para verificar si dos productos son iguales
+function areProductsEqual(p1, p2) {
+  return p1.name === p2.name && 
+         p1.categoryId === p2.categoryId && 
+         p1.locationId === p2.locationId;
+}
+
 function saveData() {
   localStorage.setItem('shoppingList', JSON.stringify(shoppingList));
   localStorage.setItem('favoriteProducts', JSON.stringify(favoriteProducts));
@@ -77,7 +84,6 @@ function renderCategories() {
     categorySelect.appendChild(option);
   });
   
-  // Re-vincular drag & drop después de renderizar
   if (configModal.style.display === 'block') {
     setTimeout(setupCategoryDragAndDrop, 100);
   }
@@ -107,7 +113,6 @@ function renderLocations() {
     locationSelect.appendChild(option);
   });
   
-  // Re-vincular drag & drop después de renderizar
   if (configModal.style.display === 'block') {
     setTimeout(setupLocationDragAndDrop, 100);
   }
@@ -117,13 +122,8 @@ function renderProductItem(item, index) {
   const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
   const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
   
-  // Verificar si el producto está en favoritos o predeterminados
-  const isFavorite = favoriteProducts.some(p => 
-    p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
-  );
-  const isDefault = defaultProducts.some(p => 
-    p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
-  );
+  const isFavorite = favoriteProducts.some(p => areProductsEqual(p, item));
+  const isDefault = defaultProducts.some(p => areProductsEqual(p, item));
   
   const li = document.createElement('li');
   li.innerHTML = `
@@ -172,7 +172,7 @@ function renderFavoritesList() {
         </select>
       </div>
       <div class="favorite-actions">
-        <button type="button" class="add-to-list" data-id="${item.id}">➕ Añadir</button>
+        <button type="button" class="add-to-list" data-id="${item.id}" data-type="favorite">➕ Añadir</button>
         <button type="button" class="save-favorite" data-id="${item.id}">💾</button>
         <button type="button" class="delete-favorite" data-id="${item.id}">🗑️</button>
       </div>
@@ -204,7 +204,7 @@ function renderDefaultsList() {
         </select>
       </div>
       <div class="default-actions">
-        <button type="button" class="add-to-list" data-id="${item.id}">➕ Añadir</button>
+        <button type="button" class="add-to-list" data-id="${item.id}" data-type="default">➕ Añadir</button>
         <button type="button" class="save-default" data-id="${item.id}">💾</button>
         <button type="button" class="delete-default" data-id="${item.id}">🗑️</button>
       </div>
@@ -447,14 +447,21 @@ if (locationForm) {
   });
 }
 
+
 // DELEGACIÓN DE EVENTOS CORREGIDA
 document.addEventListener('click', function(e) {
   // Favoritos - Añadir a lista
-  if (e.target.classList.contains('add-to-list') && e.target.closest('.favorite-item')) {
+  if (e.target.classList.contains('add-to-list') && e.target.dataset.type === 'favorite') {
     const id = Number(e.target.dataset.id);
-    // Buscar SOLO en favoriteProducts
     const itemToAdd = favoriteProducts.find(p => p.id === id);
     if (itemToAdd) {
+      // Verificar si ya existe en la lista principal
+      const existsInList = shoppingList.some(item => areProductsEqual(item, itemToAdd));
+      if (existsInList) {
+        alert('Este producto ya está en la lista.');
+        return;
+      }
+      
       const newItem = { ...itemToAdd, id: generateId(), bought: false };
       shoppingList.push(newItem);
       renderShoppingList();
@@ -464,11 +471,17 @@ document.addEventListener('click', function(e) {
   }
   
   // Predeterminados - Añadir a lista  
-  if (e.target.classList.contains('add-to-list') && e.target.closest('.default-item')) {
+  if (e.target.classList.contains('add-to-list') && e.target.dataset.type === 'default') {
     const id = Number(e.target.dataset.id);
-    // Buscar SOLO en defaultProducts
     const itemToAdd = defaultProducts.find(p => p.id === id);
     if (itemToAdd) {
+      // Verificar si ya existe en la lista principal
+      const existsInList = shoppingList.some(item => areProductsEqual(item, itemToAdd));
+      if (existsInList) {
+        alert('Este producto ya está en la lista.');
+        return;
+      }
+      
       const newItem = { ...itemToAdd, id: generateId(), bought: false };
       shoppingList.push(newItem);
       renderShoppingList();
@@ -477,7 +490,7 @@ document.addEventListener('click', function(e) {
     return;
   }
   
-  // Categorías
+  // Resto de eventos (sin cambios)
   if (e.target.classList.contains('save-category')) {
     const id = Number(e.target.dataset.id);
     const input = e.target.closest('.category-item').querySelector('input');
@@ -510,7 +523,6 @@ document.addEventListener('click', function(e) {
     saveData();
   }
   
-  // Ubicaciones
   if (e.target.classList.contains('save-location')) {
     const id = Number(e.target.dataset.id);
     const input = e.target.closest('.location-item').querySelector('input');
@@ -543,7 +555,6 @@ document.addEventListener('click', function(e) {
     saveData();
   }
   
-  // Favoritos - Guardar nombre
   if (e.target.classList.contains('save-favorite')) {
     const id = Number(e.target.dataset.id);
     const item = favoriteProducts.find(p => p.id === id);
@@ -559,7 +570,6 @@ document.addEventListener('click', function(e) {
     }
   }
   
-  // Favoritos - Eliminar
   if (e.target.classList.contains('delete-favorite')) {
     const id = Number(e.target.dataset.id);
     favoriteProducts = favoriteProducts.filter(p => p.id !== id);
@@ -568,7 +578,6 @@ document.addEventListener('click', function(e) {
     saveData();
   }
   
-  // Predeterminados - Guardar nombre
   if (e.target.classList.contains('save-default')) {
     const id = Number(e.target.dataset.id);
     const item = defaultProducts.find(p => p.id === id);
@@ -584,7 +593,6 @@ document.addEventListener('click', function(e) {
     }
   }
   
-  // Predeterminados - Eliminar
   if (e.target.classList.contains('delete-default')) {
     const id = Number(e.target.dataset.id);
     defaultProducts = defaultProducts.filter(p => p.id !== id);
@@ -660,38 +668,27 @@ if (addProductBtn) {
       bought: false 
     };
     
-    shoppingList.push(newItem);
-    
-    const productKey = `${name}-${categoryId || ''}-${locationId || ''}`;
-    
-    if (favorite) {
-      const exists = favoriteProducts.some(p => {
-        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
-        return key === productKey;
-      });
-      if (!exists) {
-        favoriteProducts.push({...newItem, id: generateId()});
-      }
-    } else {
-      favoriteProducts = favoriteProducts.filter(p => {
-        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
-        return key !== productKey;
-      });
+    // Verificar duplicados en la lista principal
+    const existsInList = shoppingList.some(item => areProductsEqual(item, newItem));
+    if (existsInList) {
+      alert('Este producto ya está en la lista.');
+      return;
     }
     
-    if (isDefault) {
-      const exists = defaultProducts.some(p => {
-        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
-        return key === productKey;
-      });
-      if (!exists) {
-        defaultProducts.push({...newItem, id: generateId()});
-      }
-    } else {
-      defaultProducts = defaultProducts.filter(p => {
-        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
-        return key !== productKey;
-      });
+    shoppingList.push(newItem);
+    
+    const productExistsInFavorites = favoriteProducts.some(p => areProductsEqual(p, newItem));
+    if (favorite && !productExistsInFavorites) {
+      favoriteProducts.push({...newItem, id: generateId()});
+    } else if (!favorite) {
+      favoriteProducts = favoriteProducts.filter(p => !areProductsEqual(p, newItem));
+    }
+    
+    const productExistsInDefaults = defaultProducts.some(p => areProductsEqual(p, newItem));
+    if (isDefault && !productExistsInDefaults) {
+      defaultProducts.push({...newItem, id: generateId()});
+    } else if (!isDefault) {
+      defaultProducts = defaultProducts.filter(p => !areProductsEqual(p, newItem));
     }
     
     renderShoppingList();
@@ -737,7 +734,16 @@ if (loadFavoritesBtn) {
       return;
     }
     
-    const newItems = favoriteProducts.map(fav => ({ ...fav, id: generateId(), bought: false }));
+    const favoritesToAdd = favoriteProducts.filter(fav => {
+      return !shoppingList.some(item => areProductsEqual(item, fav));
+    });
+    
+    if (favoritesToAdd.length === 0) {
+      alert('Los favoritos ya están en la lista.');
+      return;
+    }
+    
+    const newItems = favoritesToAdd.map(fav => ({ ...fav, id: generateId(), bought: false }));
     shoppingList.push(...newItems);
     renderShoppingList();
   });
@@ -761,12 +767,8 @@ if (copyListBtn) {
       const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
       const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
       
-      const isFavorite = favoriteProducts.some(p => 
-        p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
-      );
-      const isDefault = defaultProducts.some(p => 
-        p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
-      );
+      const isFavorite = favoriteProducts.some(p => areProductsEqual(p, item));
+      const isDefault = defaultProducts.some(p => areProductsEqual(p, item));
       
       const prefix = isFavorite ? '⭐ ' : isDefault ? '📌 ' : '';
       return `${index + 1}. ${prefix}${item.name} [${categoryName} - ${locationName}]`;
