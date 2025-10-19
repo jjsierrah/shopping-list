@@ -76,6 +76,11 @@ function renderCategories() {
     option.textContent = cat.name;
     categorySelect.appendChild(option);
   });
+  
+  // Re-vincular drag & drop después de renderizar
+  if (configModal.style.display === 'block') {
+    setTimeout(setupCategoryDragAndDrop, 100);
+  }
 }
 
 function renderLocations() {
@@ -101,6 +106,11 @@ function renderLocations() {
     option.textContent = loc.name;
     locationSelect.appendChild(option);
   });
+  
+  // Re-vincular drag & drop después de renderizar
+  if (configModal.style.display === 'block') {
+    setTimeout(setupLocationDragAndDrop, 100);
+  }
 }
 
 function renderProductItem(item, index) {
@@ -149,7 +159,6 @@ function renderFavoritesList() {
     const div = document.createElement('div');
     div.className = 'favorite-item';
     div.dataset.id = item.id;
-    // Eliminar draggable para favoritos y predeterminados
     div.innerHTML = `
       <div class="product-edit">
         <input type="text" value="${item.name}" data-id="${item.id}" class="product-name" />
@@ -182,7 +191,6 @@ function renderDefaultsList() {
     const div = document.createElement('div');
     div.className = 'default-item';
     div.dataset.id = item.id;
-    // Eliminar draggable para favoritos y predeterminados
     div.innerHTML = `
       <div class="product-edit">
         <input type="text" value="${item.name}" data-id="${item.id}" class="product-name" />
@@ -205,8 +213,8 @@ function renderDefaultsList() {
   });
 }
 
-// Drag & Drop solo para categorías y ubicaciones
-function setupDragAndDrop(listEl, itemClass, getItemFromElement, updateArray, renderFn) {
+// Drag & Drop para categorías y ubicaciones
+function setupCategoryDragAndDrop() {
   let dragSrcEl = null;
 
   function handleDragStart(e) {
@@ -218,77 +226,120 @@ function setupDragAndDrop(listEl, itemClass, getItemFromElement, updateArray, re
   function handleDragOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    
-    const draggingOverEl = this;
-    const draggingEl = dragSrcEl;
-    
-    if (draggingOverEl !== draggingEl) {
-      const rect = draggingOverEl.getBoundingClientRect();
-      const nextSibling = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-      
-      draggingOverEl.parentNode.insertBefore(
-        draggingEl,
-        nextSibling ? draggingOverEl.nextSibling : draggingOverEl
-      );
-    }
+  }
+
+  function handleDragEnter(e) {
+    e.preventDefault();
+    this.classList.add('drag-over');
+  }
+
+  function handleDragLeave() {
+    this.classList.remove('drag-over');
   }
 
   function handleDrop(e) {
-    e.stopPropagation();
     e.preventDefault();
+    e.stopPropagation();
     
-    if (dragSrcEl) {
-      dragSrcEl.classList.remove('dragging');
-      
-      const newOrder = Array.from(listEl.children).map(el => getItemFromElement(el));
-      updateArray(newOrder.filter(Boolean));
-      
-      saveData();
-      renderFn();
+    if (dragSrcEl !== this) {
+      const srcId = Number(dragSrcEl.dataset.id);
+      const targetId = Number(this.dataset.id);
+
+      const srcIndex = categories.findIndex(c => c.id === srcId);
+      const targetIndex = categories.findIndex(c => c.id === targetId);
+
+      if (srcIndex !== -1 && targetIndex !== -1) {
+        const [movedItem] = categories.splice(srcIndex, 1);
+        categories.splice(targetIndex, 0, movedItem);
+        renderCategories();
+        renderShoppingList();
+        saveData();
+      }
     }
+    
+    this.classList.remove('drag-over');
   }
 
   function handleDragEnd() {
     this.classList.remove('dragging');
+    document.querySelectorAll('.category-item').forEach(item => {
+      item.classList.remove('drag-over');
+    });
   }
 
-  const elements = listEl.querySelectorAll(itemClass);
-  elements.forEach(item => {
+  const items = document.querySelectorAll('.category-item');
+  items.forEach(item => {
     item.addEventListener('dragstart', handleDragStart, false);
     item.addEventListener('dragover', handleDragOver, false);
+    item.addEventListener('dragenter', handleDragEnter, false);
+    item.addEventListener('dragleave', handleDragLeave, false);
     item.addEventListener('drop', handleDrop, false);
     item.addEventListener('dragend', handleDragEnd, false);
   });
 }
 
-function setupCategoryDragAndDrop() {
-  setupDragAndDrop(
-    categoriesListEl, 
-    '.category-item',
-    (el) => categories.find(cat => cat.id === Number(el.dataset.id)),
-    (newCategories) => { categories = newCategories; },
-    () => {
-      renderCategories();
-      renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
-    }
-  );
-}
-
 function setupLocationDragAndDrop() {
-  setupDragAndDrop(
-    locationsListEl, 
-    '.location-item',
-    (el) => locations.find(loc => loc.id === Number(el.dataset.id)),
-    (newLocations) => { locations = newLocations; },
-    () => {
-      renderLocations();
-      renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
+  let dragSrcEl = null;
+
+  function handleDragStart(e) {
+    dragSrcEl = this;
+    e.dataTransfer.effectAllowed = 'move';
+    this.classList.add('dragging');
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }
+
+  function handleDragEnter(e) {
+    e.preventDefault();
+    this.classList.add('drag-over');
+  }
+
+  function handleDragLeave() {
+    this.classList.remove('drag-over');
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (dragSrcEl !== this) {
+      const srcId = Number(dragSrcEl.dataset.id);
+      const targetId = Number(this.dataset.id);
+
+      const srcIndex = locations.findIndex(l => l.id === srcId);
+      const targetIndex = locations.findIndex(l => l.id === targetId);
+
+      if (srcIndex !== -1 && targetIndex !== -1) {
+        const [movedItem] = locations.splice(srcIndex, 1);
+        locations.splice(targetIndex, 0, movedItem);
+        renderLocations();
+        renderShoppingList();
+        saveData();
+      }
     }
-  );
+    
+    this.classList.remove('drag-over');
+  }
+
+  function handleDragEnd() {
+    this.classList.remove('dragging');
+    document.querySelectorAll('.location-item').forEach(item => {
+      item.classList.remove('drag-over');
+    });
+  }
+
+  const items = document.querySelectorAll('.location-item');
+  items.forEach(item => {
+    item.addEventListener('dragstart', handleDragStart, false);
+    item.addEventListener('dragover', handleDragOver, false);
+    item.addEventListener('dragenter', handleDragEnter, false);
+    item.addEventListener('dragleave', handleDragLeave, false);
+    item.addEventListener('drop', handleDrop, false);
+    item.addEventListener('dragend', handleDragEnd, false);
+  });
 }
 
 // Modal controls
@@ -307,13 +358,13 @@ function closeModal(modal) {
 // Event listeners para modales
 if (openFavoritesBtn) {
   openFavoritesBtn.addEventListener('click', () => {
-    openModal(favoritesModal, renderFavoritesList, null); // Sin drag & drop
+    openModal(favoritesModal, renderFavoritesList, null);
   });
 }
 
 if (openDefaultsBtn) {
   openDefaultsBtn.addEventListener('click', () => {
-    openModal(defaultsModal, renderDefaultsList, null); // Sin drag & drop
+    openModal(defaultsModal, renderDefaultsList, null);
   });
 }
 
@@ -395,6 +446,7 @@ if (locationForm) {
     input.value = '';
   });
 }
+
 // DELEGACIÓN DE EVENTOS CORREGIDA
 document.addEventListener('click', (e) => {
   // Categorías
@@ -493,17 +545,7 @@ document.addEventListener('click', (e) => {
     const id = Number(e.target.dataset.id);
     const itemToAdd = favoriteProducts.find(p => p.id === id);
     if (itemToAdd) {
-      const existsInList = shoppingList.some(item => 
-        item.name === itemToAdd.name && 
-        item.categoryId === itemToAdd.categoryId && 
-        item.locationId === itemToAdd.locationId
-      );
-      
-      if (existsInList) {
-        alert('Este producto ya está en la lista.');
-        return;
-      }
-      
+      // Añadir SIEMPRE (sin verificar duplicados complejos)
       const newItem = { ...itemToAdd, id: generateId(), bought: false };
       shoppingList.push(newItem);
       renderShoppingList();
@@ -541,17 +583,7 @@ document.addEventListener('click', (e) => {
     const id = Number(e.target.dataset.id);
     const itemToAdd = defaultProducts.find(p => p.id === id);
     if (itemToAdd) {
-      const existsInList = shoppingList.some(item => 
-        item.name === itemToAdd.name && 
-        item.categoryId === itemToAdd.categoryId && 
-        item.locationId === itemToAdd.locationId
-      );
-      
-      if (existsInList) {
-        alert('Este producto ya está en la lista.');
-        return;
-      }
-      
+      // Añadir SIEMPRE (sin verificar duplicados complejos)
       const newItem = { ...itemToAdd, id: generateId(), bought: false };
       shoppingList.push(newItem);
       renderShoppingList();
@@ -560,9 +592,9 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Eventos para selects en modales (delegación)
+// Eventos para selects en modales
 document.addEventListener('change', (e) => {
-  // Favoritos - Categoría
+  // Favoritos
   if (e.target.classList.contains('product-category') && e.target.closest('.favorite-item')) {
     const id = Number(e.target.dataset.id);
     const item = favoriteProducts.find(p => p.id === id);
@@ -572,7 +604,6 @@ document.addEventListener('change', (e) => {
     }
   }
   
-  // Favoritos - Ubicación
   if (e.target.classList.contains('product-location') && e.target.closest('.favorite-item')) {
     const id = Number(e.target.dataset.id);
     const item = favoriteProducts.find(p => p.id === id);
@@ -582,7 +613,7 @@ document.addEventListener('change', (e) => {
     }
   }
   
-  // Predeterminados - Categoría
+  // Predeterminados
   if (e.target.classList.contains('product-category') && e.target.closest('.default-item')) {
     const id = Number(e.target.dataset.id);
     const item = defaultProducts.find(p => p.id === id);
@@ -592,7 +623,6 @@ document.addEventListener('change', (e) => {
     }
   }
   
-  // Predeterminados - Ubicación
   if (e.target.classList.contains('product-location') && e.target.closest('.default-item')) {
     const id = Number(e.target.dataset.id);
     const item = defaultProducts.find(p => p.id === id);
@@ -620,17 +650,6 @@ if (addProductBtn) {
     const categoryId = categorySelect.value ? Number(categorySelect.value) : null;
     const locationId = locationSelect.value ? Number(locationSelect.value) : null;
 
-    const existsInList = shoppingList.some(item => 
-      item.name === name && 
-      item.categoryId === categoryId && 
-      item.locationId === locationId
-    );
-    
-    if (existsInList) {
-      alert('Este producto ya está en la lista.');
-      return;
-    }
-    
     const newItem = { 
       id: generateId(), 
       name, 
@@ -641,28 +660,36 @@ if (addProductBtn) {
     
     shoppingList.push(newItem);
     
-    const productExistsInFavorites = favoriteProducts.some(p => 
-      p.name === name && p.categoryId === categoryId && p.locationId === locationId
-    );
+    const productKey = `${name}-${categoryId || ''}-${locationId || ''}`;
     
-    if (favorite && !productExistsInFavorites) {
-      favoriteProducts.push({...newItem, id: generateId()});
-    } else if (!favorite) {
-      favoriteProducts = favoriteProducts.filter(p => 
-        !(p.name === name && p.categoryId === categoryId && p.locationId === locationId)
-      );
+    if (favorite) {
+      const exists = favoriteProducts.some(p => {
+        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
+        return key === productKey;
+      });
+      if (!exists) {
+        favoriteProducts.push({...newItem, id: generateId()});
+      }
+    } else {
+      favoriteProducts = favoriteProducts.filter(p => {
+        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
+        return key !== productKey;
+      });
     }
     
-    const productExistsInDefaults = defaultProducts.some(p => 
-      p.name === name && p.categoryId === categoryId && p.locationId === locationId
-    );
-    
-    if (isDefault && !productExistsInDefaults) {
-      defaultProducts.push({...newItem, id: generateId()});
-    } else if (!isDefault) {
-      defaultProducts = defaultProducts.filter(p => 
-        !(p.name === name && p.categoryId === categoryId && p.locationId === locationId)
-      );
+    if (isDefault) {
+      const exists = defaultProducts.some(p => {
+        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
+        return key === productKey;
+      });
+      if (!exists) {
+        defaultProducts.push({...newItem, id: generateId()});
+      }
+    } else {
+      defaultProducts = defaultProducts.filter(p => {
+        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
+        return key !== productKey;
+      });
     }
     
     renderShoppingList();
@@ -708,20 +735,7 @@ if (loadFavoritesBtn) {
       return;
     }
     
-    const favoritesToAdd = favoriteProducts.filter(fav => {
-      return !shoppingList.some(item => 
-        item.name === fav.name && 
-        item.categoryId === fav.categoryId && 
-        item.locationId === fav.locationId
-      );
-    });
-    
-    if (favoritesToAdd.length === 0) {
-      alert('Los favoritos ya están en la lista.');
-      return;
-    }
-    
-    const newItems = favoritesToAdd.map(fav => ({ ...fav, id: generateId(), bought: false }));
+    const newItems = favoriteProducts.map(fav => ({ ...fav, id: generateId(), bought: false }));
     shoppingList.push(...newItems);
     renderShoppingList();
   });
