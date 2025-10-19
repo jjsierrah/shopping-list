@@ -446,11 +446,13 @@ if (locationForm) {
     input.value = '';
   });
 }
-// DELEGACIÓN DE EVENTOS - SOLO PARA BOTONES AÑADIR
+
+// DELEGACIÓN DE EVENTOS CORREGIDA
 document.addEventListener('click', function(e) {
   // Favoritos - Añadir a lista
   if (e.target.classList.contains('add-to-list') && e.target.closest('.favorite-item')) {
     const id = Number(e.target.dataset.id);
+    // Buscar SOLO en favoriteProducts
     const itemToAdd = favoriteProducts.find(p => p.id === id);
     if (itemToAdd) {
       const newItem = { ...itemToAdd, id: generateId(), bought: false };
@@ -461,9 +463,10 @@ document.addEventListener('click', function(e) {
     return;
   }
   
-  // Predeterminados - Añadir a lista
+  // Predeterminados - Añadir a lista  
   if (e.target.classList.contains('add-to-list') && e.target.closest('.default-item')) {
     const id = Number(e.target.dataset.id);
+    // Buscar SOLO en defaultProducts
     const itemToAdd = defaultProducts.find(p => p.id === id);
     if (itemToAdd) {
       const newItem = { ...itemToAdd, id: generateId(), bought: false };
@@ -474,7 +477,7 @@ document.addEventListener('click', function(e) {
     return;
   }
   
-  // Resto de eventos (categorías, ubicaciones, etc.)
+  // Categorías
   if (e.target.classList.contains('save-category')) {
     const id = Number(e.target.dataset.id);
     const input = e.target.closest('.category-item').querySelector('input');
@@ -507,6 +510,7 @@ document.addEventListener('click', function(e) {
     saveData();
   }
   
+  // Ubicaciones
   if (e.target.classList.contains('save-location')) {
     const id = Number(e.target.dataset.id);
     const input = e.target.closest('.location-item').querySelector('input');
@@ -539,6 +543,7 @@ document.addEventListener('click', function(e) {
     saveData();
   }
   
+  // Favoritos - Guardar nombre
   if (e.target.classList.contains('save-favorite')) {
     const id = Number(e.target.dataset.id);
     const item = favoriteProducts.find(p => p.id === id);
@@ -554,6 +559,7 @@ document.addEventListener('click', function(e) {
     }
   }
   
+  // Favoritos - Eliminar
   if (e.target.classList.contains('delete-favorite')) {
     const id = Number(e.target.dataset.id);
     favoriteProducts = favoriteProducts.filter(p => p.id !== id);
@@ -562,6 +568,7 @@ document.addEventListener('click', function(e) {
     saveData();
   }
   
+  // Predeterminados - Guardar nombre
   if (e.target.classList.contains('save-default')) {
     const id = Number(e.target.dataset.id);
     const item = defaultProducts.find(p => p.id === id);
@@ -577,6 +584,7 @@ document.addEventListener('click', function(e) {
     }
   }
   
+  // Predeterminados - Eliminar
   if (e.target.classList.contains('delete-default')) {
     const id = Number(e.target.dataset.id);
     defaultProducts = defaultProducts.filter(p => p.id !== id);
@@ -585,3 +593,221 @@ document.addEventListener('click', function(e) {
     saveData();
   }
 });
+
+// Eventos para selects en modales
+document.addEventListener('change', (e) => {
+  // Favoritos
+  if (e.target.classList.contains('product-category') && e.target.closest('.favorite-item')) {
+    const id = Number(e.target.dataset.id);
+    const item = favoriteProducts.find(p => p.id === id);
+    if (item) {
+      item.categoryId = e.target.value ? Number(e.target.value) : null;
+      saveData();
+    }
+  }
+  
+  if (e.target.classList.contains('product-location') && e.target.closest('.favorite-item')) {
+    const id = Number(e.target.dataset.id);
+    const item = favoriteProducts.find(p => p.id === id);
+    if (item) {
+      item.locationId = e.target.value ? Number(e.target.value) : null;
+      saveData();
+    }
+  }
+  
+  // Predeterminados
+  if (e.target.classList.contains('product-category') && e.target.closest('.default-item')) {
+    const id = Number(e.target.dataset.id);
+    const item = defaultProducts.find(p => p.id === id);
+    if (item) {
+      item.categoryId = e.target.value ? Number(e.target.value) : null;
+      saveData();
+    }
+  }
+  
+  if (e.target.classList.contains('product-location') && e.target.closest('.default-item')) {
+    const id = Number(e.target.dataset.id);
+    const item = defaultProducts.find(p => p.id === id);
+    if (item) {
+      item.locationId = e.target.value ? Number(e.target.value) : null;
+      saveData();
+    }
+  }
+});
+
+// Añadir producto
+const addProductBtn = document.getElementById('add-product-btn');
+
+if (addProductBtn) {
+  addProductBtn.addEventListener('click', () => {
+    const nameInput = document.getElementById('product-name');
+    const name = nameInput.value.trim();
+    if (!name) {
+      nameInput.focus();
+      return;
+    }
+    
+    const favorite = document.getElementById('product-favorite').checked;
+    const isDefault = document.getElementById('product-default').checked;
+    const categoryId = categorySelect.value ? Number(categorySelect.value) : null;
+    const locationId = locationSelect.value ? Number(locationSelect.value) : null;
+
+    const newItem = { 
+      id: generateId(), 
+      name, 
+      categoryId, 
+      locationId, 
+      bought: false 
+    };
+    
+    shoppingList.push(newItem);
+    
+    const productKey = `${name}-${categoryId || ''}-${locationId || ''}`;
+    
+    if (favorite) {
+      const exists = favoriteProducts.some(p => {
+        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
+        return key === productKey;
+      });
+      if (!exists) {
+        favoriteProducts.push({...newItem, id: generateId()});
+      }
+    } else {
+      favoriteProducts = favoriteProducts.filter(p => {
+        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
+        return key !== productKey;
+      });
+    }
+    
+    if (isDefault) {
+      const exists = defaultProducts.some(p => {
+        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
+        return key === productKey;
+      });
+      if (!exists) {
+        defaultProducts.push({...newItem, id: generateId()});
+      }
+    } else {
+      defaultProducts = defaultProducts.filter(p => {
+        const key = `${p.name}-${p.categoryId || ''}-${p.locationId || ''}`;
+        return key !== productKey;
+      });
+    }
+    
+    renderShoppingList();
+    renderFavoritesList();
+    renderDefaultsList();
+    
+    document.getElementById('add-product-form').reset();
+    document.getElementById('product-default').checked = true;
+  });
+}
+
+// Toggle comprado o eliminar
+if (shoppingListEl) {
+  shoppingListEl.addEventListener('click', (e) => {
+    const index = e.target.dataset.index;
+    if (index === undefined) return;
+
+    if (e.target.classList.contains('bought')) {
+      shoppingList[index].bought = e.target.checked;
+      saveData();
+    } else if (e.target.classList.contains('delete-btn')) {
+      shoppingList.splice(index, 1);
+      renderShoppingList();
+    }
+  });
+}
+
+// Botón de limpiar
+if (clearBtn) {
+  clearBtn.addEventListener('click', () => {
+    if (confirm('¿Seguro que quieres borrar la lista actual?')) {
+      shoppingList = [];
+      renderShoppingList();
+    }
+  });
+}
+
+// Cargar Favoritos
+if (loadFavoritesBtn) {
+  loadFavoritesBtn.addEventListener('click', () => {
+    if (favoriteProducts.length === 0) {
+      alert('No hay productos marcados como favoritos.');
+      return;
+    }
+    
+    const newItems = favoriteProducts.map(fav => ({ ...fav, id: generateId(), bought: false }));
+    shoppingList.push(...newItems);
+    renderShoppingList();
+  });
+}
+
+// Copiar lista al portapapeles
+if (copyListBtn) {
+  copyListBtn.addEventListener('click', () => {
+    if (shoppingList.length === 0) {
+      alert('La lista está vacía.');
+      return;
+    }
+    
+    const pendingItems = shoppingList.filter(item => !item.bought);
+    if (pendingItems.length === 0) {
+      alert('No hay productos pendientes en la lista.');
+      return;
+    }
+    
+    const listText = pendingItems.map((item, index) => {
+      const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
+      const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
+      
+      const isFavorite = favoriteProducts.some(p => 
+        p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
+      );
+      const isDefault = defaultProducts.some(p => 
+        p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
+      );
+      
+      const prefix = isFavorite ? '⭐ ' : isDefault ? '📌 ' : '';
+      return `${index + 1}. ${prefix}${item.name} [${categoryName} - ${locationName}]`;
+    }).join('\n');
+    
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(listText).then(() => {
+        alert('Lista copiada al portapapeles!');
+      }).catch(() => {
+        fallbackCopyTextToClipboard(listText);
+      });
+    } else {
+      fallbackCopyTextToClipboard(listText);
+    }
+  });
+}
+
+function fallbackCopyTextToClipboard(text) {
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.style.position = 'fixed';
+  textArea.style.left = '-9999px';
+  textArea.style.top = '-9999px';
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  
+  try {
+    const successful = document.execCommand('copy');
+    const msg = successful ? 'Lista copiada al portapapeles!' : 'Error al copiar.';
+    alert(msg);
+  } catch (err) {
+    alert('Tu navegador no permite copiar al portapapeles.');
+  }
+  
+  document.body.removeChild(textArea);
+}
+
+// Inicializar
+renderCategories();
+renderLocations();
+renderShoppingList();
+renderFavoritesList();
+renderDefaultsList();
