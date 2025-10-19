@@ -11,7 +11,8 @@
 </head>
 <body>
   <header>
-    <h1>🛒 JJ Shopping List <span class="version">v3.4</span></h1>
+    <h1>🛒 JJ Shopping List</h1>
+    <button id="open-help-btn" class="floating-help-btn">❓</button>
   </header>
 
   <main>
@@ -62,11 +63,36 @@
   <!-- Botón flotante para configuración -->
   <button id="open-config-btn" class="floating-btn">⚙️</button>
 
+  <!-- Modal de Ayuda -->
+  <div id="help-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Ayuda - JJ Shopping List</h2>
+        <button id="close-help-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="help-content">
+        <p><strong>Versión: v3.5</strong></p>
+        <p>Aplicación PWA para gestionar tu lista de la compra con las siguientes funcionalidades:</p>
+        <ul>
+          <li>✅ Añadir productos con categoría y ubicación</li>
+          <li>⭐ Marcar productos como favoritos</li>
+          <li>📌 Marcar productos como predeterminados</li>
+          <li>🔄 Gestionar categorías y ubicaciones</li>
+          <li>📋 Copiar lista al portapapeles</li>
+          <li>📱 Instalable como aplicación en Android</li>
+          <li>🔒 Datos guardados localmente (sin conexión necesaria)</li>
+        </ul>
+        <p><em>Desarrollado por JJ - 2024</em></p>
+      </div>
+      <button id="close-help-modal-btn" class="btn-secondary">Cerrar</button>
+    </div>
+  </div>
+
   <!-- Modal de Favoritos -->
   <div id="favorites-modal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Productos Favoritos <span class="version">v1.9</span></h2>
+        <h2>Productos Favoritos</h2>
         <button id="close-favorites-btn" class="close-btn">&times;</button>
       </div>
       <div class="favorites-list" id="favorites-list"></div>
@@ -78,7 +104,7 @@
   <div id="defaults-modal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Productos Predeterminados <span class="version">v1.9</span></h2>
+        <h2>Productos Predeterminados</h2>
         <button id="close-defaults-btn" class="close-btn">&times;</button>
       </div>
       <div class="defaults-list" id="defaults-list"></div>
@@ -90,7 +116,7 @@
   <div id="config-modal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
-        <h2>Configuración <span class="version">v1.9</span></h2>
+        <h2>Configuración</h2>
         <button id="close-config-btn" class="close-btn">&times;</button>
       </div>
       
@@ -114,6 +140,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.4"></script>
+  <script src="app.js?v=3.5"></script>
 </body>
 </html>
