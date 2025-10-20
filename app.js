@@ -210,9 +210,14 @@ function renderShoppingList() {
   shoppingListEl.innerHTML = '';
   shoppingList.forEach((item, index) => {
     const li = renderProductItem(item, index);
+    li.dataset.index = index;
+    li.draggable = true;
     shoppingListEl.appendChild(li);
   });
   saveData();
+
+  // Activar drag & drop en la lista principal
+  setupDragAndDrop(shoppingListEl, 'li', shoppingList, renderShoppingList);
 }
 
 function renderFavoritesList() {
@@ -281,21 +286,21 @@ function renderDefaultsList() {
   });
 }
 
-// Drag & Drop genérico con re-vinculación
-function setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn) {
-  // Primero, eliminar eventos anteriores
-  const existingItems = listEl.querySelectorAll(itemClass);
+// Drag & Drop genérico mejorado (sin clonación)
+function setupDragAndDrop(listEl, itemSelector, arrayToUpdate, renderFn) {
+  const existingItems = listEl.querySelectorAll(itemSelector);
   existingItems.forEach(item => {
-    const clone = item.cloneNode(true);
-    item.parentNode.replaceChild(clone, item);
+    item.removeEventListener('dragstart', handleDragStart);
+    item.removeEventListener('dragover', handleDragOver);
+    item.removeEventListener('dragenter', handleDragEnter);
+    item.removeEventListener('dragleave', handleDragLeave);
+    item.removeEventListener('drop', handleDrop);
+    item.removeEventListener('dragend', handleDragEnd);
   });
 
-  let dragSrcEl = null;
-
   function handleDragStart(e) {
-    dragSrcEl = this;
-    e.dataTransfer.effectAllowed = 'move';
     this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
   }
 
   function handleDragOver(e) {
@@ -315,42 +320,35 @@ function setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn) {
   function handleDrop(e) {
     e.preventDefault();
     e.stopPropagation();
-    
-    if (dragSrcEl !== this) {
-      const srcIndex = Array.from(listEl.children).indexOf(dragSrcEl);
-      const targetIndex = Array.from(listEl.children).indexOf(this);
 
-      if (srcIndex !== -1 && targetIndex !== -1) {
-        const [movedItem] = arrayToUpdate.splice(srcIndex, 1);
-        arrayToUpdate.splice(targetIndex, 0, movedItem);
-        renderFn();
-        saveData();
-        
-        // Re-vincular eventos después de reordenar
-        setTimeout(() => {
-          setupDragAndDrop(listEl, itemClass, arrayToUpdate, renderFn);
-        }, 50);
-      }
-    }
-    
-    this.classList.remove('drag-over');
+    const draggingEl = listEl.querySelector('.dragging');
+    if (!draggingEl || draggingEl === this) return;
+
+    const srcIndex = parseInt(draggingEl.dataset.index, 10);
+    const targetIndex = parseInt(this.dataset.index, 10);
+
+    if (isNaN(srcIndex) || isNaN(targetIndex)) return;
+
+    const [movedItem] = arrayToUpdate.splice(srcIndex, 1);
+    arrayToUpdate.splice(targetIndex, 0, movedItem);
+    renderFn();
   }
 
   function handleDragEnd() {
     this.classList.remove('dragging');
-    document.querySelectorAll(itemClass).forEach(item => {
+    listEl.querySelectorAll(itemSelector).forEach(item => {
       item.classList.remove('drag-over');
     });
   }
 
-  const items = listEl.querySelectorAll(itemClass);
+  const items = listEl.querySelectorAll(itemSelector);
   items.forEach(item => {
-    item.addEventListener('dragstart', handleDragStart, false);
-    item.addEventListener('dragover', handleDragOver, false);
-    item.addEventListener('dragenter', handleDragEnter, false);
-    item.addEventListener('dragleave', handleDragLeave, false);
-    item.addEventListener('drop', handleDrop, false);
-    item.addEventListener('dragend', handleDragEnd, false);
+    item.addEventListener('dragstart', handleDragStart);
+    item.addEventListener('dragover', handleDragOver);
+    item.addEventListener('dragenter', handleDragEnter);
+    item.addEventListener('dragleave', handleDragLeave);
+    item.addEventListener('drop', handleDrop);
+    item.addEventListener('dragend', handleDragEnd);
   });
 }
 
@@ -461,7 +459,8 @@ if (locationForm) {
     saveData();
     input.value = '';
   });
-  }
+    }
+
 
 // DELEGACIÓN DE EVENTOS CORREGIDA
 document.addEventListener('click', function(e) {
