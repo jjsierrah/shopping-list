@@ -366,4 +366,8 @@ h3 {
     text-align: center;
     word-break: break-word;
   }
+  .alert-title {
+  color: #d32f2f !important;
+  margin-bottom: 10px;
+    }
 }
