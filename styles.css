@@ -138,13 +138,13 @@ button:not(#add-product-btn):hover {
   margin-top: 16px;
 }
 
-/* Botón de configuración: gris oscuro */
+/* Botón de configuración: gris azulado distintivo */
 #open-config-btn {
-  background-color: #616161;
+  background-color: #546e7a;
 }
 
 #open-config-btn:hover {
-  background-color: #424242;
+  background-color: #37474f;
 }
 
 /* Botonera de 3 líneas fijas */
@@ -189,7 +189,14 @@ button:not(#add-product-btn):hover {
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  cursor: move;
+}
+
+#shopping-list li.dragging {
+  opacity: 0.6;
+  background-color: #e8f5e9;
+  transform: scale(1.01);
 }
 
 .product-info {
@@ -210,23 +217,22 @@ button:not(#add-product-btn):hover {
 .actions {
   display: flex;
   gap: 8px;
-  flex-direction: column;
-  align-items: center;
 }
 
-/* Botón de eliminar (basura) */
+/* Botón de eliminar (papelera) - más visible */
 .delete-btn {
   background-color: #f44336;
   color: white;
   border: none;
-  border-radius: 4px;
-  width: 36px;
-  height: 36px;
+  border-radius: 6px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 20px;
+  padding: 0;
 }
 
 .delete-btn:hover {
