@@ -48,7 +48,7 @@ function generateId() {
 // Función de alerta personalizada con niveles: error, success, warning
 function showAlert(message, options = {}) {
   const {
-    type = 'info', // 'error', 'success', 'warning'
+    type = 'info',
     isConfirm = false,
     onConfirm = null
   } = options;
@@ -294,8 +294,9 @@ function renderDefaultsList() {
   });
 }
 
-// Drag & Drop genérico mejorado (sin clonación)
+// Drag & Drop genérico mejorado (sin clonación, con limpieza explícita)
 function setupDragAndDrop(listEl, itemSelector, arrayToUpdate, renderFn) {
+  // Limpiar eventos anteriores
   const existingItems = listEl.querySelectorAll(itemSelector);
   existingItems.forEach(item => {
     item.removeEventListener('dragstart', handleDragStart);
@@ -349,6 +350,7 @@ function setupDragAndDrop(listEl, itemSelector, arrayToUpdate, renderFn) {
     });
   }
 
+  // Vincular nuevos eventos
   const items = listEl.querySelectorAll(itemSelector);
   items.forEach(item => {
     item.addEventListener('dragstart', handleDragStart);
@@ -467,18 +469,17 @@ if (locationForm) {
     saveData();
     input.value = '';
   });
-}
+  }
 
-// Historial para deshacer
+
+           // Historial para deshacer
 let undoStack = [];
 let undoTimeout = null;
 
-// Función para mostrar el botón de deshacer
 function showUndoButton() {
   const undoBtn = document.getElementById('undo-btn');
   if (undoBtn) {
     undoBtn.style.display = 'block';
-    // Ocultar automáticamente tras 5 segundos
     if (undoTimeout) clearTimeout(undoTimeout);
     undoTimeout = setTimeout(() => {
       undoBtn.style.display = 'none';
@@ -486,70 +487,76 @@ function showUndoButton() {
   }
 }
 
-// Función para deshacer la última eliminación
 function undoDelete() {
   if (undoStack.length === 0) return;
-  
   const lastState = undoStack.pop();
   shoppingList = lastState;
   renderShoppingList();
-  
   const undoBtn = document.getElementById('undo-btn');
   if (undoBtn) undoBtn.style.display = 'none';
   if (undoTimeout) clearTimeout(undoTimeout);
-  
   showAlert('Producto restaurado.', { type: 'success' });
 }
 
-// DELEGACIÓN DE EVENTOS CORREGIDA
+// Listener de la lista principal (fuera de delegación global)
+if (shoppingListEl) {
+  shoppingListEl.addEventListener('click', (e) => {
+    const index = e.target.dataset.index;
+    if (index === undefined) return;
+
+    if (e.target.classList.contains('bought')) {
+      shoppingList[index].bought = e.target.checked;
+      saveData();
+    } else if (e.target.classList.contains('delete-btn')) {
+      undoStack.push([...shoppingList]);
+      shoppingList.splice(index, 1);
+      renderShoppingList();
+      showUndoButton();
+    }
+  });
+}
+
+// Delegación global de eventos (sin anidamiento)
 document.addEventListener('click', function(e) {
-  // Manejo de deshacer
+  // Deshacer
   if (e.target.id === 'undo-btn') {
     undoDelete();
     return;
   }
 
-  // Favoritos - Añadir a lista
+  // Favoritos - Añadir
   if (e.target.classList.contains('add-to-list') && e.target.dataset.type === 'favorite') {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < favoriteProducts.length) {
       const itemToAdd = favoriteProducts[index];
-      // Verificar si ya existe en la lista principal (solo por nombre)
-      const existsInList = shoppingList.some(item => item.name === itemToAdd.name);
-      if (existsInList) {
+      if (shoppingList.some(item => item.name === itemToAdd.name)) {
         showAlert('Este producto ya está en la lista.', { type: 'warning' });
         return;
       }
-      
-      const newItem = { ...itemToAdd, id: generateId(), bought: false };
-      shoppingList.push(newItem);
+      shoppingList.push({ ...itemToAdd, id: generateId(), bought: false });
       renderShoppingList();
       showAlert('Producto añadido a la lista!', { type: 'success' });
     }
     return;
   }
-  
-  // Predeterminados - Añadir a lista  
+
+  // Predeterminados - Añadir
   if (e.target.classList.contains('add-to-list') && e.target.dataset.type === 'default') {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < defaultProducts.length) {
       const itemToAdd = defaultProducts[index];
-      // Verificar si ya existe en la lista principal (solo por nombre)
-      const existsInList = shoppingList.some(item => item.name === itemToAdd.name);
-      if (existsInList) {
+      if (shoppingList.some(item => item.name === itemToAdd.name)) {
         showAlert('Este producto ya está en la lista.', { type: 'warning' });
         return;
       }
-      
-      const newItem = { ...itemToAdd, id: generateId(), bought: false };
-      shoppingList.push(newItem);
+      shoppingList.push({ ...itemToAdd, id: generateId(), bought: false });
       renderShoppingList();
       showAlert('Producto añadido a la lista!', { type: 'success' });
     }
     return;
   }
-  
-  // Resto de eventos (sin cambios)
+
+  // Guardar/eliminar en modales
   if (e.target.classList.contains('save-category')) {
     const id = Number(e.target.dataset.id);
     const input = e.target.closest('.category-item').querySelector('input');
@@ -566,11 +573,10 @@ document.addEventListener('click', function(e) {
       }
     }
   }
-  
+
   if (e.target.classList.contains('delete-category')) {
     const id = Number(e.target.dataset.id);
-    const hasProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.categoryId === id);
-    if (hasProducts) {
+    if ([...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.categoryId === id)) {
       showAlert('No se puede eliminar: hay productos en esta categoría.', { type: 'warning' });
       return;
     }
@@ -581,7 +587,7 @@ document.addEventListener('click', function(e) {
     renderDefaultsList();
     saveData();
   }
-  
+
   if (e.target.classList.contains('save-location')) {
     const id = Number(e.target.dataset.id);
     const input = e.target.closest('.location-item').querySelector('input');
@@ -598,11 +604,10 @@ document.addEventListener('click', function(e) {
       }
     }
   }
-  
+
   if (e.target.classList.contains('delete-location')) {
     const id = Number(e.target.dataset.id);
-    const hasProducts = [...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.locationId === id);
-    if (hasProducts) {
+    if ([...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.locationId === id)) {
       showAlert('No se puede eliminar: hay productos en esta ubicación.', { type: 'warning' });
       return;
     }
@@ -613,7 +618,7 @@ document.addEventListener('click', function(e) {
     renderDefaultsList();
     saveData();
   }
-  
+
   if (e.target.classList.contains('save-favorite')) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < favoriteProducts.length) {
@@ -627,7 +632,7 @@ document.addEventListener('click', function(e) {
       }
     }
   }
-  
+
   if (e.target.classList.contains('delete-favorite')) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < favoriteProducts.length) {
@@ -637,7 +642,7 @@ document.addEventListener('click', function(e) {
       saveData();
     }
   }
-  
+
   if (e.target.classList.contains('save-default')) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < defaultProducts.length) {
@@ -651,7 +656,7 @@ document.addEventListener('click', function(e) {
       }
     }
   }
-  
+
   if (e.target.classList.contains('delete-default')) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < defaultProducts.length) {
@@ -673,7 +678,6 @@ document.addEventListener('change', (e) => {
       saveData();
     }
   }
-  
   if (e.target.classList.contains('product-location') && e.target.closest('.favorite-item')) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < favoriteProducts.length) {
@@ -681,7 +685,6 @@ document.addEventListener('change', (e) => {
       saveData();
     }
   }
-  
   // Predeterminados
   if (e.target.classList.contains('product-category') && e.target.closest('.default-item')) {
     const index = Number(e.target.dataset.index);
@@ -690,7 +693,6 @@ document.addEventListener('change', (e) => {
       saveData();
     }
   }
-  
   if (e.target.classList.contains('product-location') && e.target.closest('.default-item')) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < defaultProducts.length) {
@@ -700,85 +702,46 @@ document.addEventListener('change', (e) => {
   }
 });
 
-// Añadir producto - CORREGIDO
+// Añadir producto
 const addProductBtn = document.getElementById('add-product-btn');
-
 if (addProductBtn) {
   addProductBtn.addEventListener('click', (e) => {
-    e.preventDefault(); // Evitar recarga si está dentro de <form>
+    e.preventDefault();
     const nameInput = document.getElementById('product-name');
     const name = nameInput.value.trim();
-    if (!name) {
-      nameInput.focus();
-      return;
-    }
-    
-    // Validar duplicados por nombre solamente - CORREGIDO
-    const existsInList = shoppingList.some(item => item.name === name);
-    if (existsInList) {
+    if (!name) return nameInput.focus();
+
+    if (shoppingList.some(item => item.name === name)) {
       showAlert('Este producto ya está en la lista.', { type: 'warning' });
       return;
     }
-    
+
     const favorite = document.getElementById('product-favorite').checked;
     const isDefault = document.getElementById('product-default').checked;
     const categoryId = categorySelect.value ? Number(categorySelect.value) : null;
     const locationId = locationSelect.value ? Number(locationSelect.value) : null;
 
-    const newItem = { 
-      id: generateId(), 
-      name, 
-      categoryId, 
-      locationId, 
-      bought: false 
-    };
-    
+    const newItem = { id: generateId(), name, categoryId, locationId, bought: false };
     shoppingList.push(newItem);
-    
-    // Gestionar favoritos
-    const productExistsInFavorites = favoriteProducts.some(p => p.name === name);
-    if (favorite && !productExistsInFavorites) {
+
+    if (favorite && !favoriteProducts.some(p => p.name === name)) {
       favoriteProducts.push({...newItem, id: generateId()});
     } else if (!favorite) {
       favoriteProducts = favoriteProducts.filter(p => p.name !== name);
     }
-    
-    // Gestionar predeterminados
-    const productExistsInDefaults = defaultProducts.some(p => p.name === name);
-    const currentDefaultChecked = isDefault;
-    if (currentDefaultChecked && !productExistsInDefaults) {
+
+    if (isDefault && !defaultProducts.some(p => p.name === name)) {
       defaultProducts.push({...newItem, id: generateId()});
-    } else if (!currentDefaultChecked) {
+    } else if (!isDefault) {
       defaultProducts = defaultProducts.filter(p => p.name !== name);
     }
-    
+
     renderShoppingList();
     renderFavoritesList();
     renderDefaultsList();
-    
     document.getElementById('add-product-form').reset();
     document.getElementById('product-default').checked = true;
-    
     showAlert('Producto añadido a la lista!', { type: 'success' });
-  });
-}
-
-// Toggle comprado o eliminar
-if (shoppingListEl) {
-  shoppingListEl.addEventListener('click', (e) => {
-    const index = e.target.dataset.index;
-    if (index === undefined) return;
-
-    if (e.target.classList.contains('bought')) {
-      shoppingList[index].bought = e.target.checked;
-      saveData();
-    } else if (e.target.classList.contains('delete-btn')) {
-      // Guardar estado actual en el historial de deshacer
-      undoStack.push([...shoppingList]);
-      shoppingList.splice(index, 1);
-      renderShoppingList();
-      showUndoButton();
-    }
   });
 }
 
@@ -796,7 +759,7 @@ if (clearBtn) {
   });
 }
 
-// Cargar Favoritos - CORREGIDO según preferencia
+// Cargar Favoritos
 if (loadFavoritesBtn) {
   loadFavoritesBtn.addEventListener('click', () => {
     if (shoppingList.length > 0) {
@@ -807,58 +770,40 @@ if (loadFavoritesBtn) {
       showAlert('No hay productos marcados como favoritos.', { type: 'warning' });
       return;
     }
-    
-    const favoritesToAdd = favoriteProducts.filter(fav => {
-      return !shoppingList.some(item => item.name === fav.name);
-    });
-    
+    const favoritesToAdd = favoriteProducts.filter(fav => !shoppingList.some(item => item.name === fav.name));
     if (favoritesToAdd.length === 0) {
       showAlert('Los favoritos ya están en la lista.', { type: 'warning' });
       return;
     }
-    
-    const newItems = favoritesToAdd.map(fav => ({ ...fav, id: generateId(), bought: false }));
-    shoppingList.push(...newItems);
+    shoppingList.push(...favoritesToAdd.map(fav => ({ ...fav, id: generateId(), bought: false })));
     renderShoppingList();
     showAlert('Favoritos cargados correctamente.', { type: 'success' });
   });
 }
 
-// Copiar lista al portapapeles
+// Copiar lista
 if (copyListBtn) {
   copyListBtn.addEventListener('click', () => {
-    if (shoppingList.length === 0) {
-      showAlert('La lista está vacía.', { type: 'warning' });
-      return;
-    }
-    
     const pendingItems = shoppingList.filter(item => !item.bought);
     if (pendingItems.length === 0) {
-      showAlert('No hay productos pendientes en la lista.', { type: 'warning' });
+      showAlert(pendingItems.length === 0 && shoppingList.length > 0 
+        ? 'No hay productos pendientes en la lista.' 
+        : 'La lista está vacía.', { type: 'warning' });
       return;
     }
-    
     const listText = pendingItems.map((item, index) => {
-      const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
-      const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
-      
-      const isFavorite = favoriteProducts.some(p => 
-        p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
-      );
-      const isDefault = defaultProducts.some(p => 
-        p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
-      );
-      
-      const prefix = isFavorite ? '⭐ ' : isDefault ? '📌 ' : '';
-      return `${index + 1}. ${prefix}${item.name} [${categoryName} - ${locationName}]`;
+      const cat = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
+      const loc = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
+      const isFav = favoriteProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
+      const isDef = defaultProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
+      const prefix = isFav ? '⭐ ' : isDef ? '📌 ' : '';
+      return `${index + 1}. ${prefix}${item.name} [${cat} - ${loc}]`;
     }).join('\n');
-    
+
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(listText).then(() => {
         showAlert('Lista copiada al portapapeles!', { type: 'success' });
-      }).catch(() => {
-        fallbackCopyTextToClipboard(listText);
-      });
+      }).catch(() => fallbackCopyTextToClipboard(listText));
     } else {
       fallbackCopyTextToClipboard(listText);
     }
@@ -874,12 +819,12 @@ function fallbackCopyTextToClipboard(text) {
   textArea.select();
   try {
     if (document.execCommand('copy')) {
-      showAlert('Lista copiada al portapapeles!', { type: 'success' });
+      showAlert('Lista copiada!', { type: 'success' });
     } else {
-      showAlert('No se pudo copiar. Intenta manualmente.', { type: 'warning' });
+      showAlert('No se pudo copiar.', { type: 'warning' });
     }
   } catch (err) {
-    showAlert('Tu navegador no permite copiar al portapapeles.', { type: 'error' });
+    showAlert('Tu navegador no permite copiar.', { type: 'error' });
   }
   document.body.removeChild(textArea);
 }
@@ -890,39 +835,28 @@ const closeHelpBtn = document.getElementById('close-help-btn');
 const closeHelpModalBtn = document.getElementById('close-help-modal-btn');
 const helpModal = document.getElementById('help-modal');
 
-if (openHelpBtn) {
-  openHelpBtn.addEventListener('click', () => {
-    helpModal.style.display = 'block';
-  });
-}
-
-const closeHelpButtons = [closeHelpBtn, closeHelpModalBtn];
-closeHelpButtons.forEach(btn => {
-  if (btn) {
-    btn.addEventListener('click', () => {
-      helpModal.style.display = 'none';
-    });
-  }
+if (openHelpBtn) openHelpBtn.addEventListener('click', () => helpModal.style.display = 'block');
+[closeHelpBtn, closeHelpModalBtn].forEach(btn => {
+  if (btn) btn.addEventListener('click', () => helpModal.style.display = 'none');
 });
-
 window.addEventListener('click', (e) => {
-  if (e.target === helpModal) {
-    helpModal.style.display = 'none';
-  }
+  if (e.target === helpModal) helpModal.style.display = 'none';
 });
 
-// Añadir botón de deshacer al DOM si no existe
-if (!document.getElementById('undo-btn')) {
-  const undoBtn = document.createElement('button');
-  undoBtn.id = 'undo-btn';
-  undoBtn.className = 'undo-btn';
-  undoBtn.textContent = '↺ Deshacer';
-  undoBtn.style.display = 'none';
-  document.body.appendChild(undoBtn);
-  undoBtn.addEventListener('click', undoDelete);
-}
+// Crear botón de deshacer al inicio
+(function() {
+  if (!document.getElementById('undo-btn')) {
+    const undoBtn = document.createElement('button');
+    undoBtn.id = 'undo-btn';
+    undoBtn.className = 'undo-btn';
+    undoBtn.textContent = '↺ Deshacer';
+    undoBtn.style.display = 'none';
+    document.body.appendChild(undoBtn);
+    undoBtn.addEventListener('click', undoDelete);
+  }
+})();
 
-// Estilos para alertas personalizadas
+// Estilos para alertas
 const style = document.createElement('style');
 style.textContent = `
   .custom-alert {
@@ -937,7 +871,6 @@ style.textContent = `
     align-items: center;
     z-index: 10000;
   }
-  
   .alert-content {
     background: white;
     padding: 20px;
@@ -945,21 +878,17 @@ style.textContent = `
     text-align: center;
     min-width: 250px;
   }
-  
   .alert-title {
     margin-bottom: 10px;
   }
-  
   .alert-content p {
     margin-bottom: 15px;
   }
-  
   .alert-buttons {
     display: flex;
     gap: 10px;
     justify-content: center;
   }
-  
   .alert-ok, .alert-cancel, .alert-confirm {
     background-color: #4CAF50;
     color: white;
@@ -968,15 +897,12 @@ style.textContent = `
     border-radius: 4px;
     cursor: pointer;
   }
-  
   .alert-cancel {
     background-color: #6c757d;
   }
-  
   .alert-ok:hover, .alert-confirm:hover {
     background-color: #388E3C;
   }
-  
   .alert-cancel:hover {
     background-color: #5a6268;
   }
@@ -988,4 +914,4 @@ renderCategories();
 renderLocations();
 renderShoppingList();
 renderFavoritesList();
-renderDefaultsList();
+renderDefaultsList();     
