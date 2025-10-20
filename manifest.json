@@ -8,9 +8,9 @@
       "sizes": "192x192"
     }
   ],
-  "start_url": "/",
+  "start_url": "/shopping-list/",
   "background_color": "#ffffff",
   "display": "standalone",
-  "scope": "/",
+  "scope": "/shopping-list/",
   "theme_color": "#4CAF50"
 }
