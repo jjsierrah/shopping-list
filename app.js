@@ -54,7 +54,7 @@ function showAlert(message, isConfirm = false, onConfirm = null) {
   if (isConfirm) {
     alertDiv.innerHTML = `
       <div class="alert-content">
-        <h3>Atención:</h3>
+        <h3 class="alert-title">Atención:</h3>
         <p>${message}</p>
         <div class="alert-buttons">
           <button class="alert-cancel">Cancelar</button>
@@ -77,7 +77,7 @@ function showAlert(message, isConfirm = false, onConfirm = null) {
   } else {
     alertDiv.innerHTML = `
       <div class="alert-content">
-        <h3>Atención:</h3>
+        <h3 class="alert-title">Atención:</h3>
         <p>${message}</p>
         <button class="alert-ok">OK</button>
       </div>
@@ -442,9 +442,9 @@ if (locationForm) {
     saveData();
     input.value = '';
   });
-}
+  }
 
-// DELEGACIÓN DE EVENTOS CORREGIDA
+    // DELEGACIÓN DE EVENTOS CORREGIDA
 document.addEventListener('click', function(e) {
   // Favoritos - Añadir a lista
   if (e.target.classList.contains('add-to-list') && e.target.dataset.type === 'favorite') {
@@ -863,8 +863,8 @@ style.textContent = `
     min-width: 250px;
   }
   
-  .alert-content h3 {
-    color: #2e7d32;
+  .alert-title {
+    color: #d32f2f;
     margin-bottom: 10px;
   }
   
