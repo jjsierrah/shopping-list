@@ -1,16 +1,26 @@
 {
   "short_name": "ShoppingList",
   "name": "Shopping List",
+  "description": "Gestiona tu lista de la compra con categorías, ubicaciones, favoritos y productos predeterminados.",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "/shopping-list/icon-192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/shopping-list/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": "/shopping-list/",
+  "scope": "/shopping-list/",
   "background_color": "#ffffff",
   "display": "standalone",
-  "scope": "/shopping-list/",
-  "theme_color": "#4CAF50"
+  "theme_color": "#4CAF50",
+  "orientation": "portrait-primary",
+  "lang": "es"
 }
