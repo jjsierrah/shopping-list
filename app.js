@@ -200,7 +200,11 @@ function renderProductItem(item, index) {
     </div>
     <div class="actions">
       <input type="checkbox" class="bought" ${item.bought ? 'checked' : ''} data-index="${index}">
-      <button type="button" class="delete-btn" data-index="${index}">🗑️</button>
+      <button type="button" class="delete-btn" data-index="${index}">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+        </svg>
+      </button>
     </div>
   `;
   return li;
@@ -234,14 +238,16 @@ function renderFavoritesList() {
     div.innerHTML = `
       <div class="product-edit">
         <input type="text" value="${item.name}" data-index="${index}" class="product-name" />
-        <select class="product-category" data-index="${index}">
-          <option value="">-- Categoría --</option>
-          ${categories.map(cat => `<option value="${cat.id}" ${cat.id === item.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
-        </select>
-        <select class="product-location" data-index="${index}">
-          <option value="">-- Ubicación --</option>
-          ${locations.map(loc => `<option value="${loc.id}" ${loc.id === item.locationId ? 'selected' : ''}>${loc.name}</option>`).join('')}
-        </select>
+        <div class="category-location-row">
+          <select class="product-category" data-index="${index}">
+            <option value="">-- Categoría --</option>
+            ${categories.map(cat => `<option value="${cat.id}" ${cat.id === item.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
+          </select>
+          <select class="product-location" data-index="${index}">
+            <option value="">-- Ubicación --</option>
+            ${locations.map(loc => `<option value="${loc.id}" ${loc.id === item.locationId ? 'selected' : ''}>${loc.name}</option>`).join('')}
+          </select>
+        </div>
       </div>
       <div class="favorite-actions">
         <button type="button" class="add-to-list" data-index="${index}" data-type="favorite">➕ Añadir</button>
@@ -267,14 +273,16 @@ function renderDefaultsList() {
     div.innerHTML = `
       <div class="product-edit">
         <input type="text" value="${item.name}" data-index="${index}" class="product-name" />
-        <select class="product-category" data-index="${index}">
-          <option value="">-- Categoría --</option>
-          ${categories.map(cat => `<option value="${cat.id}" ${cat.id === item.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
-        </select>
-        <select class="product-location" data-index="${index}">
-          <option value="">-- Ubicación --</option>
-          ${locations.map(loc => `<option value="${loc.id}" ${loc.id === item.locationId ? 'selected' : ''}>${loc.name}</option>`).join('')}
-        </select>
+        <div class="category-location-row">
+          <select class="product-category" data-index="${index}">
+            <option value="">-- Categoría --</option>
+            ${categories.map(cat => `<option value="${cat.id}" ${cat.id === item.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
+          </select>
+          <select class="product-location" data-index="${index}">
+            <option value="">-- Ubicación --</option>
+            ${locations.map(loc => `<option value="${loc.id}" ${loc.id === item.locationId ? 'selected' : ''}>${loc.name}</option>`).join('')}
+          </select>
+        </div>
       </div>
       <div class="default-actions">
         <button type="button" class="add-to-list" data-index="${index}" data-type="default">➕ Añadir</button>
@@ -459,7 +467,7 @@ if (locationForm) {
     saveData();
     input.value = '';
   });
-    }
+                                                 }
 
 
 // DELEGACIÓN DE EVENTOS CORREGIDA
