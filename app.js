@@ -467,11 +467,48 @@ if (locationForm) {
     saveData();
     input.value = '';
   });
-                                                 }
+}
 
+// Historial para deshacer
+let undoStack = [];
+let undoTimeout = null;
+
+// Función para mostrar el botón de deshacer
+function showUndoButton() {
+  const undoBtn = document.getElementById('undo-btn');
+  if (undoBtn) {
+    undoBtn.style.display = 'block';
+    // Ocultar automáticamente tras 5 segundos
+    if (undoTimeout) clearTimeout(undoTimeout);
+    undoTimeout = setTimeout(() => {
+      undoBtn.style.display = 'none';
+    }, 5000);
+  }
+}
+
+// Función para deshacer la última eliminación
+function undoDelete() {
+  if (undoStack.length === 0) return;
+  
+  const lastState = undoStack.pop();
+  shoppingList = lastState;
+  renderShoppingList();
+  
+  const undoBtn = document.getElementById('undo-btn');
+  if (undoBtn) undoBtn.style.display = 'none';
+  if (undoTimeout) clearTimeout(undoTimeout);
+  
+  showAlert('Producto restaurado.', { type: 'success' });
+}
 
 // DELEGACIÓN DE EVENTOS CORREGIDA
 document.addEventListener('click', function(e) {
+  // Manejo de deshacer
+  if (e.target.id === 'undo-btn') {
+    undoDelete();
+    return;
+  }
+
   // Favoritos - Añadir a lista
   if (e.target.classList.contains('add-to-list') && e.target.dataset.type === 'favorite') {
     const index = Number(e.target.dataset.index);
@@ -736,8 +773,11 @@ if (shoppingListEl) {
       shoppingList[index].bought = e.target.checked;
       saveData();
     } else if (e.target.classList.contains('delete-btn')) {
+      // Guardar estado actual en el historial de deshacer
+      undoStack.push([...shoppingList]);
       shoppingList.splice(index, 1);
       renderShoppingList();
+      showUndoButton();
     }
   });
 }
@@ -870,6 +910,17 @@ window.addEventListener('click', (e) => {
     helpModal.style.display = 'none';
   }
 });
+
+// Añadir botón de deshacer al DOM si no existe
+if (!document.getElementById('undo-btn')) {
+  const undoBtn = document.createElement('button');
+  undoBtn.id = 'undo-btn';
+  undoBtn.className = 'undo-btn';
+  undoBtn.textContent = '↺ Deshacer';
+  undoBtn.style.display = 'none';
+  document.body.appendChild(undoBtn);
+  undoBtn.addEventListener('click', undoDelete);
+}
 
 // Estilos para alertas personalizadas
 const style = document.createElement('style');
