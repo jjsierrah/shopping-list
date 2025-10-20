@@ -140,7 +140,18 @@ button:not(#add-product-btn):hover {
 
 /* Botón de configuración: gris azulado distintivo */
 #open-config-btn {
-  background-color: #546e7a;
+  background-color: #455a64;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+#open-config-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: white;
 }
 
 #open-config-btn:hover {
@@ -199,6 +210,11 @@ button:not(#add-product-btn):hover {
   transform: scale(1.01);
 }
 
+#shopping-list li.drag-over {
+  background-color: #e3f2fd;
+  border: 1px dashed #2196f3;
+}
+
 .product-info {
   flex: 1;
 }
@@ -219,24 +235,25 @@ button:not(#add-product-btn):hover {
   gap: 8px;
 }
 
-/* Botón de eliminar (papelera) - más visible */
+/* Botón de eliminar (papelera) - con SVG */
 .delete-btn {
   background-color: #f44336;
   color: white;
   border: none;
-  border-radius: 6px;
-  width: 44px;
-  height: 44px;
+  border-radius: 8px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 20px;
   padding: 0;
 }
 
-.delete-btn:hover {
-  background-color: #d32f2f;
+.delete-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: white;
 }
 
 input[type="checkbox"].bought {
@@ -310,18 +327,48 @@ input[type="checkbox"].bought {
   margin-bottom: 14px;
 }
 
+/* Edición de producto en modales */
 .product-edit {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
-.product-edit input[type="text"],
-.product-edit select {
+.product-name {
   width: 100%;
   padding: 6px;
   border: 1px solid #ccc;
   border-radius: 4px;
+}
+
+.category-location-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.category-location-row select {
+  flex: 1;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Acciones (botonera) con más espacio */
+.favorite-actions,
+.default-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.favorite-actions button,
+.default-actions button {
+  flex: 1;
+  min-width: 80px;
+  padding: 6px 8px;
+  font-size: 0.85em;
 }
 
 .category-item,
