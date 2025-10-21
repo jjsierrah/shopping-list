@@ -45,80 +45,46 @@ function generateId() {
   return Date.now() + Math.floor(Math.random() * 1000000);
 }
 
-// Función de alerta personalizada con niveles: error, success, warning
+// Función de alerta personalizada
 function showAlert(message, options = {}) {
-  const {
-    type = 'info',
-    isConfirm = false,
-    onConfirm = null
-  } = options;
-
-  const titles = {
-    error: 'Atención:',
-    success: 'Información:',
-    warning: 'Información:'
-  };
-
-  const colors = {
-    error: '#d32f2f',
-    success: '#2e7d32',
-    warning: '#f57c00'
-  };
-
-  const alertDiv = document.createElement('div');
-  alertDiv.className = 'custom-alert';
-
+  const { type = 'info', isConfirm = false, onConfirm = null } = options;
+  const titles = { error: 'Atención:', success: 'Información:', warning: 'Información:' };
+  const colors = { error: '#d32f2f', success: '#2e7d32', warning: '#f57c00' };
   const titleText = titles[type] || 'Información:';
   const titleColor = colors[type] || '#2e7d32';
 
-  if (isConfirm) {
-    alertDiv.innerHTML = `
-      <div class="alert-content">
-        <h3 class="alert-title" style="color: ${titleColor};">${titleText}</h3>
-        <p>${message}</p>
-        <div class="alert-buttons">
-          <button class="alert-cancel">Cancelar</button>
-          <button class="alert-confirm">Aceptar</button>
-        </div>
+  const alertDiv = document.createElement('div');
+  alertDiv.className = 'custom-alert';
+  alertDiv.innerHTML = isConfirm ? `
+    <div class="alert-content">
+      <h3 class="alert-title" style="color: ${titleColor};">${titleText}</h3>
+      <p>${message}</p>
+      <div class="alert-buttons">
+        <button class="alert-cancel">Cancelar</button>
+        <button class="alert-confirm">Aceptar</button>
       </div>
-    `;
-    
-    const cancelBtn = alertDiv.querySelector('.alert-cancel');
-    const confirmBtn = alertDiv.querySelector('.alert-confirm');
-    
-    cancelBtn.addEventListener('click', () => {
-      document.body.removeChild(alertDiv);
-    });
-    
-    confirmBtn.addEventListener('click', () => {
-      document.body.removeChild(alertDiv);
-      if (onConfirm) onConfirm();
-    });
-  } else {
-    alertDiv.innerHTML = `
-      <div class="alert-content">
-        <h3 class="alert-title" style="color: ${titleColor};">${titleText}</h3>
-        <p>${message}</p>
-        <button class="alert-ok">OK</button>
-      </div>
-    `;
-    
-    const okBtn = alertDiv.querySelector('.alert-ok');
-    okBtn.addEventListener('click', () => {
-      document.body.removeChild(alertDiv);
-    });
-  }
-  
+    </div>
+  ` : `
+    <div class="alert-content">
+      <h3 class="alert-title" style="color: ${titleColor};">${titleText}</h3>
+      <p>${message}</p>
+      <button class="alert-ok">OK</button>
+    </div>
+  `;
+
+  const cancelBtn = alertDiv.querySelector('.alert-cancel');
+  const confirmBtn = alertDiv.querySelector('.alert-confirm');
+  const okBtn = alertDiv.querySelector('.alert-ok');
+
+  if (cancelBtn) cancelBtn.addEventListener('click', () => document.body.removeChild(alertDiv));
+  if (confirmBtn) confirmBtn.addEventListener('click', () => { document.body.removeChild(alertDiv); if (onConfirm) onConfirm(); });
+  if (okBtn) okBtn.addEventListener('click', () => document.body.removeChild(alertDiv));
+
   if (!isConfirm) {
-    const closeOnEscape = (e) => {
-      if (e.key === 'Escape') {
-        document.body.removeChild(alertDiv);
-        document.removeEventListener('keydown', closeOnEscape);
-      }
-    };
+    const closeOnEscape = (e) => { if (e.key === 'Escape') { document.body.removeChild(alertDiv); document.removeEventListener('keydown', closeOnEscape); } };
     document.addEventListener('keydown', closeOnEscape);
   }
-  
+
   document.body.appendChild(alertDiv);
 }
 
@@ -133,7 +99,6 @@ function saveData() {
 function renderCategories() {
   categoriesListEl.innerHTML = '';
   categorySelect.innerHTML = '<option value="">-- Categoría --</option>';
-  
   categories.forEach(cat => {
     const div = document.createElement('div');
     div.className = 'category-item';
@@ -147,7 +112,6 @@ function renderCategories() {
       </div>
     `;
     categoriesListEl.appendChild(div);
-
     const option = document.createElement('option');
     option.value = cat.id;
     option.textContent = cat.name;
@@ -158,7 +122,6 @@ function renderCategories() {
 function renderLocations() {
   locationsListEl.innerHTML = '';
   locationSelect.innerHTML = '<option value="">-- Ubicación --</option>';
-  
   locations.forEach(loc => {
     const div = document.createElement('div');
     div.className = 'location-item';
@@ -172,7 +135,6 @@ function renderLocations() {
       </div>
     `;
     locationsListEl.appendChild(div);
-
     const option = document.createElement('option');
     option.value = loc.id;
     option.textContent = loc.name;
@@ -183,14 +145,8 @@ function renderLocations() {
 function renderProductItem(item, index) {
   const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
   const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
-  
-  const isFavorite = favoriteProducts.some(p => 
-    p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
-  );
-  const isDefault = defaultProducts.some(p => 
-    p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
-  );
-  
+  const isFavorite = favoriteProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
+  const isDefault = defaultProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
   const li = document.createElement('li');
   li.innerHTML = `
     <div class="product-info">
@@ -219,18 +175,14 @@ function renderShoppingList() {
     shoppingListEl.appendChild(li);
   });
   saveData();
-
-  // Activar drag & drop en la lista principal
-  setupDragAndDrop(shoppingListEl, 'li', shoppingList, renderShoppingList);
+  initDragAndDrop(shoppingListEl, 'li', shoppingList, renderShoppingList);
 }
 
 function renderFavoritesList() {
   favoritesListEl.innerHTML = '';
-  
   favoriteProducts.forEach((item, index) => {
     const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
     const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
-    
     const div = document.createElement('div');
     div.className = 'favorite-item';
     div.dataset.index = index;
@@ -257,15 +209,14 @@ function renderFavoritesList() {
     `;
     favoritesListEl.appendChild(div);
   });
+  initDragAndDrop(favoritesListEl, '.favorite-item', favoriteProducts, renderFavoritesList);
 }
 
 function renderDefaultsList() {
   defaultsListEl.innerHTML = '';
-  
   defaultProducts.forEach((item, index) => {
     const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
     const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
-    
     const div = document.createElement('div');
     div.className = 'default-item';
     div.dataset.index = index;
@@ -292,83 +243,60 @@ function renderDefaultsList() {
     `;
     defaultsListEl.appendChild(div);
   });
+  initDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList);
 }
 
-// Drag & Drop genérico mejorado (sin clonación, con limpieza explícita)
-function setupDragAndDrop(listEl, itemSelector, arrayToUpdate, renderFn) {
-  // Limpiar eventos anteriores
-  const existingItems = listEl.querySelectorAll(itemSelector);
-  existingItems.forEach(item => {
-    item.removeEventListener('dragstart', handleDragStart);
-    item.removeEventListener('dragover', handleDragOver);
-    item.removeEventListener('dragenter', handleDragEnter);
-    item.removeEventListener('dragleave', handleDragLeave);
-    item.removeEventListener('drop', handleDrop);
-    item.removeEventListener('dragend', handleDragEnd);
-  });
+// Drag & Drop simple y confiable
+function initDragAndDrop(container, itemSelector, dataArray, renderFn) {
+  let dragSrcEl = null;
 
-  function handleDragStart(e) {
-    this.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-  }
+  const items = container.querySelectorAll(itemSelector);
+  items.forEach(item => {
+    item.addEventListener('dragstart', (e) => {
+      dragSrcEl = item;
+      e.dataTransfer.effectAllowed = 'move';
+      item.classList.add('dragging');
+    });
 
-  function handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  }
+    item.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    });
 
-  function handleDragEnter(e) {
-    e.preventDefault();
-    this.classList.add('drag-over');
-  }
+    item.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+      item.classList.add('drag-over');
+    });
 
-  function handleDragLeave() {
-    this.classList.remove('drag-over');
-  }
-
-  function handleDrop(e) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const draggingEl = listEl.querySelector('.dragging');
-    if (!draggingEl || draggingEl === this) return;
-
-    const srcIndex = parseInt(draggingEl.dataset.index, 10);
-    const targetIndex = parseInt(this.dataset.index, 10);
-
-    if (isNaN(srcIndex) || isNaN(targetIndex)) return;
-
-    const [movedItem] = arrayToUpdate.splice(srcIndex, 1);
-    arrayToUpdate.splice(targetIndex, 0, movedItem);
-    renderFn();
-  }
-
-  function handleDragEnd() {
-    this.classList.remove('dragging');
-    listEl.querySelectorAll(itemSelector).forEach(item => {
+    item.addEventListener('dragleave', () => {
       item.classList.remove('drag-over');
     });
-  }
 
-  // Vincular nuevos eventos
-  const items = listEl.querySelectorAll(itemSelector);
-  items.forEach(item => {
-    item.addEventListener('dragstart', handleDragStart);
-    item.addEventListener('dragover', handleDragOver);
-    item.addEventListener('dragenter', handleDragEnter);
-    item.addEventListener('dragleave', handleDragLeave);
-    item.addEventListener('drop', handleDrop);
-    item.addEventListener('dragend', handleDragEnd);
+    item.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (dragSrcEl !== item) {
+        const srcIndex = Array.from(container.children).indexOf(dragSrcEl);
+        const targetIndex = Array.from(container.children).indexOf(item);
+        if (srcIndex !== -1 && targetIndex !== -1) {
+          const [moved] = dataArray.splice(srcIndex, 1);
+          dataArray.splice(targetIndex, 0, moved);
+          renderFn();
+        }
+      }
+    });
+
+    item.addEventListener('dragend', () => {
+      items.forEach(el => {
+        el.classList.remove('dragging', 'drag-over');
+      });
+    });
   });
 }
 
 // Modal controls
-function openModal(modal, renderFn, dragSetupFn) {
+function openModal(modal, renderFn) {
   modal.style.display = 'block';
   renderFn();
-  if (dragSetupFn) {
-    setTimeout(dragSetupFn, 100);
-  }
 }
 
 function closeModal(modal) {
@@ -377,17 +305,20 @@ function closeModal(modal) {
 
 // Event listeners para modales
 if (openFavoritesBtn) {
-  openFavoritesBtn.addEventListener('click', () => {
-    openModal(favoritesModal, renderFavoritesList, () => {
-      setupDragAndDrop(favoritesListEl, '.favorite-item', favoriteProducts, renderFavoritesList);
-    });
-  });
+  openFavoritesBtn.addEventListener('click', () => openModal(favoritesModal, renderFavoritesList));
 }
 
 if (openDefaultsBtn) {
-  openDefaultsBtn.addEventListener('click', () => {
-    openModal(defaultsModal, renderDefaultsList, () => {
-      setupDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList);
+  openDefaultsBtn.addEventListener('click', () => openModal(defaultsModal, renderDefaultsList));
+}
+
+if (openConfigBtn) {
+  openConfigBtn.addEventListener('click', () => {
+    openModal(configModal, () => {
+      renderCategories();
+      renderLocations();
+      initDragAndDrop(categoriesListEl, '.category-item', categories, renderCategories);
+      initDragAndDrop(locationsListEl, '.location-item', locations, renderLocations);
     });
   });
 }
@@ -403,9 +334,7 @@ const closeButtons = [
 ];
 
 closeButtons.forEach(({btn, modal}) => {
-  if (btn) {
-    btn.addEventListener('click', () => closeModal(modal));
-  }
+  if (btn) btn.addEventListener('click', () => closeModal(modal));
 });
 
 window.addEventListener('click', (e) => {
@@ -414,34 +343,17 @@ window.addEventListener('click', (e) => {
   if (e.target === defaultsModal) closeModal(defaultsModal);
 });
 
-// Configuración modal
-if (openConfigBtn) {
-  openConfigBtn.addEventListener('click', () => {
-    openModal(configModal, () => {
-      renderCategories();
-      renderLocations();
-    }, () => {
-      setupDragAndDrop(categoriesListEl, '.category-item', categories, renderCategories);
-      setupDragAndDrop(locationsListEl, '.location-item', locations, renderLocations);
-    });
-  });
-}
-
 // Añadir categoría
 if (categoryForm) {
   categoryForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const input = document.getElementById('new-category');
     const name = input.value.trim();
-    
     if (!name) return;
-
-    const exists = categories.some(c => c.name.toLowerCase() === name.toLowerCase());
-    if (exists) {
+    if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
       showAlert('La categoría ya existe.', { type: 'warning' });
       return;
     }
-
     categories.push({ id: Date.now(), name });
     renderCategories();
     saveData();
@@ -455,15 +367,11 @@ if (locationForm) {
     e.preventDefault();
     const input = document.getElementById('new-location');
     const name = input.value.trim();
-    
     if (!name) return;
-
-    const exists = locations.some(l => l.name.toLowerCase() === name.toLowerCase());
-    if (exists) {
+    if (locations.some(l => l.name.toLowerCase() === name.toLowerCase())) {
       showAlert('La ubicación ya existe.', { type: 'warning' });
       return;
     }
-
     locations.push({ id: Date.now(), name });
     renderLocations();
     saveData();
@@ -471,69 +379,75 @@ if (locationForm) {
   });
   }
 
-
-           // Historial para deshacer
+// Historial de deshacer
 let undoStack = [];
-let undoTimeout = null;
 
+// Crear botón de deshacer al inicio
+document.addEventListener('DOMContentLoaded', () => {
+  if (!document.getElementById('undo-btn')) {
+    const btn = document.createElement('button');
+    btn.id = 'undo-btn';
+    btn.className = 'undo-btn';
+    btn.textContent = '↺ Deshacer';
+    btn.style.display = 'none';
+    document.body.appendChild(btn);
+    btn.addEventListener('click', () => {
+      if (undoStack.length > 0) {
+        shoppingList = undoStack.pop();
+        renderShoppingList();
+        btn.style.display = 'none';
+        showAlert('Producto restaurado.', { type: 'success' });
+      }
+    });
+  }
+});
+
+// Mostrar botón de deshacer
 function showUndoButton() {
-  const undoBtn = document.getElementById('undo-btn');
-  if (undoBtn) {
-    undoBtn.style.display = 'block';
-    if (undoTimeout) clearTimeout(undoTimeout);
-    undoTimeout = setTimeout(() => {
-      undoBtn.style.display = 'none';
-    }, 5000);
+  const btn = document.getElementById('undo-btn');
+  if (btn) {
+    btn.style.display = 'block';
+    setTimeout(() => { if (btn.style.display !== 'none') btn.style.display = 'none'; }, 5000);
   }
 }
 
-function undoDelete() {
-  if (undoStack.length === 0) return;
-  const lastState = undoStack.pop();
-  shoppingList = lastState;
-  renderShoppingList();
-  const undoBtn = document.getElementById('undo-btn');
-  if (undoBtn) undoBtn.style.display = 'none';
-  if (undoTimeout) clearTimeout(undoTimeout);
-  showAlert('Producto restaurado.', { type: 'success' });
-}
+// Listener de eliminación (único y global)
+document.addEventListener('click', (e) => {
+  // Deshacer
+  if (e.target.id === 'undo-btn') return; // ya manejado
 
-// Listener de la lista principal (fuera de delegación global)
-if (shoppingListEl) {
-  shoppingListEl.addEventListener('click', (e) => {
+  // Eliminar producto
+  if (e.target.classList.contains('delete-btn') && e.target.closest('#shopping-list')) {
     const index = e.target.dataset.index;
-    if (index === undefined) return;
-
-    if (e.target.classList.contains('bought')) {
-      shoppingList[index].bought = e.target.checked;
-      saveData();
-    } else if (e.target.classList.contains('delete-btn')) {
+    if (index !== undefined) {
       undoStack.push([...shoppingList]);
       shoppingList.splice(index, 1);
       renderShoppingList();
       showUndoButton();
+      return;
     }
-  });
-}
+  }
 
-// Delegación global de eventos (sin anidamiento)
-document.addEventListener('click', function(e) {
-  // Deshacer
-  if (e.target.id === 'undo-btn') {
-    undoDelete();
-    return;
+  // Toggle comprado
+  if (e.target.classList.contains('bought') && e.target.closest('#shopping-list')) {
+    const index = e.target.dataset.index;
+    if (index !== undefined) {
+      shoppingList[index].bought = e.target.checked;
+      saveData();
+      return;
+    }
   }
 
   // Favoritos - Añadir
   if (e.target.classList.contains('add-to-list') && e.target.dataset.type === 'favorite') {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < favoriteProducts.length) {
-      const itemToAdd = favoriteProducts[index];
-      if (shoppingList.some(item => item.name === itemToAdd.name)) {
+      const item = favoriteProducts[index];
+      if (shoppingList.some(p => p.name === item.name)) {
         showAlert('Este producto ya está en la lista.', { type: 'warning' });
         return;
       }
-      shoppingList.push({ ...itemToAdd, id: generateId(), bought: false });
+      shoppingList.push({ ...item, id: generateId(), bought: false });
       renderShoppingList();
       showAlert('Producto añadido a la lista!', { type: 'success' });
     }
@@ -544,12 +458,12 @@ document.addEventListener('click', function(e) {
   if (e.target.classList.contains('add-to-list') && e.target.dataset.type === 'default') {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < defaultProducts.length) {
-      const itemToAdd = defaultProducts[index];
-      if (shoppingList.some(item => item.name === itemToAdd.name)) {
+      const item = defaultProducts[index];
+      if (shoppingList.some(p => p.name === item.name)) {
         showAlert('Este producto ya está en la lista.', { type: 'warning' });
         return;
       }
-      shoppingList.push({ ...itemToAdd, id: generateId(), bought: false });
+      shoppingList.push({ ...item, id: generateId(), bought: false });
       renderShoppingList();
       showAlert('Producto añadido a la lista!', { type: 'success' });
     }
@@ -560,17 +474,10 @@ document.addEventListener('click', function(e) {
   if (e.target.classList.contains('save-category')) {
     const id = Number(e.target.dataset.id);
     const input = e.target.closest('.category-item').querySelector('input');
-    const newName = input.value.trim();
-    if (newName) {
+    const name = input.value.trim();
+    if (name) {
       const cat = categories.find(c => c.id === id);
-      if (cat) {
-        cat.name = newName;
-        renderCategories();
-        renderShoppingList();
-        renderFavoritesList();
-        renderDefaultsList();
-        saveData();
-      }
+      if (cat) { cat.name = name; renderCategories(); renderShoppingList(); renderFavoritesList(); renderDefaultsList(); saveData(); }
     }
   }
 
@@ -578,30 +485,19 @@ document.addEventListener('click', function(e) {
     const id = Number(e.target.dataset.id);
     if ([...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.categoryId === id)) {
       showAlert('No se puede eliminar: hay productos en esta categoría.', { type: 'warning' });
-      return;
+    } else {
+      categories = categories.filter(c => c.id !== id);
+      renderCategories(); renderShoppingList(); renderFavoritesList(); renderDefaultsList(); saveData();
     }
-    categories = categories.filter(c => c.id !== id);
-    renderCategories();
-    renderShoppingList();
-    renderFavoritesList();
-    renderDefaultsList();
-    saveData();
   }
 
   if (e.target.classList.contains('save-location')) {
     const id = Number(e.target.dataset.id);
     const input = e.target.closest('.location-item').querySelector('input');
-    const newName = input.value.trim();
-    if (newName) {
+    const name = input.value.trim();
+    if (name) {
       const loc = locations.find(l => l.id === id);
-      if (loc) {
-        loc.name = newName;
-        renderLocations();
-        renderShoppingList();
-        renderFavoritesList();
-        renderDefaultsList();
-        saveData();
-      }
+      if (loc) { loc.name = name; renderLocations(); renderShoppingList(); renderFavoritesList(); renderDefaultsList(); saveData(); }
     }
   }
 
@@ -609,27 +505,18 @@ document.addEventListener('click', function(e) {
     const id = Number(e.target.dataset.id);
     if ([...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.locationId === id)) {
       showAlert('No se puede eliminar: hay productos en esta ubicación.', { type: 'warning' });
-      return;
+    } else {
+      locations = locations.filter(l => l.id !== id);
+      renderLocations(); renderShoppingList(); renderFavoritesList(); renderDefaultsList(); saveData();
     }
-    locations = locations.filter(l => l.id !== id);
-    renderLocations();
-    renderShoppingList();
-    renderFavoritesList();
-    renderDefaultsList();
-    saveData();
   }
 
   if (e.target.classList.contains('save-favorite')) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < favoriteProducts.length) {
       const input = e.target.closest('.favorite-item').querySelector('.product-name');
-      const newName = input.value.trim();
-      if (newName) {
-        favoriteProducts[index].name = newName;
-        renderFavoritesList();
-        renderShoppingList();
-        saveData();
-      }
+      const name = input.value.trim();
+      if (name) { favoriteProducts[index].name = name; renderFavoritesList(); renderShoppingList(); saveData(); }
     }
   }
 
@@ -637,9 +524,7 @@ document.addEventListener('click', function(e) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < favoriteProducts.length) {
       favoriteProducts.splice(index, 1);
-      renderFavoritesList();
-      renderShoppingList();
-      saveData();
+      renderFavoritesList(); renderShoppingList(); saveData();
     }
   }
 
@@ -647,13 +532,8 @@ document.addEventListener('click', function(e) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < defaultProducts.length) {
       const input = e.target.closest('.default-item').querySelector('.product-name');
-      const newName = input.value.trim();
-      if (newName) {
-        defaultProducts[index].name = newName;
-        renderDefaultsList();
-        renderShoppingList();
-        saveData();
-      }
+      const name = input.value.trim();
+      if (name) { defaultProducts[index].name = name; renderDefaultsList(); renderShoppingList(); saveData(); }
     }
   }
 
@@ -661,78 +541,71 @@ document.addEventListener('click', function(e) {
     const index = Number(e.target.dataset.index);
     if (index >= 0 && index < defaultProducts.length) {
       defaultProducts.splice(index, 1);
-      renderDefaultsList();
-      renderShoppingList();
-      saveData();
+      renderDefaultsList(); renderShoppingList(); saveData();
     }
   }
 });
 
 // Eventos para selects en modales
 document.addEventListener('change', (e) => {
-  // Favoritos
-  if (e.target.classList.contains('product-category') && e.target.closest('.favorite-item')) {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < favoriteProducts.length) {
-      favoriteProducts[index].categoryId = e.target.value ? Number(e.target.value) : null;
+  const updateList = (list, index, prop, value) => {
+    if (index >= 0 && index < list.length) {
+      list[index][prop] = value ? Number(value) : null;
       saveData();
     }
-  }
-  if (e.target.classList.contains('product-location') && e.target.closest('.favorite-item')) {
+  };
+
+  if (e.target.classList.contains('product-category')) {
     const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < favoriteProducts.length) {
-      favoriteProducts[index].locationId = e.target.value ? Number(e.target.value) : null;
-      saveData();
+    const value = e.target.value;
+    if (e.target.closest('.favorite-item')) {
+      updateList(favoriteProducts, index, 'categoryId', value);
+    } else if (e.target.closest('.default-item')) {
+      updateList(defaultProducts, index, 'categoryId', value);
     }
   }
-  // Predeterminados
-  if (e.target.classList.contains('product-category') && e.target.closest('.default-item')) {
+
+  if (e.target.classList.contains('product-location')) {
     const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < defaultProducts.length) {
-      defaultProducts[index].categoryId = e.target.value ? Number(e.target.value) : null;
-      saveData();
-    }
-  }
-  if (e.target.classList.contains('product-location') && e.target.closest('.default-item')) {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < defaultProducts.length) {
-      defaultProducts[index].locationId = e.target.value ? Number(e.target.value) : null;
-      saveData();
+    const value = e.target.value;
+    if (e.target.closest('.favorite-item')) {
+      updateList(favoriteProducts, index, 'locationId', value);
+    } else if (e.target.closest('.default-item')) {
+      updateList(defaultProducts, index, 'locationId', value);
     }
   }
 });
 
 // Añadir producto
-const addProductBtn = document.getElementById('add-product-btn');
-if (addProductBtn) {
-  addProductBtn.addEventListener('click', (e) => {
+if (document.getElementById('add-product-btn')) {
+  document.getElementById('add-product-btn').addEventListener('click', (e) => {
     e.preventDefault();
     const nameInput = document.getElementById('product-name');
     const name = nameInput.value.trim();
     if (!name) return nameInput.focus();
 
-    if (shoppingList.some(item => item.name === name)) {
+    if (shoppingList.some(p => p.name === name)) {
       showAlert('Este producto ya está en la lista.', { type: 'warning' });
       return;
     }
 
-    const favorite = document.getElementById('product-favorite').checked;
-    const isDefault = document.getElementById('product-default').checked;
-    const categoryId = categorySelect.value ? Number(categorySelect.value) : null;
-    const locationId = locationSelect.value ? Number(locationSelect.value) : null;
+    const isFav = document.getElementById('product-favorite').checked;
+    const isDef = document.getElementById('product-default').checked;
+    const catId = categorySelect.value ? Number(categorySelect.value) : null;
+    const locId = locationSelect.value ? Number(locationSelect.value) : null;
 
-    const newItem = { id: generateId(), name, categoryId, locationId, bought: false };
+    const newItem = { id: generateId(), name, categoryId: catId, locationId: locId, bought: false };
     shoppingList.push(newItem);
 
-    if (favorite && !favoriteProducts.some(p => p.name === name)) {
-      favoriteProducts.push({...newItem, id: generateId()});
-    } else if (!favorite) {
+    if (isFav && !favoriteProducts.some(p => p.name === name)) {
+      favoriteProducts.push({ ...newItem, id: generateId() });
+    } else if (!isFav) {
       favoriteProducts = favoriteProducts.filter(p => p.name !== name);
     }
 
-    if (isDefault && !defaultProducts.some(p => p.name === name)) {
-      defaultProducts.push({...newItem, id: generateId()});
-    } else if (!isDefault) {
+    if (isDef && !defaultProducts.some(p => p.name === name)) {
+      defaultProducts.push({ ...newItem, id: generateId() });
+    } else if (!isDef) {
       defaultProducts = defaultProducts.filter(p => p.name !== name);
     }
 
@@ -770,12 +643,12 @@ if (loadFavoritesBtn) {
       showAlert('No hay productos marcados como favoritos.', { type: 'warning' });
       return;
     }
-    const favoritesToAdd = favoriteProducts.filter(fav => !shoppingList.some(item => item.name === fav.name));
-    if (favoritesToAdd.length === 0) {
+    const toAdd = favoriteProducts.filter(fav => !shoppingList.some(p => p.name === fav.name));
+    if (toAdd.length === 0) {
       showAlert('Los favoritos ya están en la lista.', { type: 'warning' });
       return;
     }
-    shoppingList.push(...favoritesToAdd.map(fav => ({ ...fav, id: generateId(), bought: false })));
+    shoppingList.push(...toAdd.map(fav => ({ ...fav, id: generateId(), bought: false })));
     renderShoppingList();
     showAlert('Favoritos cargados correctamente.', { type: 'success' });
   });
@@ -784,128 +657,81 @@ if (loadFavoritesBtn) {
 // Copiar lista
 if (copyListBtn) {
   copyListBtn.addEventListener('click', () => {
-    const pendingItems = shoppingList.filter(item => !item.bought);
-    if (pendingItems.length === 0) {
-      showAlert(pendingItems.length === 0 && shoppingList.length > 0 
-        ? 'No hay productos pendientes en la lista.' 
-        : 'La lista está vacía.', { type: 'warning' });
+    const pending = shoppingList.filter(p => !p.bought);
+    if (pending.length === 0) {
+      showAlert(shoppingList.length > 0 ? 'No hay productos pendientes.' : 'La lista está vacía.', { type: 'warning' });
       return;
     }
-    const listText = pendingItems.map((item, index) => {
-      const cat = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
-      const loc = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
-      const isFav = favoriteProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
-      const isDef = defaultProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
+    const text = pending.map((p, i) => {
+      const cat = categories.find(c => c.id === p.categoryId)?.name || 'Sin categoría';
+      const loc = locations.find(l => l.id === p.locationId)?.name || 'Sin ubicación';
+      const isFav = favoriteProducts.some(f => f.name === p.name && f.categoryId === p.categoryId && f.locationId === p.locationId);
+      const isDef = defaultProducts.some(d => d.name === p.name && d.categoryId === p.categoryId && d.locationId === p.locationId);
       const prefix = isFav ? '⭐ ' : isDef ? '📌 ' : '';
-      return `${index + 1}. ${prefix}${item.name} [${cat} - ${loc}]`;
+      return `${i + 1}. ${prefix}${p.name} [${cat} - ${loc}]`;
     }).join('\n');
 
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(listText).then(() => {
+      navigator.clipboard.writeText(text).then(() => {
         showAlert('Lista copiada al portapapeles!', { type: 'success' });
-      }).catch(() => fallbackCopyTextToClipboard(listText));
+      }).catch(() => fallbackCopy(text));
     } else {
-      fallbackCopyTextToClipboard(listText);
+      fallbackCopy(text);
     }
   });
 }
 
-function fallbackCopyTextToClipboard(text) {
-  const textArea = document.createElement('textarea');
-  textArea.value = text;
-  textArea.setAttribute('readonly', '');
-  textArea.style.cssText = 'position:fixed; left:-9999px; top:-9999px;';
-  document.body.appendChild(textArea);
-  textArea.select();
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed; left:-9999px; top:-9999px;';
+  document.body.appendChild(ta);
+  ta.select();
   try {
-    if (document.execCommand('copy')) {
-      showAlert('Lista copiada!', { type: 'success' });
-    } else {
+    document.execCommand('copy') ? 
+      showAlert('Lista copiada!', { type: 'success' }) :
       showAlert('No se pudo copiar.', { type: 'warning' });
-    }
   } catch (err) {
     showAlert('Tu navegador no permite copiar.', { type: 'error' });
   }
-  document.body.removeChild(textArea);
+  document.body.removeChild(ta);
 }
 
 // Modal de Ayuda
-const openHelpBtn = document.getElementById('open-help-btn');
-const closeHelpBtn = document.getElementById('close-help-btn');
-const closeHelpModalBtn = document.getElementById('close-help-modal-btn');
+const helpBtn = document.getElementById('open-help-btn');
 const helpModal = document.getElementById('help-modal');
-
-if (openHelpBtn) openHelpBtn.addEventListener('click', () => helpModal.style.display = 'block');
-[closeHelpBtn, closeHelpModalBtn].forEach(btn => {
+if (helpBtn) helpBtn.addEventListener('click', () => helpModal.style.display = 'block');
+['close-help-btn', 'close-help-modal-btn'].forEach(id => {
+  const btn = document.getElementById(id);
   if (btn) btn.addEventListener('click', () => helpModal.style.display = 'none');
 });
 window.addEventListener('click', (e) => {
   if (e.target === helpModal) helpModal.style.display = 'none';
 });
 
-// Crear botón de deshacer al inicio
-(function() {
-  if (!document.getElementById('undo-btn')) {
-    const undoBtn = document.createElement('button');
-    undoBtn.id = 'undo-btn';
-    undoBtn.className = 'undo-btn';
-    undoBtn.textContent = '↺ Deshacer';
-    undoBtn.style.display = 'none';
-    document.body.appendChild(undoBtn);
-    undoBtn.addEventListener('click', undoDelete);
-  }
-})();
-
 // Estilos para alertas
 const style = document.createElement('style');
 style.textContent = `
   .custom-alert {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5); display: flex;
+    justify-content: center; align-items: center; z-index: 10000;
   }
   .alert-content {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-    min-width: 250px;
+    background: white; padding: 20px; border-radius: 8px;
+    text-align: center; min-width: 250px;
   }
-  .alert-title {
-    margin-bottom: 10px;
-  }
-  .alert-content p {
-    margin-bottom: 15px;
-  }
-  .alert-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-  }
+  .alert-title { margin-bottom: 10px; }
+  .alert-content p { margin-bottom: 15px; }
+  .alert-buttons { display: flex; gap: 10px; justify-content: center; }
   .alert-ok, .alert-cancel, .alert-confirm {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
+    background-color: #4CAF50; color: white; border: none;
+    padding: 8px 16px; border-radius: 4px; cursor: pointer;
   }
-  .alert-cancel {
-    background-color: #6c757d;
-  }
-  .alert-ok:hover, .alert-confirm:hover {
-    background-color: #388E3C;
-  }
-  .alert-cancel:hover {
-    background-color: #5a6268;
-  }
+  .alert-cancel { background-color: #6c757d; }
+  .alert-ok:hover, .alert-confirm:hover { background-color: #388E3C; }
+  .alert-cancel:hover { background-color: #5a6268; }
 `;
 document.head.appendChild(style);
 
@@ -914,4 +740,4 @@ renderCategories();
 renderLocations();
 renderShoppingList();
 renderFavoritesList();
-renderDefaultsList();     
+renderDefaultsList();
