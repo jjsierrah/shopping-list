@@ -1,5 +1,4 @@
 // DOM Elements
-const productForm = document.getElementById('add-product-form');
 const shoppingListEl = document.getElementById('shopping-list');
 const clearBtn = document.getElementById('clear-list');
 const loadFavoritesBtn = document.getElementById('load-favorites');
@@ -24,6 +23,12 @@ const closeDefaultsModalBtn = document.getElementById('close-defaults-modal-btn'
 const configModal = document.getElementById('config-modal');
 const favoritesModal = document.getElementById('favorites-modal');
 const defaultsModal = document.getElementById('defaults-modal');
+
+// Nuevos elementos para la modal de añadir producto
+const openAddProductModalBtn = document.getElementById('open-add-product-modal');
+const closeAddProductModalBtn = document.getElementById('close-add-product-modal-btn');
+const addProductModal = document.getElementById('add-product-modal');
+const addProductBtn = document.getElementById('add-product-btn');
 
 // Load data - TRES LISTAS SEPARADAS
 let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
@@ -370,6 +375,21 @@ function closeModal(modal) {
   modal.style.display = 'none';
 }
 
+// Abrir modal de añadir producto
+if (openAddProductModalBtn) {
+  openAddProductModalBtn.addEventListener('click', () => {
+    addProductModal.style.display = 'block';
+    document.getElementById('product-name').focus();
+  });
+}
+
+// Cerrar modal de añadir producto
+if (closeAddProductModalBtn) {
+  closeAddProductModalBtn.addEventListener('click', () => {
+    addProductModal.style.display = 'none';
+  });
+}
+
 if (openFavoritesBtn) {
   openFavoritesBtn.addEventListener('click', () => {
     openModal(favoritesModal, renderFavoritesList);
@@ -394,13 +414,18 @@ const closeButtons = [
 ];
 
 closeButtons.forEach(({btn, modal}) => {
-  if (btn) btn.addEventListener('click', () => closeModal(modal));
+  if (btn) {
+    btn.addEventListener('click', () => closeModal(modal));
+  }
 });
 
 window.addEventListener('click', (e) => {
+  if (e.target === addProductModal) addProductModal.style.display = 'none';
   if (e.target === configModal) closeModal(configModal);
   if (e.target === favoritesModal) closeModal(favoritesModal);
   if (e.target === defaultsModal) closeModal(defaultsModal);
+  const helpModal = document.getElementById('help-modal');
+  if (e.target === helpModal) helpModal.style.display = 'none';
 });
 
 if (openConfigBtn) {
@@ -451,6 +476,7 @@ if (locationForm) {
     input.value = '';
   });
   }
+
 
 // Crear botón de deshacer global al inicio
 (function() {
@@ -704,8 +730,7 @@ document.addEventListener('change', (e) => {
   }
 });
 
-// Añadir producto
-const addProductBtn = document.getElementById('add-product-btn');
+// Añadir producto desde la MODAL
 if (addProductBtn) {
   addProductBtn.addEventListener('click', (e) => {
     e.preventDefault();
@@ -741,8 +766,12 @@ if (addProductBtn) {
     renderShoppingList();
     renderFavoritesList();
     renderDefaultsList();
+    
+    // Cerrar modal y resetear
+    document.getElementById('add-product-modal').style.display = 'none';
     document.getElementById('add-product-form').reset();
     document.getElementById('product-default').checked = true;
+    
     showAlert('Producto añadido a la lista!', false, null, 'info');
   });
 }
@@ -837,9 +866,6 @@ if (openHelpBtn) openHelpBtn.addEventListener('click', () => helpModal.style.dis
 [closeHelpBtn, closeHelpModalBtn].forEach(btn => {
   if (btn) btn.addEventListener('click', () => helpModal.style.display = 'none');
 });
-window.addEventListener('click', (e) => {
-  if (e.target === helpModal) helpModal.style.display = 'none';
-});
 
 // Estilos para alertas
 const style = document.createElement('style');
@@ -900,3 +926,7 @@ renderLocations();
 renderShoppingList();
 renderFavoritesList();
 renderDefaultsList();
+
+
+
+                                
