@@ -40,6 +40,15 @@ let locations = JSON.parse(localStorage.getItem('locations')) || [
   { id: Date.now() + 5, name: 'Tienda especializada' }
 ];
 
+// Undo stack por contexto
+let undoStack = {
+  shoppingList: [],
+  favorites: [],
+  defaults: [],
+  categories: [],
+  locations: []
+};
+
 // Función para generar ID único
 function generateId() {
   return Date.now() + Math.floor(Math.random() * 1000000);
@@ -117,6 +126,9 @@ function saveData() {
   localStorage.setItem('locations', JSON.stringify(locations));
 }
 
+// SVG de papelera (reutilizable)
+const TRASH_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
+
 function renderCategories() {
   categoriesListEl.innerHTML = '';
   categorySelect.innerHTML = '<option value="">-- Categoría --</option>';
@@ -130,7 +142,7 @@ function renderCategories() {
       <input type="text" value="${cat.name}" data-id="${cat.id}" />
       <div class="category-actions">
         <button type="button" class="save-category" data-id="${cat.id}">💾</button>
-        <button type="button" class="delete-category" data-id="${cat.id}">🗑️</button>
+        <button type="button" class="delete-category" data-id="${cat.id}">${TRASH_SVG}</button>
       </div>
     `;
     categoriesListEl.appendChild(div);
@@ -155,7 +167,7 @@ function renderLocations() {
       <input type="text" value="${loc.name}" data-id="${loc.id}" />
       <div class="location-actions">
         <button type="button" class="save-location" data-id="${loc.id}">💾</button>
-        <button type="button" class="delete-location" data-id="${loc.id}">🗑️</button>
+        <button type="button" class="delete-location" data-id="${loc.id}">${TRASH_SVG}</button>
       </div>
     `;
     locationsListEl.appendChild(div);
@@ -167,7 +179,7 @@ function renderLocations() {
   });
 }
 
-function renderProductItem(item, index) {
+function renderProductItem(item) {
   const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
   const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
   
@@ -179,6 +191,8 @@ function renderProductItem(item, index) {
   );
   
   const li = document.createElement('li');
+  li.dataset.id = item.id; // ✅ usar id, no índice
+  li.draggable = true;
   li.innerHTML = `
     <div class="product-info">
       <h3>${item.name}${isFavorite ? ' ⭐' : ''}${isDefault ? ' 📌' : ''}</h3>
@@ -186,12 +200,8 @@ function renderProductItem(item, index) {
       <div class="location">${locationName}</div>
     </div>
     <div class="actions">
-      <input type="checkbox" class="bought" ${item.bought ? 'checked' : ''} data-index="${index}">
-      <button type="button" class="delete-btn" data-index="${index}">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-        </svg>
-      </button>
+      <input type="checkbox" class="bought" ${item.bought ? 'checked' : ''} data-id="${item.id}">
+      <button type="button" class="delete-btn" data-id="${item.id}">${TRASH_SVG}</button>
     </div>
   `;
   return li;
@@ -199,10 +209,8 @@ function renderProductItem(item, index) {
 
 function renderShoppingList() {
   shoppingListEl.innerHTML = '';
-  shoppingList.forEach((item, index) => {
-    const li = renderProductItem(item, index);
-    li.dataset.index = index;
-    li.draggable = true;
+  shoppingList.forEach(item => {
+    const li = renderProductItem(item);
     shoppingListEl.appendChild(li);
   });
   saveData();
@@ -218,26 +226,26 @@ function renderFavoritesList() {
     
     const div = document.createElement('div');
     div.className = 'favorite-item';
-    div.dataset.index = index;
+    div.dataset.id = item.id;
     div.draggable = true;
     div.innerHTML = `
       <div class="product-edit">
-        <input type="text" value="${item.name}" data-index="${index}" class="product-name" />
+        <input type="text" value="${item.name}" data-id="${item.id}" class="product-name" />
         <div class="category-location-row">
-          <select class="product-category" data-index="${index}">
+          <select class="product-category" data-id="${item.id}">
             <option value="">-- Categoría --</option>
             ${categories.map(cat => `<option value="${cat.id}" ${cat.id === item.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
           </select>
-          <select class="product-location" data-index="${index}">
+          <select class="product-location" data-id="${item.id}">
             <option value="">-- Ubicación --</option>
             ${locations.map(loc => `<option value="${loc.id}" ${loc.id === item.locationId ? 'selected' : ''}>${loc.name}</option>`).join('')}
           </select>
         </div>
       </div>
       <div class="favorite-actions">
-        <button type="button" class="add-to-list" data-index="${index}" data-type="favorite">➕ Añadir</button>
-        <button type="button" class="save-favorite" data-index="${index}">💾</button>
-        <button type="button" class="delete-favorite" data-index="${index}">🗑️</button>
+        <button type="button" class="add-to-list" data-id="${item.id}" data-type="favorite">➕ Añadir</button>
+        <button type="button" class="save-favorite" data-id="${item.id}">💾</button>
+        <button type="button" class="delete-favorite" data-id="${item.id}">${TRASH_SVG}</button>
       </div>
     `;
     favoritesListEl.appendChild(div);
@@ -254,26 +262,26 @@ function renderDefaultsList() {
     
     const div = document.createElement('div');
     div.className = 'default-item';
-    div.dataset.index = index;
+    div.dataset.id = item.id;
     div.draggable = true;
     div.innerHTML = `
       <div class="product-edit">
-        <input type="text" value="${item.name}" data-index="${index}" class="product-name" />
+        <input type="text" value="${item.name}" data-id="${item.id}" class="product-name" />
         <div class="category-location-row">
-          <select class="product-category" data-index="${index}">
+          <select class="product-category" data-id="${item.id}">
             <option value="">-- Categoría --</option>
             ${categories.map(cat => `<option value="${cat.id}" ${cat.id === item.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
           </select>
-          <select class="product-location" data-index="${index}">
+          <select class="product-location" data-id="${item.id}">
             <option value="">-- Ubicación --</option>
             ${locations.map(loc => `<option value="${loc.id}" ${loc.id === item.locationId ? 'selected' : ''}>${loc.name}</option>`).join('')}
           </select>
         </div>
       </div>
       <div class="default-actions">
-        <button type="button" class="add-to-list" data-index="${index}" data-type="default">➕ Añadir</button>
-        <button type="button" class="save-default" data-index="${index}">💾</button>
-        <button type="button" class="delete-default" data-index="${index}">🗑️</button>
+        <button type="button" class="add-to-list" data-id="${item.id}" data-type="default">➕ Añadir</button>
+        <button type="button" class="save-default" data-id="${item.id}">💾</button>
+        <button type="button" class="delete-default" data-id="${item.id}">${TRASH_SVG}</button>
       </div>
     `;
     defaultsListEl.appendChild(div);
@@ -281,7 +289,7 @@ function renderDefaultsList() {
   initDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList);
 }
 
-// Drag & Drop robusto con clonación para evitar fugas
+// Drag & Drop robusto
 function initDragAndDrop(container, itemSelector, dataArray, renderFn) {
   const existingItems = container.querySelectorAll(itemSelector);
   existingItems.forEach(item => {
@@ -358,7 +366,6 @@ function closeModal(modal) {
   modal.style.display = 'none';
 }
 
-// Event listeners para modales
 if (openFavoritesBtn) {
   openFavoritesBtn.addEventListener('click', () => {
     openModal(favoritesModal, renderFavoritesList);
@@ -373,7 +380,6 @@ if (openDefaultsBtn) {
   });
 }
 
-// Cerrar modales
 const closeButtons = [
   {btn: closeConfigBtn, modal: configModal},
   {btn: closeFavoritesBtn, modal: favoritesModal},
@@ -384,9 +390,7 @@ const closeButtons = [
 ];
 
 closeButtons.forEach(({btn, modal}) => {
-  if (btn) {
-    btn.addEventListener('click', () => closeModal(modal));
-  }
+  if (btn) btn.addEventListener('click', () => closeModal(modal));
 });
 
 window.addEventListener('click', (e) => {
@@ -395,7 +399,6 @@ window.addEventListener('click', (e) => {
   if (e.target === defaultsModal) closeModal(defaultsModal);
 });
 
-// Configuración modal — CORREGIDO: siempre re-inicializa drag & drop
 if (openConfigBtn) {
   openConfigBtn.addEventListener('click', () => {
     openModal(configModal, () => {
@@ -415,15 +418,11 @@ if (categoryForm) {
     e.preventDefault();
     const input = document.getElementById('new-category');
     const name = input.value.trim();
-    
     if (!name) return;
-
-    const exists = categories.some(c => c.name.toLowerCase() === name.toLowerCase());
-    if (exists) {
+    if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
       showAlert('La categoría ya existe.', false, null, 'warning');
       return;
     }
-
     categories.push({ id: Date.now(), name });
     renderCategories();
     saveData();
@@ -437,27 +436,19 @@ if (locationForm) {
     e.preventDefault();
     const input = document.getElementById('new-location');
     const name = input.value.trim();
-    
     if (!name) return;
-
-    const exists = locations.some(l => l.name.toLowerCase() === name.toLowerCase());
-    if (exists) {
+    if (locations.some(l => l.name.toLowerCase() === name.toLowerCase())) {
       showAlert('La ubicación ya existe.', false, null, 'warning');
       return;
     }
-
     locations.push({ id: Date.now(), name });
     renderLocations();
     saveData();
     input.value = '';
   });
-    }
+                                               }
 
-
-// Historial para deshacer
-let undoStack = [];
-
-// Crear botón de deshacer al inicio
+// Crear botón de deshacer al inicio (único para toda la app)
 (function() {
   if (!document.getElementById('undo-btn')) {
     const undoBtn = document.createElement('button');
@@ -466,15 +457,6 @@ let undoStack = [];
     undoBtn.textContent = '↺ Deshacer';
     undoBtn.style.display = 'none';
     document.body.appendChild(undoBtn);
-    undoBtn.addEventListener('click', () => {
-      if (undoStack.length > 0) {
-        shoppingList = JSON.parse(JSON.stringify(undoStack[0]));
-        renderShoppingList();
-        undoBtn.style.display = 'none';
-        showAlert('Producto restaurado.', false, null, 'info');
-        undoStack = [];
-      }
-    });
   }
 })();
 
@@ -489,43 +471,145 @@ function showUndoButton() {
   }
 }
 
-// >>> CORRECCIÓN CLAVE: DELEGACIÓN GLOBAL ÚNICA PARA ELIMINACIÓN <<<
+// >>> DELEGACIÓN GLOBAL ÚNICA PARA TODAS LAS PAPELERAS <<<
 document.addEventListener('click', (e) => {
-  // Solo procesar si el clic es en un botón de papelera dentro de #shopping-list
-  if (e.target.classList.contains('delete-btn') && e.target.closest('#shopping-list')) {
-    const index = e.target.dataset.index;
-    if (index !== undefined && !isNaN(index)) {
-      const idx = parseInt(index, 10);
-      if (idx >= 0 && idx < shoppingList.length) {
-        // Guardar copia profunda del estado ACTUAL (antes de borrar)
-        undoStack = [JSON.parse(JSON.stringify(shoppingList))];
-        // Eliminar el producto
-        shoppingList.splice(idx, 1);
-        // Re-renderizar
-        renderShoppingList();
-        // Mostrar deshacer
-        showUndoButton();
-      }
+  const target = e.target;
+
+  // Shopping List
+  if (target.classList.contains('delete-btn') && target.closest('#shopping-list')) {
+    const id = Number(target.dataset.id);
+    const item = shoppingList.find(p => p.id === id);
+    if (item) {
+      undoStack.shoppingList = [JSON.parse(JSON.stringify(shoppingList))];
+      shoppingList = shoppingList.filter(p => p.id !== id);
+      renderShoppingList();
+      showUndoButton();
     }
+    return;
+  }
+
+  // Favoritos
+  if (target.classList.contains('delete-favorite')) {
+    const id = Number(target.dataset.id);
+    const item = favoriteProducts.find(p => p.id === id);
+    if (item) {
+      undoStack.favorites = [JSON.parse(JSON.stringify(favoriteProducts))];
+      favoriteProducts = favoriteProducts.filter(p => p.id !== id);
+      renderFavoritesList();
+      renderShoppingList();
+      showUndoButton();
+    }
+    return;
+  }
+
+  // Predeterminados
+  if (target.classList.contains('delete-default')) {
+    const id = Number(target.dataset.id);
+    const item = defaultProducts.find(p => p.id === id);
+    if (item) {
+      undoStack.defaults = [JSON.parse(JSON.stringify(defaultProducts))];
+      defaultProducts = defaultProducts.filter(p => p.id !== id);
+      renderDefaultsList();
+      renderShoppingList();
+      showUndoButton();
+    }
+    return;
+  }
+
+  // Categorías
+  if (target.classList.contains('delete-category')) {
+    const id = Number(target.dataset.id);
+    const item = categories.find(c => c.id === id);
+    if (item) {
+      undoStack.categories = [JSON.parse(JSON.stringify(categories))];
+      categories = categories.filter(c => c.id !== id);
+      renderCategories();
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+      showUndoButton();
+    }
+    return;
+  }
+
+  // Ubicaciones
+  if (target.classList.contains('delete-location')) {
+    const id = Number(target.dataset.id);
+    const item = locations.find(l => l.id === id);
+    if (item) {
+      undoStack.locations = [JSON.parse(JSON.stringify(locations))];
+      locations = locations.filter(l => l.id !== id);
+      renderLocations();
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+      showUndoButton();
+    }
+    return;
+  }
+
+  // Deshacer
+  if (target.id === 'undo-btn') {
+    if (undoStack.shoppingList.length > 0) {
+      shoppingList = JSON.parse(JSON.stringify(undoStack.shoppingList[0]));
+      renderShoppingList();
+      undoStack.shoppingList = [];
+    } else if (undoStack.favorites.length > 0) {
+      favoriteProducts = JSON.parse(JSON.stringify(undoStack.favorites[0]));
+      renderFavoritesList();
+      renderShoppingList();
+      undoStack.favorites = [];
+    } else if (undoStack.defaults.length > 0) {
+      defaultProducts = JSON.parse(JSON.stringify(undoStack.defaults[0]));
+      renderDefaultsList();
+      renderShoppingList();
+      undoStack.defaults = [];
+    } else if (undoStack.categories.length > 0) {
+      categories = JSON.parse(JSON.stringify(undoStack.categories[0]));
+      renderCategories();
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+      undoStack.categories = [];
+    } else if (undoStack.locations.length > 0) {
+      locations = JSON.parse(JSON.stringify(undoStack.locations[0]));
+      renderLocations();
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+      undoStack.locations = [];
+    }
+    document.getElementById('undo-btn').style.display = 'none';
+    showAlert('Acción deshecha.', false, null, 'info');
+    return;
   }
 });
 
 // >>> RESTO DE EVENTOS (sin tocar eliminación) <<<
 document.addEventListener('click', function(e) {
-  // Si es papelera, ya fue manejado arriba → salir
-  if (e.target.classList.contains('delete-btn') && e.target.closest('#shopping-list')) {
+  const target = e.target;
+
+  // Evitar procesar eliminaciones aquí
+  if (
+    target.classList.contains('delete-btn') ||
+    target.classList.contains('delete-favorite') ||
+    target.classList.contains('delete-default') ||
+    target.classList.contains('delete-category') ||
+    target.classList.contains('delete-location') ||
+    target.id === 'undo-btn'
+  ) {
     return;
   }
 
   // Favoritos - Añadir
-  if (e.target.classList.contains('add-to-list') && e.target.dataset.type === 'favorite') {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < favoriteProducts.length) {
-      const itemToAdd = favoriteProducts[index];
-      if (shoppingList.some(item => item.name === itemToAdd.name)) {
-        showAlert('Este producto ya está en la lista.', false, null, 'warning');
-        return;
-      }
+  if (target.classList.contains('add-to-list') && target.dataset.type === 'favorite') {
+    const id = Number(target.dataset.id);
+    const itemToAdd = favoriteProducts.find(p => p.id === id);
+    if (itemToAdd && shoppingList.some(p => p.name === itemToAdd.name)) {
+      showAlert('Este producto ya está en la lista.', false, null, 'warning');
+      return;
+    }
+    if (itemToAdd) {
       shoppingList.push({ ...itemToAdd, id: generateId(), bought: false });
       renderShoppingList();
       showAlert('Producto añadido a la lista!', false, null, 'info');
@@ -534,14 +618,14 @@ document.addEventListener('click', function(e) {
   }
 
   // Predeterminados - Añadir
-  if (e.target.classList.contains('add-to-list') && e.target.dataset.type === 'default') {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < defaultProducts.length) {
-      const itemToAdd = defaultProducts[index];
-      if (shoppingList.some(item => item.name === itemToAdd.name)) {
-        showAlert('Este producto ya está en la lista.', false, null, 'warning');
-        return;
-      }
+  if (target.classList.contains('add-to-list') && target.dataset.type === 'default') {
+    const id = Number(target.dataset.id);
+    const itemToAdd = defaultProducts.find(p => p.id === id);
+    if (itemToAdd && shoppingList.some(p => p.name === itemToAdd.name)) {
+      showAlert('Este producto ya está en la lista.', false, null, 'warning');
+      return;
+    }
+    if (itemToAdd) {
       shoppingList.push({ ...itemToAdd, id: generateId(), bought: false });
       renderShoppingList();
       showAlert('Producto añadido a la lista!', false, null, 'info');
@@ -549,10 +633,10 @@ document.addEventListener('click', function(e) {
     return;
   }
 
-  // Guardar/eliminar en modales (categorías, ubicaciones, favoritos, predeterminados)
-  if (e.target.classList.contains('save-category')) {
-    const id = Number(e.target.dataset.id);
-    const input = e.target.closest('.category-item').querySelector('input');
+  // Guardar en modales
+  if (target.classList.contains('save-category')) {
+    const id = Number(target.dataset.id);
+    const input = target.closest('.category-item').querySelector('input');
     const newName = input.value.trim();
     if (newName) {
       const cat = categories.find(c => c.id === id);
@@ -567,23 +651,9 @@ document.addEventListener('click', function(e) {
     }
   }
 
-  if (e.target.classList.contains('delete-category')) {
-    const id = Number(e.target.dataset.id);
-    if ([...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.categoryId === id)) {
-      showAlert('No se puede eliminar: hay productos en esta categoría.', false, null, 'warning');
-      return;
-    }
-    categories = categories.filter(c => c.id !== id);
-    renderCategories();
-    renderShoppingList();
-    renderFavoritesList();
-    renderDefaultsList();
-    saveData();
-  }
-
-  if (e.target.classList.contains('save-location')) {
-    const id = Number(e.target.dataset.id);
-    const input = e.target.closest('.location-item').querySelector('input');
+  if (target.classList.contains('save-location')) {
+    const id = Number(target.dataset.id);
+    const input = target.closest('.location-item').querySelector('input');
     const newName = input.value.trim();
     if (newName) {
       const loc = locations.find(l => l.id === id);
@@ -598,27 +668,14 @@ document.addEventListener('click', function(e) {
     }
   }
 
-  if (e.target.classList.contains('delete-location')) {
-    const id = Number(e.target.dataset.id);
-    if ([...shoppingList, ...favoriteProducts, ...defaultProducts].some(p => p.locationId === id)) {
-      showAlert('No se puede eliminar: hay productos en esta ubicación.', false, null, 'warning');
-      return;
-    }
-    locations = locations.filter(l => l.id !== id);
-    renderLocations();
-    renderShoppingList();
-    renderFavoritesList();
-    renderDefaultsList();
-    saveData();
-  }
-
-  if (e.target.classList.contains('save-favorite')) {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < favoriteProducts.length) {
-      const input = e.target.closest('.favorite-item').querySelector('.product-name');
-      const newName = input.value.trim();
-      if (newName) {
-        favoriteProducts[index].name = newName;
+  if (target.classList.contains('save-favorite')) {
+    const id = Number(target.dataset.id);
+    const input = target.closest('.favorite-item').querySelector('.product-name');
+    const newName = input.value.trim();
+    if (newName) {
+      const item = favoriteProducts.find(p => p.id === id);
+      if (item) {
+        item.name = newName;
         renderFavoritesList();
         renderShoppingList();
         saveData();
@@ -626,42 +683,47 @@ document.addEventListener('click', function(e) {
     }
   }
 
-  if (e.target.classList.contains('delete-favorite')) {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < favoriteProducts.length) {
-      favoriteProducts.splice(index, 1);
-      renderFavoritesList();
-      renderShoppingList();
-      saveData();
-    }
-  }
-
-  if (e.target.classList.contains('save-default')) {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < defaultProducts.length) {
-      const input = e.target.closest('.default-item').querySelector('.product-name');
-      const newName = input.value.trim();
-      if (newName) {
-        defaultProducts[index].name = newName;
+  if (target.classList.contains('save-default')) {
+    const id = Number(target.dataset.id);
+    const input = target.closest('.default-item').querySelector('.product-name');
+    const newName = input.value.trim();
+    if (newName) {
+      const item = defaultProducts.find(p => p.id === id);
+      if (item) {
+        item.name = newName;
         renderDefaultsList();
         renderShoppingList();
         saveData();
       }
     }
   }
+});
 
-  if (e.target.classList.contains('delete-default')) {
-    const index = Number(e.target.dataset.index);
-    if (index >= 0 && index < defaultProducts.length) {
-      defaultProducts.splice(index, 1);
-      renderDefaultsList();
-      renderShoppingList();
-      saveData();
+// Eventos para selects en modales
+document.addEventListener('change', (e) => {
+  const target = e.target;
+  const id = Number(target.dataset.id);
+
+  if (target.classList.contains('product-category')) {
+    if (target.closest('.favorite-item')) {
+      const item = favoriteProducts.find(p => p.id === id);
+      if (item) { item.categoryId = target.value ? Number(target.value) : null; saveData(); }
+    } else if (target.closest('.default-item')) {
+      const item = defaultProducts.find(p => p.id === id);
+      if (item) { item.categoryId = target.value ? Number(target.value) : null; saveData(); }
+    }
+  }
+
+  if (target.classList.contains('product-location')) {
+    if (target.closest('.favorite-item')) {
+      const item = favoriteProducts.find(p => p.id === id);
+      if (item) { item.locationId = target.value ? Number(target.value) : null; saveData(); }
+    } else if (target.closest('.default-item')) {
+      const item = defaultProducts.find(p => p.id === id);
+      if (item) { item.locationId = target.value ? Number(target.value) : null; saveData(); }
     }
   }
 });
-
-// >>> RESTO DEL CÓDIGO SIN CAMBIOS: addProductBtn, clearBtn, loadFavoritesBtn, copyListBtn, etc. <<<
 
 // Añadir producto
 const addProductBtn = document.getElementById('add-product-btn');
@@ -849,6 +911,26 @@ style.textContent = `
   }
   .alert-cancel:hover {
     background-color: #5a6268;
+  }
+
+  /* Papelera blanca en todos los contextos */
+  .delete-btn, .delete-favorite, .delete-default, .delete-category, .delete-location {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+  }
+  .delete-btn svg, .delete-favorite svg, .delete-default svg, .delete-category svg, .delete-location svg {
+    width: 24px;
+    height: 24px;
+    fill: white !important;
   }
 `;
 document.head.appendChild(style);
