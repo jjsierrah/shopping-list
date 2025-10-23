@@ -476,18 +476,42 @@ if (locationForm) {
     input.value = '';
   });
   }
-
-
-// Crear botón de deshacer global al inicio
+// >>> CORREGIDO: Botón de deshacer siempre presente en el DOM <<<
 (function() {
-  if (!document.getElementById('undo-btn')) {
-    const undoBtn = document.createElement('button');
+  let undoBtn = document.getElementById('undo-btn');
+  if (!undoBtn) {
+    undoBtn = document.createElement('button');
     undoBtn.id = 'undo-btn';
     undoBtn.className = 'undo-btn';
     undoBtn.textContent = '↺ Deshacer';
     undoBtn.style.display = 'none';
     document.body.appendChild(undoBtn);
   }
+
+  undoBtn.addEventListener('click', () => {
+    let restored = false;
+    for (const key of ['shoppingList', 'favorites', 'defaults', 'categories', 'locations']) {
+      if (undoStack[key]) {
+        if (key === 'shoppingList') shoppingList = JSON.parse(JSON.stringify(undoStack[key]));
+        else if (key === 'favorites') favoriteProducts = JSON.parse(JSON.stringify(undoStack[key]));
+        else if (key === 'defaults') defaultProducts = JSON.parse(JSON.stringify(undoStack[key]));
+        else if (key === 'categories') categories = JSON.parse(JSON.stringify(undoStack[key]));
+        else if (key === 'locations') locations = JSON.parse(JSON.stringify(undoStack[key]));
+        undoStack[key] = null;
+        restored = true;
+        break;
+      }
+    }
+    if (restored) {
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+      renderCategories();
+      renderLocations();
+      undoBtn.style.display = 'none';
+      showAlert('Acción deshecha.', false, null, 'info');
+    }
+  });
 })();
 
 function showUndoButton() {
@@ -731,6 +755,7 @@ document.addEventListener('change', (e) => {
 });
 
 // Añadir producto desde la MODAL
+const addProductBtn = document.getElementById('add-product-btn');
 if (addProductBtn) {
   addProductBtn.addEventListener('click', (e) => {
     e.preventDefault();
@@ -926,7 +951,3 @@ renderLocations();
 renderShoppingList();
 renderFavoritesList();
 renderDefaultsList();
-
-
-
-                                
