@@ -47,7 +47,7 @@ header h1 {
   background-color: #5a6268;
 }
 
-/* === Botonera principal (3 líneas: 3-2-2) === */
+/* === Botonera principal: 3 líneas (3-2-2) === */
 .button-grid {
   margin: 20px 0;
   display: flex;
@@ -94,7 +94,6 @@ button {
   min-height: 44px;
   text-align: center;
   word-break: break-word;
-  font-size: 0.85em;
 }
 
 button:hover {
@@ -229,7 +228,7 @@ button:hover {
   gap: 8px;
 }
 
-/* === Papelera (blanca y visible) === */
+/* === Papelera blanca en todos los contextos === */
 .delete-btn,
 .delete-favorite,
 .delete-default,
@@ -322,7 +321,27 @@ input[type="checkbox"].bought {
   color: #666;
 }
 
-/* === Estilo para bloques en modales (Favoritos, Predeterminados, Configuración) === */
+.help-content {
+  margin-bottom: 16px;
+}
+
+.help-content ul {
+  margin-left: 20px;
+  margin-bottom: 16px;
+}
+
+.help-content li {
+  margin-bottom: 8px;
+}
+
+.categories-list,
+.locations-list,
+.favorites-list,
+.defaults-list {
+  margin-bottom: 16px;
+}
+
+/* === Estilo unificado para items en Favoritos, Predeterminados y Configuración === */
 .favorite-item,
 .default-item,
 .category-item,
@@ -355,7 +374,7 @@ input[type="checkbox"].bought {
   gap: 4px;
 }
 
-/* Botones de acción en modales */
+/* === Botones de acción en modales (guardar/eliminar) === */
 .save-category, .delete-category,
 .save-location, .delete-location,
 .save-favorite, .delete-favorite,
@@ -480,9 +499,4 @@ h3 {
     padding: 8px 4px;
     font-size: 0.75em;
   }
-  
-  .modal-undo-btn {
-    font-size: 0.85em;
-    padding: 6px 10px;
   }
-}
