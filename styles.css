@@ -47,16 +47,25 @@ header h1 {
   background-color: #5a6268;
 }
 
-/* Formulario con marco */
-.product-input-group {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 16px;
-  background-color: white;
+/* Botón de añadir producto en la vista principal */
+.btn-add-product {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.1em;
   margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
+.btn-add-product:hover {
+  background-color: #388E3C;
+}
+
+/* Formulario con marco */
 .product-form {
   display: flex;
   flex-wrap: wrap;
@@ -106,7 +115,7 @@ header h1 {
 }
 
 /* Botones generales (botonera, modales, etc.) */
-button:not(#add-product-btn) {
+button:not(#add-product-btn):not(.btn-add-product) {
   padding: 10px 12px;
   background-color: #4CAF50;
   color: white;
@@ -120,7 +129,7 @@ button:not(#add-product-btn) {
   word-break: break-word;
 }
 
-button:not(#add-product-btn):hover {
+button:not(#add-product-btn):not(.btn-add-product):hover {
   background-color: #388E3C;
 }
 
@@ -520,4 +529,4 @@ h3 {
     text-align: center;
     word-break: break-word;
   }
-    }
+  }
