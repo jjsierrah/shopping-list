@@ -47,7 +47,7 @@ header h1 {
   background-color: #5a6268;
 }
 
-/* Botonera de 3 líneas fijas */
+/* === Botonera principal (3 líneas: 3-2-2) === */
 .button-grid {
   margin: 20px 0;
   display: flex;
@@ -81,6 +81,7 @@ header h1 {
   max-width: 48%;
 }
 
+/* === Estilo general de botones === */
 button {
   padding: 10px 12px;
   background-color: #4CAF50;
@@ -108,7 +109,13 @@ button:hover {
   background-color: #d32f2f;
 }
 
-/* Botón de configuración: gris azulado distintivo */
+.btn-secondary {
+  background-color: #6c757d;
+  width: 100%;
+  margin-top: 16px;
+}
+
+/* Botón de configuración */
 #open-config-btn {
   background-color: #455a64;
   color: white;
@@ -128,7 +135,53 @@ button:hover {
   background-color: #37474f;
 }
 
-/* Lista de productos */
+/* === Modal de Añadir Producto === */
+#add-product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#add-product-form input[type="text"],
+#add-product-form select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+}
+
+#add-product-form .checkbox-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+#add-product-form .checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: normal;
+}
+
+#add-product-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.1em;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+#add-product-btn:hover {
+  background-color: #388E3C;
+}
+
+/* === Lista de productos === */
 #shopping-list {
   list-style: none;
 }
@@ -176,8 +229,12 @@ button:hover {
   gap: 8px;
 }
 
-/* Botón de eliminar (papelera) - con SVG y color blanco garantizado */
-.delete-btn {
+/* === Papelera (blanca y visible) === */
+.delete-btn,
+.delete-favorite,
+.delete-default,
+.delete-category,
+.delete-location {
   background-color: #f44336;
   color: white;
   border: none;
@@ -191,7 +248,11 @@ button:hover {
   padding: 0;
 }
 
-.delete-btn svg {
+.delete-btn svg,
+.delete-favorite svg,
+.delete-default svg,
+.delete-category svg,
+.delete-location svg {
   width: 24px;
   height: 24px;
   fill: white !important;
@@ -201,7 +262,7 @@ input[type="checkbox"].bought {
   transform: scale(1.3);
 }
 
-/* Botón de deshacer (centrado abajo) */
+/* === Botón de deshacer (visible en ventana principal) === */
 .undo-btn {
   position: fixed;
   bottom: 20px;
@@ -223,7 +284,7 @@ input[type="checkbox"].bought {
   background-color: #1976d2;
 }
 
-/* Modal */
+/* === Modales generales === */
 .modal {
   position: fixed;
   z-index: 1000;
@@ -261,81 +322,40 @@ input[type="checkbox"].bought {
   color: #666;
 }
 
-.help-content {
-  margin-bottom: 16px;
-}
-
-.help-content ul {
-  margin-left: 20px;
-  margin-bottom: 16px;
-}
-
-.help-content li {
-  margin-bottom: 8px;
-}
-
-.categories-list,
-.locations-list,
-.favorites-list,
-.defaults-list {
-  margin-bottom: 16px;
-}
-
-/* Estilo para bloques de favoritos y predeterminados */
+/* === Estilo para bloques en modales (Favoritos, Predeterminados, Configuración) === */
 .favorite-item,
-.default-item {
+.default-item,
+.category-item,
+.location-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px;
   border: 1px solid #eee;
   border-radius: 6px;
-  padding: 12px;
   background-color: #fafafa;
-  margin-bottom: 14px;
 }
 
-/* Edición de producto en modales */
-.product-edit {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.product-name {
-  width: 100%;
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.category-location-row {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.category-location-row select {
+.favorite-item input,
+.default-item input,
+.category-item input,
+.location-item input {
   flex: 1;
   padding: 6px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-/* Acciones (botonera) con más espacio */
 .favorite-actions,
-.default-actions {
+.default-actions,
+.category-actions,
+.location-actions {
   display: flex;
-  gap: 6px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+  gap: 4px;
 }
 
-.favorite-actions button,
-.default-actions button {
-  flex: 1;
-  min-width: 80px;
-  padding: 6px 8px;
-  font-size: 0.85em;
-}
-
-/* >>> UNIFICADO: Botones uniformes en todos los contextos <<< */
+/* Botones de acción en modales */
 .save-category, .delete-category,
 .save-location, .delete-location,
 .save-favorite, .delete-favorite,
@@ -385,50 +405,42 @@ input[type="checkbox"].bought {
   fill: white !important;
 }
 
-/* Botón de deshacer dentro de modales */
-.modal-undo-btn {
-  background-color: #2196f3;
-  color: white;
-  border: none;
+/* === Edición en Favoritos y Predeterminados === */
+.product-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.product-name {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ccc;
   border-radius: 4px;
-  padding: 8px 12px;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 12px;
+}
+
+.category-location-row {
+  display: flex;
+  gap: 8px;
   width: 100%;
 }
 
-.modal-undo-btn:hover {
-  background-color: #1976d2;
-}
-
-/* >>> NUEVO: Estilo unificado para items en Configuración <<< */
-.category-item,
-.location-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  padding: 8px;
-  border: 1px solid #eee;
-  border-radius: 6px;
-  background-color: #fafafa;
-}
-
-.category-item input,
-.location-item input {
+.category-location-row select {
   flex: 1;
   padding: 6px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-.category-actions,
-.location-actions {
-  display: flex;
-  gap: 4px;
+.favorite-actions button,
+.default-actions button {
+  flex: 1;
+  min-width: 80px;
+  padding: 6px 8px;
+  font-size: 0.85em;
 }
 
+/* === Formularios de añadir categoría/ubicación === */
 .add-form {
   display: flex;
   gap: 8px;
@@ -445,7 +457,7 @@ h3 {
   font-size: 1.1em;
 }
 
-/* Responsive */
+/* === Responsive === */
 @media (max-width: 480px) {
   .modal-content {
     margin: 20px auto;
@@ -468,49 +480,9 @@ h3 {
     padding: 8px 4px;
     font-size: 0.75em;
   }
-  /* === Estilo para la modal de Añadir Producto === */
-#add-product-form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-#add-product-form input[type="text"],
-#add-product-form select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1em;
-}
-
-#add-product-form .checkbox-group {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-#add-product-form .checkbox-group label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: normal;
-}
-
-#add-product-btn {
-  width: 100%;
-  padding: 12px;
-  font-size: 1.1em;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  margin-top: 8px;
-}
-
-#add-product-btn:hover {
-  background-color: #388E3C;
-}
+  
+  .modal-undo-btn {
+    font-size: 0.85em;
+    padding: 6px 10px;
   }
+}
