@@ -42,12 +42,16 @@ let locations = JSON.parse(localStorage.getItem('locations')) || [
 
 // Undo stack por contexto
 let undoStack = {
-  shoppingList: [],
-  favorites: [],
-  defaults: [],
-  categories: [],
-  locations: []
+  shoppingList: null,
+  favorites: null,
+  defaults: null,
+  categories: null,
+  locations: null
 };
+
+// SVGs reutilizables
+const TRASH_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
+const SAVE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17,3H5C3.89,3 3,3.89 3,5V19C3,20.11 3.89,21 5,21H19C20.11,21 21,20.11 21,19V7L17,3M12,19C10.34,19 9,17.66 9,16C9,14.34 10.34,13 12,13C13.66,13 15,14.34 15,16C15,17.66 13.66,19 12,19M18,12H6V6H17V12Z"/></svg>`;
 
 // Función para generar ID único
 function generateId() {
@@ -126,9 +130,6 @@ function saveData() {
   localStorage.setItem('locations', JSON.stringify(locations));
 }
 
-// SVG de papelera (reutilizable)
-const TRASH_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
-
 function renderCategories() {
   categoriesListEl.innerHTML = '';
   categorySelect.innerHTML = '<option value="">-- Categoría --</option>';
@@ -141,7 +142,7 @@ function renderCategories() {
     div.innerHTML = `
       <input type="text" value="${cat.name}" data-id="${cat.id}" />
       <div class="category-actions">
-        <button type="button" class="save-category" data-id="${cat.id}">💾</button>
+        <button type="button" class="save-category" data-id="${cat.id}">${SAVE_SVG}</button>
         <button type="button" class="delete-category" data-id="${cat.id}">${TRASH_SVG}</button>
       </div>
     `;
@@ -166,7 +167,7 @@ function renderLocations() {
     div.innerHTML = `
       <input type="text" value="${loc.name}" data-id="${loc.id}" />
       <div class="location-actions">
-        <button type="button" class="save-location" data-id="${loc.id}">💾</button>
+        <button type="button" class="save-location" data-id="${loc.id}">${SAVE_SVG}</button>
         <button type="button" class="delete-location" data-id="${loc.id}">${TRASH_SVG}</button>
       </div>
     `;
@@ -191,7 +192,7 @@ function renderProductItem(item) {
   );
   
   const li = document.createElement('li');
-  li.dataset.id = item.id; // ✅ usar id, no índice
+  li.dataset.id = item.id;
   li.draggable = true;
   li.innerHTML = `
     <div class="product-info">
@@ -220,7 +221,7 @@ function renderShoppingList() {
 function renderFavoritesList() {
   favoritesListEl.innerHTML = '';
   
-  favoriteProducts.forEach((item, index) => {
+  favoriteProducts.forEach(item => {
     const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
     const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
     
@@ -244,7 +245,7 @@ function renderFavoritesList() {
       </div>
       <div class="favorite-actions">
         <button type="button" class="add-to-list" data-id="${item.id}" data-type="favorite">➕ Añadir</button>
-        <button type="button" class="save-favorite" data-id="${item.id}">💾</button>
+        <button type="button" class="save-favorite" data-id="${item.id}">${SAVE_SVG}</button>
         <button type="button" class="delete-favorite" data-id="${item.id}">${TRASH_SVG}</button>
       </div>
     `;
@@ -256,7 +257,7 @@ function renderFavoritesList() {
 function renderDefaultsList() {
   defaultsListEl.innerHTML = '';
   
-  defaultProducts.forEach((item, index) => {
+  defaultProducts.forEach(item => {
     const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
     const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
     
@@ -280,7 +281,7 @@ function renderDefaultsList() {
       </div>
       <div class="default-actions">
         <button type="button" class="add-to-list" data-id="${item.id}" data-type="default">➕ Añadir</button>
-        <button type="button" class="save-default" data-id="${item.id}">💾</button>
+        <button type="button" class="save-default" data-id="${item.id}">${SAVE_SVG}</button>
         <button type="button" class="delete-default" data-id="${item.id}">${TRASH_SVG}</button>
       </div>
     `;
@@ -446,9 +447,9 @@ if (locationForm) {
     saveData();
     input.value = '';
   });
-                                               }
+                                                 }
 
-// Crear botón de deshacer al inicio (único para toda la app)
+// Crear botón de deshacer global al inicio
 (function() {
   if (!document.getElementById('undo-btn')) {
     const undoBtn = document.createElement('button');
@@ -471,16 +472,49 @@ function showUndoButton() {
   }
 }
 
-// >>> DELEGACIÓN GLOBAL ÚNICA PARA TODAS LAS PAPELERAS <<<
+// Función para mostrar deshacer en modal
+function showModalUndoButton(modal, context) {
+  const existing = modal.querySelector('.modal-undo-btn');
+  if (existing) existing.remove();
+
+  const btn = document.createElement('button');
+  btn.className = 'modal-undo-btn';
+  btn.textContent = '↺ Deshacer eliminación';
+  btn.onclick = () => {
+    if (undoStack[context]) {
+      if (context === 'shoppingList') shoppingList = JSON.parse(JSON.stringify(undoStack[context]));
+      else if (context === 'favorites') favoriteProducts = JSON.parse(JSON.stringify(undoStack[context]));
+      else if (context === 'defaults') defaultProducts = JSON.parse(JSON.stringify(undoStack[context]));
+      else if (context === 'categories') categories = JSON.parse(JSON.stringify(undoStack[context]));
+      else if (context === 'locations') locations = JSON.parse(JSON.stringify(undoStack[context]));
+      
+      undoStack[context] = null;
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+      renderCategories();
+      renderLocations();
+      btn.remove();
+      showAlert('Acción deshecha.', false, null, 'info');
+    }
+  };
+  modal.querySelector('.modal-content').appendChild(btn);
+
+  setTimeout(() => {
+    if (btn.parentNode) btn.remove();
+    undoStack[context] = null;
+  }, 5000);
+}
+
+// >>> DELEGACIÓN GLOBAL CORREGIDA <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
 
   // Shopping List
   if (target.classList.contains('delete-btn') && target.closest('#shopping-list')) {
     const id = Number(target.dataset.id);
-    const item = shoppingList.find(p => p.id === id);
-    if (item) {
-      undoStack.shoppingList = [JSON.parse(JSON.stringify(shoppingList))];
+    if (!isNaN(id)) {
+      undoStack.shoppingList = JSON.parse(JSON.stringify(shoppingList));
       shoppingList = shoppingList.filter(p => p.id !== id);
       renderShoppingList();
       showUndoButton();
@@ -491,13 +525,12 @@ document.addEventListener('click', (e) => {
   // Favoritos
   if (target.classList.contains('delete-favorite')) {
     const id = Number(target.dataset.id);
-    const item = favoriteProducts.find(p => p.id === id);
-    if (item) {
-      undoStack.favorites = [JSON.parse(JSON.stringify(favoriteProducts))];
+    if (!isNaN(id)) {
+      undoStack.favorites = JSON.parse(JSON.stringify(favoriteProducts));
       favoriteProducts = favoriteProducts.filter(p => p.id !== id);
       renderFavoritesList();
       renderShoppingList();
-      showUndoButton();
+      showModalUndoButton(favoritesModal, 'favorites');
     }
     return;
   }
@@ -505,13 +538,12 @@ document.addEventListener('click', (e) => {
   // Predeterminados
   if (target.classList.contains('delete-default')) {
     const id = Number(target.dataset.id);
-    const item = defaultProducts.find(p => p.id === id);
-    if (item) {
-      undoStack.defaults = [JSON.parse(JSON.stringify(defaultProducts))];
+    if (!isNaN(id)) {
+      undoStack.defaults = JSON.parse(JSON.stringify(defaultProducts));
       defaultProducts = defaultProducts.filter(p => p.id !== id);
       renderDefaultsList();
       renderShoppingList();
-      showUndoButton();
+      showModalUndoButton(defaultsModal, 'defaults');
     }
     return;
   }
@@ -519,15 +551,14 @@ document.addEventListener('click', (e) => {
   // Categorías
   if (target.classList.contains('delete-category')) {
     const id = Number(target.dataset.id);
-    const item = categories.find(c => c.id === id);
-    if (item) {
-      undoStack.categories = [JSON.parse(JSON.stringify(categories))];
+    if (!isNaN(id)) {
+      undoStack.categories = JSON.parse(JSON.stringify(categories));
       categories = categories.filter(c => c.id !== id);
       renderCategories();
       renderShoppingList();
       renderFavoritesList();
       renderDefaultsList();
-      showUndoButton();
+      showModalUndoButton(configModal, 'categories');
     }
     return;
   }
@@ -535,52 +566,42 @@ document.addEventListener('click', (e) => {
   // Ubicaciones
   if (target.classList.contains('delete-location')) {
     const id = Number(target.dataset.id);
-    const item = locations.find(l => l.id === id);
-    if (item) {
-      undoStack.locations = [JSON.parse(JSON.stringify(locations))];
+    if (!isNaN(id)) {
+      undoStack.locations = JSON.parse(JSON.stringify(locations));
       locations = locations.filter(l => l.id !== id);
       renderLocations();
       renderShoppingList();
       renderFavoritesList();
       renderDefaultsList();
-      showUndoButton();
+      showModalUndoButton(configModal, 'locations');
     }
     return;
   }
 
-  // Deshacer
+  // Deshacer global
   if (target.id === 'undo-btn') {
-    if (undoStack.shoppingList.length > 0) {
-      shoppingList = JSON.parse(JSON.stringify(undoStack.shoppingList[0]));
-      renderShoppingList();
-      undoStack.shoppingList = [];
-    } else if (undoStack.favorites.length > 0) {
-      favoriteProducts = JSON.parse(JSON.stringify(undoStack.favorites[0]));
-      renderFavoritesList();
-      renderShoppingList();
-      undoStack.favorites = [];
-    } else if (undoStack.defaults.length > 0) {
-      defaultProducts = JSON.parse(JSON.stringify(undoStack.defaults[0]));
-      renderDefaultsList();
-      renderShoppingList();
-      undoStack.defaults = [];
-    } else if (undoStack.categories.length > 0) {
-      categories = JSON.parse(JSON.stringify(undoStack.categories[0]));
-      renderCategories();
-      renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
-      undoStack.categories = [];
-    } else if (undoStack.locations.length > 0) {
-      locations = JSON.parse(JSON.stringify(undoStack.locations[0]));
-      renderLocations();
-      renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
-      undoStack.locations = [];
+    let restored = false;
+    for (const key of ['shoppingList', 'favorites', 'defaults', 'categories', 'locations']) {
+      if (undoStack[key]) {
+        if (key === 'shoppingList') shoppingList = JSON.parse(JSON.stringify(undoStack[key]));
+        else if (key === 'favorites') favoriteProducts = JSON.parse(JSON.stringify(undoStack[key]));
+        else if (key === 'defaults') defaultProducts = JSON.parse(JSON.stringify(undoStack[key]));
+        else if (key === 'categories') categories = JSON.parse(JSON.stringify(undoStack[key]));
+        else if (key === 'locations') locations = JSON.parse(JSON.stringify(undoStack[key]));
+        undoStack[key] = null;
+        restored = true;
+        break;
+      }
     }
-    document.getElementById('undo-btn').style.display = 'none';
-    showAlert('Acción deshecha.', false, null, 'info');
+    if (restored) {
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+      renderCategories();
+      renderLocations();
+      document.getElementById('undo-btn').style.display = 'none';
+      showAlert('Acción deshecha.', false, null, 'info');
+    }
     return;
   }
 });
@@ -589,7 +610,6 @@ document.addEventListener('click', (e) => {
 document.addEventListener('click', function(e) {
   const target = e.target;
 
-  // Evitar procesar eliminaciones aquí
   if (
     target.classList.contains('delete-btn') ||
     target.classList.contains('delete-favorite') ||
@@ -862,7 +882,7 @@ window.addEventListener('click', (e) => {
   if (e.target === helpModal) helpModal.style.display = 'none';
 });
 
-// Estilos para alertas
+// Estilos para alertas y SVGs
 const style = document.createElement('style');
 style.textContent = `
   .custom-alert {
@@ -911,26 +931,6 @@ style.textContent = `
   }
   .alert-cancel:hover {
     background-color: #5a6268;
-  }
-
-  /* Papelera blanca en todos los contextos */
-  .delete-btn, .delete-favorite, .delete-default, .delete-category, .delete-location {
-    background-color: #f44336;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0;
-  }
-  .delete-btn svg, .delete-favorite svg, .delete-default svg, .delete-category svg, .delete-location svg {
-    width: 24px;
-    height: 24px;
-    fill: white !important;
   }
 `;
 document.head.appendChild(style);
