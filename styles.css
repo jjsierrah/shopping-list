@@ -468,4 +468,49 @@ h3 {
     padding: 8px 4px;
     font-size: 0.75em;
   }
+  /* === Estilo para la modal de Añadir Producto === */
+#add-product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#add-product-form input[type="text"],
+#add-product-form select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+}
+
+#add-product-form .checkbox-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+#add-product-form .checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: normal;
+}
+
+#add-product-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.1em;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+#add-product-btn:hover {
+  background-color: #388E3C;
+}
   }
