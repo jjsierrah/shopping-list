@@ -301,6 +301,7 @@ input[type="checkbox"].bought {
   max-width: 500px;
   max-height: 80vh;
   overflow-y: auto;
+  position: relative;
 }
 
 .modal-header {
@@ -392,6 +393,73 @@ input[type="checkbox"].bought {
   font-size: 0.85em;
 }
 
+/* >>> NUEVO: Botones uniformes en modales <<< */
+.save-category, .delete-category,
+.save-location, .delete-location,
+.save-favorite, .delete-favorite,
+.save-default, .delete-default {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  margin: 0 2px;
+}
+
+.save-category:hover, .save-location:hover,
+.save-favorite:hover, .save-default:hover {
+  background-color: #5a6268;
+}
+
+.delete-category, .delete-location,
+.delete-favorite, .delete-default {
+  background-color: #f44336;
+  width: 40px;
+  height: 40px;
+}
+
+.delete-category:hover, .delete-location:hover,
+.delete-favorite:hover, .delete-default:hover {
+  background-color: #d32f2f;
+}
+
+.save-category svg, .save-location svg,
+.save-favorite svg, .save-default svg {
+  width: 20px;
+  height: 20px;
+  fill: white;
+}
+
+.delete-category svg, .delete-location svg,
+.delete-favorite svg, .delete-default svg {
+  width: 20px;
+  height: 20px;
+  fill: white !important;
+}
+
+/* Botón de deshacer dentro de modales */
+.modal-undo-btn {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.modal-undo-btn:hover {
+  background-color: #1976d2;
+}
+
 .category-item,
 .location-item {
   display: flex;
@@ -462,4 +530,4 @@ h3 {
     text-align: center;
     word-break: break-word;
   }
-}
+  }
