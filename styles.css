@@ -253,7 +253,7 @@ button:not(#add-product-btn):hover {
 .delete-btn svg {
   width: 24px;
   height: 24px;
-  fill: white !important; /* Garantiza blanco */
+  fill: white !important;
 }
 
 input[type="checkbox"].bought {
@@ -393,7 +393,7 @@ input[type="checkbox"].bought {
   font-size: 0.85em;
 }
 
-/* >>> NUEVO: Botones uniformes en modales <<< */
+/* >>> UNIFICADO: Botones uniformes en todos los contextos <<< */
 .save-category, .delete-category,
 .save-location, .delete-location,
 .save-favorite, .delete-favorite,
@@ -460,6 +460,7 @@ input[type="checkbox"].bought {
   background-color: #1976d2;
 }
 
+/* >>> NUEVO: Estilo unificado para items en Configuración <<< */
 .category-item,
 .location-item {
   display: flex;
@@ -467,34 +468,23 @@ input[type="checkbox"].bought {
   gap: 8px;
   margin-bottom: 10px;
   padding: 8px;
-  border-radius: 4px;
-  cursor: move;
-  transition: background-color 0.2s;
-}
-
-.category-item.dragging,
-.location-item.dragging,
-.favorite-item.dragging,
-.default-item.dragging {
-  opacity: 1;
-  background-color: #e8f5e9;
-  transform: scale(1.02);
+  border: 1px solid #eee;
+  border-radius: 6px;
+  background-color: #fafafa;
 }
 
 .category-item input,
 .location-item input {
   flex: 1;
   padding: 6px;
-  border: 1px solid #ddd;
+  border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-.category-actions button,
-.location-actions button,
-.favorite-actions button,
-.default-actions button {
-  padding: 4px 8px;
-  font-size: 0.9em;
+.category-actions,
+.location-actions {
+  display: flex;
+  gap: 4px;
 }
 
 .add-form {
@@ -530,4 +520,4 @@ h3 {
     text-align: center;
     word-break: break-word;
   }
-  }
+    }
