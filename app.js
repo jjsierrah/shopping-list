@@ -53,9 +53,6 @@ let undoStack = {
 const TRASH_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
 const SAVE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17,3H5C3.89,3 3,3.89 3,5V19C3,20.11 3.89,21 5,21H19C20.11,21 21,20.11 21,19V7L17,3M12,19C10.34,19 9,17.66 9,16C9,14.34 10.34,13 12,13C13.66,13 15,14.34 15,16C15,17.66 13.66,19 12,19M18,12H6V6H17V12Z"/></svg>`;
 
-// Bandera para evitar clics tras arrastrar
-let wasDragged = false;
-
 // Función para generar ID único
 function generateId() {
   return Date.now() + Math.floor(Math.random() * 1000000);
@@ -156,6 +153,9 @@ function renderCategories() {
     option.textContent = cat.name;
     categorySelect.appendChild(option);
   });
+
+  // Re-inicializar Drag & Drop aquí
+  initDragAndDrop(categoriesListEl, '.category-item', categories, renderCategories);
 }
 
 function renderLocations() {
@@ -181,6 +181,9 @@ function renderLocations() {
     option.textContent = loc.name;
     locationSelect.appendChild(option);
   });
+
+  // Re-inicializar Drag & Drop aquí
+  initDragAndDrop(locationsListEl, '.location-item', locations, renderLocations);
 }
 
 function renderProductItem(item) {
@@ -293,14 +296,11 @@ function renderDefaultsList() {
   initDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList);
 }
 
-// Drag & Drop robusto (SIN clonación)
+// Drag & Drop robusto (sin clonación)
 function initDragAndDrop(container, itemSelector, dataArray, renderFn) {
-  // Eliminamos la clonación: causa pérdida de eventos y data-id
-
   let dragSrcEl = null;
 
   function handleDragStart(e) {
-    wasDragged = true;
     dragSrcEl = this;
     e.dataTransfer.effectAllowed = 'move';
     this.classList.add('dragging');
@@ -332,7 +332,6 @@ function initDragAndDrop(container, itemSelector, dataArray, renderFn) {
         const [movedItem] = dataArray.splice(srcIndex, 1);
         dataArray.splice(targetIndex, 0, movedItem);
         renderFn();
-        // No es necesario re-inicializar Drag & Drop si no clonamos
       }
     }
     
@@ -346,17 +345,20 @@ function initDragAndDrop(container, itemSelector, dataArray, renderFn) {
     });
   }
 
-  const items = container.querySelectorAll(itemSelector);
-  items.forEach(item => {
-    // Remover listeners anteriores para evitar duplicados (opcional, pero seguro)
+  // Limpiar listeners anteriores
+  const existingItems = container.querySelectorAll(itemSelector);
+  existingItems.forEach(item => {
     item.removeEventListener('dragstart', handleDragStart);
     item.removeEventListener('dragover', handleDragOver);
     item.removeEventListener('dragenter', handleDragEnter);
     item.removeEventListener('dragleave', handleDragLeave);
     item.removeEventListener('drop', handleDrop);
     item.removeEventListener('dragend', handleDragEnd);
+  });
 
-    // Añadir listeners frescos
+  // Añadir nuevos listeners
+  const items = container.querySelectorAll(itemSelector);
+  items.forEach(item => {
     item.addEventListener('dragstart', handleDragStart, false);
     item.addEventListener('dragover', handleDragOver, false);
     item.addEventListener('dragenter', handleDragEnter, false);
@@ -376,38 +378,51 @@ function closeModal(modal) {
   modal.style.display = 'none';
 }
 
+// >>> ABRIR MODAL DE AÑADIR PRODUCTO (CORREGIDO) <<<
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'add-product-btn-main') {
+    document.getElementById('add-product-modal').style.display = 'block';
+  }
+});
+
+// Cerrar modales con botones y fuera
+const modalCloseTriggers = [
+  { btn: 'close-add-product-modal-btn', modal: 'add-product-modal' },
+  { btn: 'close-config-btn', modal: 'config-modal' },
+  { btn: 'close-favorites-btn', modal: 'favorites-modal' },
+  { btn: 'close-defaults-btn', modal: 'defaults-modal' },
+  { btn: 'close-config-modal-btn', modal: 'config-modal' },
+  { btn: 'close-favorites-modal-btn', modal: 'favorites-modal' },
+  { btn: 'close-defaults-modal-btn', modal: 'defaults-modal' },
+  { btn: 'close-help-btn', modal: 'help-modal' },
+  { btn: 'close-help-modal-btn', modal: 'help-modal' }
+];
+
+modalCloseTriggers.forEach(({btn, modal}) => {
+  const button = document.getElementById(btn);
+  const modalEl = document.getElementById(modal);
+  if (button) {
+    button.addEventListener('click', () => closeModal(modalEl));
+  }
+});
+
+// Cerrar al hacer clic fuera
+['add-product-modal', 'config-modal', 'favorites-modal', 'defaults-modal', 'help-modal'].forEach(id => {
+  const modal = document.getElementById(id);
+  if (modal) {
+    window.addEventListener('click', (e) => {
+      if (e.target === modal) modal.style.display = 'none';
+    });
+  }
+});
+
 if (openFavoritesBtn) {
-  openFavoritesBtn.addEventListener('click', () => {
-    openModal(favoritesModal, renderFavoritesList);
-    setTimeout(() => initDragAndDrop(favoritesListEl, '.favorite-item', favoriteProducts, renderFavoritesList), 100);
-  });
+  openFavoritesBtn.addEventListener('click', () => openModal(favoritesModal, renderFavoritesList));
 }
 
 if (openDefaultsBtn) {
-  openDefaultsBtn.addEventListener('click', () => {
-    openModal(defaultsModal, renderDefaultsList);
-    setTimeout(() => initDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList), 100);
-  });
+  openDefaultsBtn.addEventListener('click', () => openModal(defaultsModal, renderDefaultsList));
 }
-
-const closeButtons = [
-  {btn: closeConfigBtn, modal: configModal},
-  {btn: closeFavoritesBtn, modal: favoritesModal},
-  {btn: closeDefaultsBtn, modal: defaultsModal},
-  {btn: closeConfigModalBtn, modal: configModal},
-  {btn: closeFavoritesModalBtn, modal: favoritesModal},
-  {btn: closeDefaultsModalBtn, modal: defaultsModal}
-];
-
-closeButtons.forEach(({btn, modal}) => {
-  if (btn) btn.addEventListener('click', () => closeModal(modal));
-});
-
-window.addEventListener('click', (e) => {
-  if (e.target === configModal) closeModal(configModal);
-  if (e.target === favoritesModal) closeModal(favoritesModal);
-  if (e.target === defaultsModal) closeModal(defaultsModal);
-});
 
 if (openConfigBtn) {
   openConfigBtn.addEventListener('click', () => {
@@ -415,35 +430,8 @@ if (openConfigBtn) {
       renderCategories();
       renderLocations();
     });
-    setTimeout(() => {
-      initDragAndDrop(categoriesListEl, '.category-item', categories, renderCategories);
-      initDragAndDrop(locationsListEl, '.location-item', locations, renderLocations);
-    }, 100);
   });
 }
-
-// >>> ABRIR MODAL DE AÑADIR PRODUCTO DESDE BOTÓN EN LÍNEA 1 <<<
-const addProductBtnMain = document.getElementById('add-product-btn-main');
-const addProductModal = document.getElementById('add-product-modal');
-const closeAddProductModalBtn = document.getElementById('close-add-product-modal-btn');
-
-if (addProductBtnMain) {
-  addProductBtnMain.addEventListener('click', () => {
-    addProductModal.style.display = 'block';
-  });
-}
-
-if (closeAddProductModalBtn) {
-  closeAddProductModalBtn.addEventListener('click', () => {
-    addProductModal.style.display = 'none';
-  });
-}
-
-window.addEventListener('click', (e) => {
-  if (e.target === addProductModal) {
-    addProductModal.style.display = 'none';
-  }
-});
 
 // Añadir categoría
 if (categoryForm) {
@@ -456,7 +444,7 @@ if (categoryForm) {
       showAlert('La categoría ya existe.', false, null, 'warning');
       return;
     }
-    categories.push({ id: Date.now(), name });
+    categories.push({ id: generateId(), name });
     renderCategories();
     saveData();
     input.value = '';
@@ -474,7 +462,7 @@ if (locationForm) {
       showAlert('La ubicación ya existe.', false, null, 'warning');
       return;
     }
-    locations.push({ id: Date.now(), name });
+    locations.push({ id: generateId(), name });
     renderLocations();
     saveData();
     input.value = '';
@@ -504,7 +492,6 @@ function showUndoButton() {
   }
 }
 
-// Función para mostrar deshacer en modal
 function showModalUndoButton(modal, context) {
   const existing = modal.querySelector('.modal-undo-btn');
   if (existing) existing.remove();
@@ -538,17 +525,11 @@ function showModalUndoButton(modal, context) {
   }, 5000);
 }
 
-// >>> LISTENER ÚNICO Y CORREGIDO PARA TODOS LOS CLICKS <<<
+// >>> LISTENER ÚNICO Y ROBUSTO PARA TODOS LOS CLICKS <<<
 document.addEventListener('click', (e) => {
-  // Protección: ignorar clic si acaba de hacer drag
-  if (wasDragged) {
-    wasDragged = false;
-    return;
-  }
-
   const target = e.target;
 
-  // --- ELIMINACIÓN ---
+  // --- ELIMINACIÓN (robusta, sin banderas) ---
   if (target.classList.contains('delete-btn') && target.closest('#shopping-list')) {
     const id = Number(target.dataset.id);
     if (!isNaN(id)) {
@@ -589,7 +570,7 @@ document.addEventListener('click', (e) => {
     if (!isNaN(id)) {
       undoStack.categories = JSON.parse(JSON.stringify(categories));
       categories = categories.filter(c => c.id !== id);
-      renderCategories();
+      renderCategories(); // Esto ya llama a initDragAndDrop
       renderShoppingList();
       renderFavoritesList();
       renderDefaultsList();
@@ -603,7 +584,7 @@ document.addEventListener('click', (e) => {
     if (!isNaN(id)) {
       undoStack.locations = JSON.parse(JSON.stringify(locations));
       locations = locations.filter(l => l.id !== id);
-      renderLocations();
+      renderLocations(); // Esto ya llama a initDragAndDrop
       renderShoppingList();
       renderFavoritesList();
       renderDefaultsList();
@@ -748,10 +729,9 @@ document.addEventListener('change', (e) => {
   }
 });
 
-// Añadir producto
-const addProductBtn = document.getElementById('add-product-btn');
-if (addProductBtn) {
-  addProductBtn.addEventListener('click', (e) => {
+// Añadir producto desde modal
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'add-product-btn') {
     e.preventDefault();
     const nameInput = document.getElementById('product-name');
     const name = nameInput.value.trim();
@@ -787,9 +767,10 @@ if (addProductBtn) {
     renderDefaultsList();
     document.getElementById('add-product-form').reset();
     document.getElementById('product-default').checked = true;
+    document.getElementById('add-product-modal').style.display = 'none';
     showAlert('Producto añadido a la lista!', false, null, 'info');
-  });
-}
+  }
+});
 
 // Botón de limpiar
 if (clearBtn) {
@@ -873,17 +854,11 @@ function fallbackCopyTextToClipboard(text) {
 
 // Modal de Ayuda
 const openHelpBtn = document.getElementById('open-help-btn');
-const closeHelpBtn = document.getElementById('close-help-btn');
-const closeHelpModalBtn = document.getElementById('close-help-modal-btn');
-const helpModal = document.getElementById('help-modal');
-
-if (openHelpBtn) openHelpBtn.addEventListener('click', () => helpModal.style.display = 'block');
-[closeHelpBtn, closeHelpModalBtn].forEach(btn => {
-  if (btn) btn.addEventListener('click', () => helpModal.style.display = 'none');
-});
-window.addEventListener('click', (e) => {
-  if (e.target === helpModal) helpModal.style.display = 'none';
-});
+if (openHelpBtn) {
+  openHelpBtn.addEventListener('click', () => {
+    document.getElementById('help-modal').style.display = 'block';
+  });
+}
 
 // Estilos para alertas y SVGs
 const style = document.createElement('style');
