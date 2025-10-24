@@ -422,13 +422,13 @@ if (openConfigBtn) {
   });
 }
 
-// >>> AÑADIR MODAL DE AÑADIR PRODUCTO <<<
-const openAddProductModalBtn = document.getElementById('open-add-product-modal');
+// >>> ABRIR MODAL DE AÑADIR PRODUCTO DESDE BOTÓN EN LÍNEA 1 <<<
+const addProductBtnMain = document.getElementById('add-product-btn-main');
 const addProductModal = document.getElementById('add-product-modal');
 const closeAddProductModalBtn = document.getElementById('close-add-product-modal-btn');
 
-if (openAddProductModalBtn) {
-  openAddProductModalBtn.addEventListener('click', () => {
+if (addProductBtnMain) {
+  addProductBtnMain.addEventListener('click', () => {
     addProductModal.style.display = 'block';
   });
 }
