@@ -15,32 +15,20 @@
     <button id="open-help-btn" class="header-help-btn">?</button>
   </header>
 
-  <main>
-    <!-- Botonera de 7 botones en 3 líneas -->
-    <div class="button-grid">
-      <!-- Línea 1: Añadir producto, Copiar y Limpiar -->
-      <div class="button-row three-buttons">
-        <button id="add-product-btn-main">➕ Añadir producto</button>
-        <button id="copy-list">📋 Copiar lista</button>
-        <button id="clear-list" class="btn-clear">Limpiar lista</button>
-      </div>
-      
-      <!-- Línea 2: Favoritos -->
-      <div class="button-row">
-        <button id="open-favorites-btn">⭐ Favoritos</button>
-        <button id="load-favorites">➕ Cargar Favoritos</button>
-      </div>
-      
-      <!-- Línea 3: Predeterminados y Configuración -->
-      <div class="button-row">
-        <button id="open-defaults-btn">📌 Predeterminados</button>
-        <button id="open-config-btn">⚙️ Configuración</button>
-      </div>
-    </div>
+  <!-- Menú desplegable de acciones principales -->
+  <select id="main-actions" class="main-actions-select">
+    <option value="">— Acciones —</option>
+    <option value="add-product">➕ Añadir producto</option>
+    <option value="copy-list">📋 Copiar lista</option>
+    <option value="clear-list">Limpiar lista</option>
+    <option value="open-favorites">⭐ Favoritos</option>
+    <option value="load-favorites">➕ Cargar Favoritos</option>
+    <option value="open-defaults">📌 Predeterminados</option>
+    <option value="open-config">⚙️ Configuración</option>
+  </select>
 
-    <!-- Lista de productos -->
-    <ul id="shopping-list"></ul>
-  </main>
+  <!-- Lista de productos -->
+  <ul id="shopping-list"></ul>
 
   <!-- Modal de Añadir Producto -->
   <div id="add-product-modal" class="modal" style="display: none;">
@@ -149,4 +137,4 @@
 
   <script src="app.js?v=4.0"></script>
 </body>
-</html>
+      </html>
