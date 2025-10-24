@@ -378,13 +378,6 @@ function closeModal(modal) {
   modal.style.display = 'none';
 }
 
-// >>> ABRIR MODAL DE AÑADIR PRODUCTO (CORREGIDO) <<<
-document.addEventListener('click', (e) => {
-  if (e.target.id === 'add-product-btn-main') {
-    document.getElementById('add-product-modal').style.display = 'block';
-  }
-});
-
 // Cerrar modales con botones y fuera
 const modalCloseTriggers = [
   { btn: 'close-add-product-modal-btn', modal: 'add-product-modal' },
@@ -523,7 +516,7 @@ function showModalUndoButton(modal, context) {
     if (btn.parentNode) btn.remove();
     undoStack[context] = null;
   }, 5000);
-}
+      }
 
 // >>> LISTENER ÚNICO Y ROBUSTO PARA TODOS LOS CLICKS <<<
 document.addEventListener('click', (e) => {
@@ -857,6 +850,42 @@ const openHelpBtn = document.getElementById('open-help-btn');
 if (openHelpBtn) {
   openHelpBtn.addEventListener('click', () => {
     document.getElementById('help-modal').style.display = 'block';
+  });
+}
+
+// >>> MANEJADOR DEL SELECT DE ACCIONES PRINCIPALES <<<
+const mainActionsSelect = document.getElementById('main-actions');
+if (mainActionsSelect) {
+  mainActionsSelect.addEventListener('change', (e) => {
+    const action = e.target.value;
+    if (!action) return;
+
+    // Reset select
+    e.target.selectedIndex = 0;
+
+    switch (action) {
+      case 'add-product':
+        document.getElementById('add-product-modal').style.display = 'block';
+        break;
+      case 'copy-list':
+        document.getElementById('copy-list').click();
+        break;
+      case 'clear-list':
+        document.getElementById('clear-list').click();
+        break;
+      case 'open-favorites':
+        document.getElementById('open-favorites-btn').click();
+        break;
+      case 'load-favorites':
+        document.getElementById('load-favorites').click();
+        break;
+      case 'open-defaults':
+        document.getElementById('open-defaults-btn').click();
+        break;
+      case 'open-config':
+        document.getElementById('open-config-btn').click();
+        break;
+    }
   });
 }
 
