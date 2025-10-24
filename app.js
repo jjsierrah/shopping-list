@@ -765,67 +765,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Botón de limpiar
-if (clearBtn) {
-  clearBtn.addEventListener('click', () => {
-    showAlert('¿Seguro que quieres borrar la lista actual?', true, () => {
-      shoppingList = [];
-      renderShoppingList();
-    }, 'error');
-  });
-}
-
-// Cargar Favoritos
-if (loadFavoritesBtn) {
-  loadFavoritesBtn.addEventListener('click', () => {
-    if (shoppingList.length > 0) {
-      showAlert('La lista ya contiene productos. No se puede cargar favoritos.', false, null, 'warning');
-      return;
-    }
-    if (favoriteProducts.length === 0) {
-      showAlert('No hay productos marcados como favoritos.', false, null, 'warning');
-      return;
-    }
-    const favoritesToAdd = favoriteProducts.filter(fav => !shoppingList.some(item => item.name === fav.name));
-    if (favoritesToAdd.length === 0) {
-      showAlert('Los favoritos ya están en la lista.', false, null, 'warning');
-      return;
-    }
-    shoppingList.push(...favoritesToAdd.map(fav => ({ ...fav, id: generateId(), bought: false })));
-    renderShoppingList();
-    showAlert('Favoritos cargados correctamente.', false, null, 'info');
-  });
-}
-
-// Copiar lista
-if (copyListBtn) {
-  copyListBtn.addEventListener('click', () => {
-    const pendingItems = shoppingList.filter(item => !item.bought);
-    if (pendingItems.length === 0) {
-      showAlert(pendingItems.length === 0 && shoppingList.length > 0 
-        ? 'No hay productos pendientes en la lista.' 
-        : 'La lista está vacía.', false, null, 'warning');
-      return;
-    }
-    const listText = pendingItems.map((item, index) => {
-      const cat = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
-      const loc = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
-      const isFav = favoriteProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
-      const isDef = defaultProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
-      const prefix = isFav ? '⭐ ' : isDef ? '📌 ' : '';
-      return `${index + 1}. ${prefix}${item.name} [${cat} - ${loc}]`;
-    }).join('\n');
-
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(listText).then(() => {
-        showAlert('Lista copiada al portapapeles!', false, null, 'info');
-      }).catch(() => fallbackCopyTextToClipboard(listText));
-    } else {
-      fallbackCopyTextToClipboard(listText);
-    }
-  });
-}
-
+// Función fallback para copiar (usada por el select)
 function fallbackCopyTextToClipboard(text) {
   const textArea = document.createElement('textarea');
   textArea.value = text;
@@ -853,7 +793,7 @@ if (openHelpBtn) {
   });
 }
 
-// >>> MANEJADOR DEL SELECT DE ACCIONES PRINCIPALES <<<
+// >>> MANEJADOR DEL SELECT DE ACCIONES PRINCIPALES (CORREGIDO) <<<
 const mainActionsSelect = document.getElementById('main-actions');
 if (mainActionsSelect) {
   mainActionsSelect.addEventListener('change', (e) => {
@@ -868,22 +808,66 @@ if (mainActionsSelect) {
         document.getElementById('add-product-modal').style.display = 'block';
         break;
       case 'copy-list':
-        document.getElementById('copy-list').click();
+        // Lógica directa de copiar lista
+        const pendingItems = shoppingList.filter(item => !item.bought);
+        if (pendingItems.length === 0) {
+          showAlert(pendingItems.length === 0 && shoppingList.length > 0 
+            ? 'No hay productos pendientes en la lista.' 
+            : 'La lista está vacía.', false, null, 'warning');
+        } else {
+          const listText = pendingItems.map((item, index) => {
+            const cat = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
+            const loc = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
+            const isFav = favoriteProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
+            const isDef = defaultProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
+            const prefix = isFav ? '⭐ ' : isDef ? '📌 ' : '';
+            return `${index + 1}. ${prefix}${item.name} [${cat} - ${loc}]`;
+          }).join('\n');
+
+          if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(listText).then(() => {
+              showAlert('Lista copiada al portapapeles!', false, null, 'info');
+            }).catch(() => fallbackCopyTextToClipboard(listText));
+          } else {
+            fallbackCopyTextToClipboard(listText);
+          }
+        }
         break;
       case 'clear-list':
-        document.getElementById('clear-list').click();
+        showAlert('¿Seguro que quieres borrar la lista actual?', true, () => {
+          shoppingList = [];
+          renderShoppingList();
+        }, 'error');
         break;
       case 'open-favorites':
-        document.getElementById('open-favorites-btn').click();
+        openModal(favoritesModal, renderFavoritesList);
         break;
       case 'load-favorites':
-        document.getElementById('load-favorites').click();
+        if (shoppingList.length > 0) {
+          showAlert('La lista ya contiene productos. No se puede cargar favoritos.', false, null, 'warning');
+          return;
+        }
+        if (favoriteProducts.length === 0) {
+          showAlert('No hay productos marcados como favoritos.', false, null, 'warning');
+          return;
+        }
+        const favoritesToAdd = favoriteProducts.filter(fav => !shoppingList.some(item => item.name === fav.name));
+        if (favoritesToAdd.length === 0) {
+          showAlert('Los favoritos ya están en la lista.', false, null, 'warning');
+          return;
+        }
+        shoppingList.push(...favoritesToAdd.map(fav => ({ ...fav, id: generateId(), bought: false })));
+        renderShoppingList();
+        showAlert('Favoritos cargados correctamente.', false, null, 'info');
         break;
       case 'open-defaults':
-        document.getElementById('open-defaults-btn').click();
+        openModal(defaultsModal, renderDefaultsList);
         break;
       case 'open-config':
-        document.getElementById('open-config-btn').click();
+        openModal(configModal, () => {
+          renderCategories();
+          renderLocations();
+        });
         break;
     }
   });
