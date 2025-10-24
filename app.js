@@ -413,6 +413,29 @@ if (openConfigBtn) {
   });
 }
 
+// >>> AÑADIR MODAL DE AÑADIR PRODUCTO <<<
+const openAddProductModalBtn = document.getElementById('open-add-product-modal');
+const addProductModal = document.getElementById('add-product-modal');
+const closeAddProductModalBtn = document.getElementById('close-add-product-modal-btn');
+
+if (openAddProductModalBtn) {
+  openAddProductModalBtn.addEventListener('click', () => {
+    addProductModal.style.display = 'block';
+  });
+}
+
+if (closeAddProductModalBtn) {
+  closeAddProductModalBtn.addEventListener('click', () => {
+    addProductModal.style.display = 'none';
+  });
+}
+
+window.addEventListener('click', (e) => {
+  if (e.target === addProductModal) {
+    addProductModal.style.display = 'none';
+  }
+});
+
 // Añadir categoría
 if (categoryForm) {
   categoryForm.addEventListener('submit', (e) => {
@@ -447,7 +470,7 @@ if (locationForm) {
     saveData();
     input.value = '';
   });
-                                                 }
+}
 
 // Crear botón de deshacer global al inicio
 (function() {
@@ -506,11 +529,11 @@ function showModalUndoButton(modal, context) {
   }, 5000);
 }
 
-// >>> DELEGACIÓN GLOBAL CORREGIDA <<<
+// >>> LISTENER ÚNICO Y CORREGIDO PARA TODOS LOS CLICKS <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
 
-  // Shopping List
+  // --- ELIMINACIÓN ---
   if (target.classList.contains('delete-btn') && target.closest('#shopping-list')) {
     const id = Number(target.dataset.id);
     if (!isNaN(id)) {
@@ -522,7 +545,6 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // Favoritos
   if (target.classList.contains('delete-favorite')) {
     const id = Number(target.dataset.id);
     if (!isNaN(id)) {
@@ -535,7 +557,6 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // Predeterminados
   if (target.classList.contains('delete-default')) {
     const id = Number(target.dataset.id);
     if (!isNaN(id)) {
@@ -548,7 +569,6 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // Categorías
   if (target.classList.contains('delete-category')) {
     const id = Number(target.dataset.id);
     if (!isNaN(id)) {
@@ -563,7 +583,6 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // Ubicaciones
   if (target.classList.contains('delete-location')) {
     const id = Number(target.dataset.id);
     if (!isNaN(id)) {
@@ -578,7 +597,7 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // Deshacer global
+  // --- DESHACER ---
   if (target.id === 'undo-btn') {
     let restored = false;
     for (const key of ['shoppingList', 'favorites', 'defaults', 'categories', 'locations']) {
@@ -604,31 +623,24 @@ document.addEventListener('click', (e) => {
     }
     return;
   }
-});
 
-// >>> RESTO DE EVENTOS (sin tocar eliminación) <<<
-document.addEventListener('click', function(e) {
-  const target = e.target;
-
-  if (
-    target.classList.contains('delete-btn') ||
-    target.classList.contains('delete-favorite') ||
-    target.classList.contains('delete-default') ||
-    target.classList.contains('delete-category') ||
-    target.classList.contains('delete-location') ||
-    target.id === 'undo-btn'
-  ) {
-    return;
-  }
-
-  // Favoritos - Añadir
-  if (target.classList.contains('add-to-list') && target.dataset.type === 'favorite') {
+  // --- AÑADIR DESDE FAVORITOS O PREDETERMINADOS ---
+  if (target.classList.contains('add-to-list')) {
+    const type = target.dataset.type;
     const id = Number(target.dataset.id);
-    const itemToAdd = favoriteProducts.find(p => p.id === id);
+    let itemToAdd = null;
+
+    if (type === 'favorite') {
+      itemToAdd = favoriteProducts.find(p => p.id === id);
+    } else if (type === 'default') {
+      itemToAdd = defaultProducts.find(p => p.id === id);
+    }
+
     if (itemToAdd && shoppingList.some(p => p.name === itemToAdd.name)) {
       showAlert('Este producto ya está en la lista.', false, null, 'warning');
       return;
     }
+
     if (itemToAdd) {
       shoppingList.push({ ...itemToAdd, id: generateId(), bought: false });
       renderShoppingList();
@@ -637,85 +649,61 @@ document.addEventListener('click', function(e) {
     return;
   }
 
-  // Predeterminados - Añadir
-  if (target.classList.contains('add-to-list') && target.dataset.type === 'default') {
-    const id = Number(target.dataset.id);
-    const itemToAdd = defaultProducts.find(p => p.id === id);
-    if (itemToAdd && shoppingList.some(p => p.name === itemToAdd.name)) {
-      showAlert('Este producto ya está en la lista.', false, null, 'warning');
-      return;
-    }
-    if (itemToAdd) {
-      shoppingList.push({ ...itemToAdd, id: generateId(), bought: false });
-      renderShoppingList();
-      showAlert('Producto añadido a la lista!', false, null, 'info');
-    }
-    return;
-  }
-
-  // Guardar en modales
+  // --- GUARDAR EDICIONES EN MODALES ---
   if (target.classList.contains('save-category')) {
     const id = Number(target.dataset.id);
     const input = target.closest('.category-item').querySelector('input');
     const newName = input.value.trim();
-    if (newName) {
-      const cat = categories.find(c => c.id === id);
-      if (cat) {
-        cat.name = newName;
-        renderCategories();
-        renderShoppingList();
-        renderFavoritesList();
-        renderDefaultsList();
-        saveData();
-      }
+    if (newName && categories.some(c => c.id === id)) {
+      categories.find(c => c.id === id).name = newName;
+      renderCategories();
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+      saveData();
     }
+    return;
   }
 
   if (target.classList.contains('save-location')) {
     const id = Number(target.dataset.id);
     const input = target.closest('.location-item').querySelector('input');
     const newName = input.value.trim();
-    if (newName) {
-      const loc = locations.find(l => l.id === id);
-      if (loc) {
-        loc.name = newName;
-        renderLocations();
-        renderShoppingList();
-        renderFavoritesList();
-        renderDefaultsList();
-        saveData();
-      }
+    if (newName && locations.some(l => l.id === id)) {
+      locations.find(l => l.id === id).name = newName;
+      renderLocations();
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+      saveData();
     }
+    return;
   }
 
   if (target.classList.contains('save-favorite')) {
     const id = Number(target.dataset.id);
     const input = target.closest('.favorite-item').querySelector('.product-name');
     const newName = input.value.trim();
-    if (newName) {
-      const item = favoriteProducts.find(p => p.id === id);
-      if (item) {
-        item.name = newName;
-        renderFavoritesList();
-        renderShoppingList();
-        saveData();
-      }
+    if (newName && favoriteProducts.some(p => p.id === id)) {
+      favoriteProducts.find(p => p.id === id).name = newName;
+      renderFavoritesList();
+      renderShoppingList();
+      saveData();
     }
+    return;
   }
 
   if (target.classList.contains('save-default')) {
     const id = Number(target.dataset.id);
     const input = target.closest('.default-item').querySelector('.product-name');
     const newName = input.value.trim();
-    if (newName) {
-      const item = defaultProducts.find(p => p.id === id);
-      if (item) {
-        item.name = newName;
-        renderDefaultsList();
-        renderShoppingList();
-        saveData();
-      }
+    if (newName && defaultProducts.some(p => p.id === id)) {
+      defaultProducts.find(p => p.id === id).name = newName;
+      renderDefaultsList();
+      renderShoppingList();
+      saveData();
     }
+    return;
   }
 });
 
@@ -827,7 +815,7 @@ if (copyListBtn) {
     if (pendingItems.length === 0) {
       showAlert(pendingItems.length === 0 && shoppingList.length > 0 
         ? 'No hay productos pendientes en la lista.' 
-        : 'La lista está vacía.', { type: 'warning' });
+        : 'La lista está vacía.', false, null, 'warning');
       return;
     }
     const listText = pendingItems.map((item, index) => {
