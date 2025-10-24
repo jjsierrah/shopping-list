@@ -16,11 +16,13 @@
   </header>
 
   <main>
-    <!-- Botonera de 3 líneas -->
+    <!-- Botón único en la ventana principal -->
+    <button id="open-add-product-modal" class="btn-add-product">➕ Añadir producto</button>
+
+    <!-- Botonera de 6 botones en 3 líneas fijas -->
     <div class="button-grid">
-      <!-- Línea 1: Añadir, Copiar, Limpiar -->
-      <div class="button-row three-buttons">
-        <button id="open-add-product-modal">➕ Añadir producto</button>
+      <!-- Línea 1: Copiar y Limpiar -->
+      <div class="button-row">
         <button id="copy-list">📋 Copiar lista</button>
         <button id="clear-list" class="btn-clear">Limpiar lista</button>
       </div>
@@ -40,9 +42,6 @@
 
     <!-- Lista de productos -->
     <ul id="shopping-list"></ul>
-
-    <!-- Botón de deshacer -->
-    <button id="undo-btn" class="undo-btn" style="display: none;">↺ Deshacer</button>
   </main>
 
   <!-- Modal de Añadir Producto -->
@@ -52,7 +51,7 @@
         <h2>Añadir Producto</h2>
         <button id="close-add-product-modal-btn" class="close-btn">&times;</button>
       </div>
-      <form id="add-product-form">
+      <form id="add-product-form" class="product-form">
         <input type="text" id="product-name" placeholder="Nombre del producto" required />
         <select id="product-category-select">
           <option value="">-- Categoría --</option>
