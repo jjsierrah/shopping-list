@@ -47,7 +47,7 @@ header h1 {
   background-color: #5a6268;
 }
 
-/* === Botonera principal: 3 líneas (3-2-2) === */
+/* Botonera de 3 líneas */
 .button-grid {
   margin: 20px 0;
   display: flex;
@@ -64,7 +64,6 @@ header h1 {
   flex-wrap: nowrap;
 }
 
-/* Primera línea: 3 botones */
 .button-row.three-buttons {
   justify-content: space-between;
 }
@@ -74,14 +73,13 @@ header h1 {
   min-width: 30%;
 }
 
-/* Líneas 2 y 3: 2 botones */
 .button-row:not(.three-buttons) button {
   flex: 1;
   min-width: 45%;
   max-width: 48%;
 }
 
-/* === Estilo general de botones === */
+/* Botones generales */
 button {
   padding: 10px 12px;
   background-color: #4CAF50;
@@ -94,6 +92,7 @@ button {
   min-height: 44px;
   text-align: center;
   word-break: break-word;
+  font-size: 0.85em;
 }
 
 button:hover {
@@ -114,7 +113,6 @@ button:hover {
   margin-top: 16px;
 }
 
-/* Botón de configuración */
 #open-config-btn {
   background-color: #455a64;
   color: white;
@@ -134,7 +132,7 @@ button:hover {
   background-color: #37474f;
 }
 
-/* === Modal de Añadir Producto === */
+/* Modal de Añadir Producto */
 #add-product-form {
   display: flex;
   flex-direction: column;
@@ -180,7 +178,7 @@ button:hover {
   background-color: #388E3C;
 }
 
-/* === Lista de productos === */
+/* Lista de productos */
 #shopping-list {
   list-style: none;
 }
@@ -228,7 +226,7 @@ button:hover {
   gap: 8px;
 }
 
-/* === Papelera blanca en todos los contextos === */
+/* Papelera blanca */
 .delete-btn,
 .delete-favorite,
 .delete-default,
@@ -261,7 +259,7 @@ input[type="checkbox"].bought {
   transform: scale(1.3);
 }
 
-/* === Botón de deshacer (visible en ventana principal) === */
+/* Botón de deshacer */
 .undo-btn {
   position: fixed;
   bottom: 20px;
@@ -283,7 +281,7 @@ input[type="checkbox"].bought {
   background-color: #1976d2;
 }
 
-/* === Modales generales === */
+/* Modales */
 .modal {
   position: fixed;
   z-index: 1000;
@@ -341,7 +339,7 @@ input[type="checkbox"].bought {
   margin-bottom: 16px;
 }
 
-/* === Estilo unificado para items en Favoritos, Predeterminados y Configuración === */
+/* Marcos en modales */
 .favorite-item,
 .default-item,
 .category-item,
@@ -374,7 +372,6 @@ input[type="checkbox"].bought {
   gap: 4px;
 }
 
-/* === Botones de acción en modales (guardar/eliminar) === */
 .save-category, .delete-category,
 .save-location, .delete-location,
 .save-favorite, .delete-favorite,
@@ -424,7 +421,6 @@ input[type="checkbox"].bought {
   fill: white !important;
 }
 
-/* === Edición en Favoritos y Predeterminados === */
 .product-edit {
   display: flex;
   flex-direction: column;
@@ -459,7 +455,6 @@ input[type="checkbox"].bought {
   font-size: 0.85em;
 }
 
-/* === Formularios de añadir categoría/ubicación === */
 .add-form {
   display: flex;
   gap: 8px;
@@ -476,7 +471,6 @@ h3 {
   font-size: 1.1em;
 }
 
-/* === Responsive === */
 @media (max-width: 480px) {
   .modal-content {
     margin: 20px auto;
@@ -499,4 +493,4 @@ h3 {
     padding: 8px 4px;
     font-size: 0.75em;
   }
-  }
+}
