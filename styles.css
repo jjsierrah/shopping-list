@@ -47,24 +47,6 @@ header h1 {
   background-color: #5a6268;
 }
 
-/* Botón de añadir producto en la vista principal */
-.btn-add-product {
-  width: 100%;
-  padding: 12px;
-  font-size: 1.1em;
-  margin-bottom: 20px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.btn-add-product:hover {
-  background-color: #388E3C;
-}
-
 /* Formulario con marco */
 .product-form {
   display: flex;
@@ -184,16 +166,21 @@ button:not(#add-product-btn):not(.btn-add-product):hover {
   flex-wrap: nowrap;
 }
 
-.button-row button {
+/* Primera línea: 3 botones */
+.button-row.three-buttons {
+  justify-content: space-between;
+}
+
+.button-row.three-buttons button {
+  flex: 1;
+  min-width: 30%;
+}
+
+/* Líneas 2 y 3: 2 botones */
+.button-row:not(.three-buttons) button {
   flex: 1;
   min-width: 45%;
   max-width: 48%;
-  padding: 10px 8px;
-  font-size: 0.85em;
-  min-height: 44px;
-  white-space: normal;
-  text-align: center;
-  word-break: break-word;
 }
 
 /* Lista de productos */
@@ -269,11 +256,12 @@ input[type="checkbox"].bought {
   transform: scale(1.3);
 }
 
-/* Botón de deshacer (flotante) */
+/* Botón de deshacer centrado abajo */
 .undo-btn {
   position: fixed;
-  bottom: 80px;
-  right: 24px;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   background-color: #2196f3;
   color: white;
   border: none;
@@ -528,5 +516,11 @@ h3 {
     white-space: normal;
     text-align: center;
     word-break: break-word;
+  }
+  
+  .button-row.three-buttons button {
+    min-width: 30%;
+    padding: 8px 4px;
+    font-size: 0.75em;
   }
 }
