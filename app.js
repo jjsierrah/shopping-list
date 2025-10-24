@@ -53,6 +53,9 @@ let undoStack = {
 const TRASH_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
 const SAVE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17,3H5C3.89,3 3,3.89 3,5V19C3,20.11 3.89,21 5,21H19C20.11,21 21,20.11 21,19V7L17,3M12,19C10.34,19 9,17.66 9,16C9,14.34 10.34,13 12,13C13.66,13 15,14.34 15,16C15,17.66 13.66,19 12,19M18,12H6V6H17V12Z"/></svg>`;
 
+// Bandera para evitar clics tras arrastrar
+let wasDragged = false;
+
 // Función para generar ID único
 function generateId() {
   return Date.now() + Math.floor(Math.random() * 1000000);
@@ -290,17 +293,14 @@ function renderDefaultsList() {
   initDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList);
 }
 
-// Drag & Drop robusto
+// Drag & Drop robusto (SIN clonación)
 function initDragAndDrop(container, itemSelector, dataArray, renderFn) {
-  const existingItems = container.querySelectorAll(itemSelector);
-  existingItems.forEach(item => {
-    const clone = item.cloneNode(true);
-    item.parentNode.replaceChild(clone, item);
-  });
+  // Eliminamos la clonación: causa pérdida de eventos y data-id
 
   let dragSrcEl = null;
 
   function handleDragStart(e) {
+    wasDragged = true;
     dragSrcEl = this;
     e.dataTransfer.effectAllowed = 'move';
     this.classList.add('dragging');
@@ -332,7 +332,7 @@ function initDragAndDrop(container, itemSelector, dataArray, renderFn) {
         const [movedItem] = dataArray.splice(srcIndex, 1);
         dataArray.splice(targetIndex, 0, movedItem);
         renderFn();
-        setTimeout(() => initDragAndDrop(container, itemSelector, dataArray, renderFn), 50);
+        // No es necesario re-inicializar Drag & Drop si no clonamos
       }
     }
     
@@ -348,6 +348,15 @@ function initDragAndDrop(container, itemSelector, dataArray, renderFn) {
 
   const items = container.querySelectorAll(itemSelector);
   items.forEach(item => {
+    // Remover listeners anteriores para evitar duplicados (opcional, pero seguro)
+    item.removeEventListener('dragstart', handleDragStart);
+    item.removeEventListener('dragover', handleDragOver);
+    item.removeEventListener('dragenter', handleDragEnter);
+    item.removeEventListener('dragleave', handleDragLeave);
+    item.removeEventListener('drop', handleDrop);
+    item.removeEventListener('dragend', handleDragEnd);
+
+    // Añadir listeners frescos
     item.addEventListener('dragstart', handleDragStart, false);
     item.addEventListener('dragover', handleDragOver, false);
     item.addEventListener('dragenter', handleDragEnter, false);
@@ -531,6 +540,12 @@ function showModalUndoButton(modal, context) {
 
 // >>> LISTENER ÚNICO Y CORREGIDO PARA TODOS LOS CLICKS <<<
 document.addEventListener('click', (e) => {
+  // Protección: ignorar clic si acaba de hacer drag
+  if (wasDragged) {
+    wasDragged = false;
+    return;
+  }
+
   const target = e.target;
 
   // --- ELIMINACIÓN ---
