@@ -20,11 +20,13 @@
     <option value="">— Acciones —</option>
     <option value="add-product">➕ Añadir producto</option>
     <option value="copy-list">📋 Copiar lista</option>
-    <option value="clear-list">Limpiar lista</option>
+    <option value="clear-list">🗑️ Limpiar lista</option>
     <option value="open-favorites">⭐ Favoritos</option>
     <option value="load-favorites">➕ Cargar Favoritos</option>
     <option value="open-defaults">📌 Predeterminados</option>
     <option value="open-config">⚙️ Configuración</option>
+    <option value="export-txt">📤 Exportar a TXT</option>
+    <option value="import-txt">📥 Importar desde TXT</option>
   </select>
 
   <!-- Lista de productos -->
@@ -75,6 +77,7 @@
           <li>📌 Marcar productos como predeterminados</li>
           <li>🔄 Gestionar categorías y ubicaciones</li>
           <li>📋 Copiar lista al portapapeles</li>
+          <li>📤📥 Exportar/Importar lista en TXT</li>
           <li>📱 Instalable como aplicación en Android</li>
           <li>🔒 Datos guardados localmente (sin conexión necesaria)</li>
           <li>↕️ Reordenar productos con arrastrar y soltar</li>
@@ -134,6 +137,9 @@
       <button id="close-config-modal-btn" class="btn-secondary">Cerrar</button>
     </div>
   </div>
+
+  <!-- Input oculto para importar archivo -->
+  <input type="file" id="import-file-input" accept=".txt" style="display: none;" />
 
   <script src="app.js?v=4.0"></script>
 </body>
