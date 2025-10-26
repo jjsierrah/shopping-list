@@ -59,81 +59,6 @@ function generateId() {
   return Date.now() + Math.floor(Math.random() * 1000000);
 }
 
-// >>> LISTENER GLOBAL DE ELIMINACIÓN (ROBUSTO, SIN EXCEPCIONES) <<<
-document.addEventListener('click', function(e) {
-  const target = e.target;
-
-  // Verificar si es un botón de eliminar
-  const isDeleteBtn = target.classList.contains('delete-btn') ||
-                      target.classList.contains('delete-favorite') ||
-                      target.classList.contains('delete-default') ||
-                      target.classList.contains('delete-category') ||
-                      target.classList.contains('delete-location');
-
-  if (!isDeleteBtn) return;
-
-  // Obtener ID de forma segura
-  const idAttr = target.getAttribute('data-id');
-  if (!idAttr) return;
-
-  const id = Number(idAttr);
-  if (isNaN(id) || id <= 0) return;
-
-  // Evitar doble clic
-  if (target.hasAttribute('data-processing')) return;
-  target.setAttribute('data-processing', 'true');
-  setTimeout(() => target.removeAttribute('data-processing'), 300);
-
-  // --- GUARDAR ESTADO ANTES DE ELIMINAR (para deshacer) ---
-  if (target.classList.contains('delete-btn') && target.closest('#shopping-list')) {
-    undoStack.shoppingList = JSON.parse(JSON.stringify(shoppingList));
-    shoppingList = shoppingList.filter(p => p.id !== id);
-    renderShoppingList();
-    showUndoButton();
-    return;
-  }
-
-  if (target.classList.contains('delete-favorite')) {
-    undoStack.favorites = JSON.parse(JSON.stringify(favoriteProducts));
-    favoriteProducts = favoriteProducts.filter(p => p.id !== id);
-    renderFavoritesList();
-    renderShoppingList();
-    showModalUndoButton(favoritesModal, 'favorites');
-    return;
-  }
-
-  if (target.classList.contains('delete-default')) {
-    undoStack.defaults = JSON.parse(JSON.stringify(defaultProducts));
-    defaultProducts = defaultProducts.filter(p => p.id !== id);
-    renderDefaultsList();
-    renderShoppingList();
-    showModalUndoButton(defaultsModal, 'defaults');
-    return;
-  }
-
-  if (target.classList.contains('delete-category')) {
-    undoStack.categories = JSON.parse(JSON.stringify(categories));
-    categories = categories.filter(c => c.id !== id);
-    renderCategories();
-    renderShoppingList();
-    renderFavoritesList();
-    renderDefaultsList();
-    showModalUndoButton(configModal, 'categories');
-    return;
-  }
-
-  if (target.classList.contains('delete-location')) {
-    undoStack.locations = JSON.parse(JSON.stringify(locations));
-    locations = locations.filter(l => l.id !== id);
-    renderLocations();
-    renderShoppingList();
-    renderFavoritesList();
-    renderDefaultsList();
-    showModalUndoButton(configModal, 'locations');
-    return;
-  }
-});
-
 // Función de alerta personalizada mejorada
 function showAlert(message, isConfirm = false, onConfirm = null, type = 'info') {
   const colors = {
@@ -274,17 +199,47 @@ function renderProductItem(item) {
   const li = document.createElement('li');
   li.dataset.id = item.id;
   li.draggable = true;
-  li.innerHTML = `
-    <div class="product-info">
-      <h3>${item.name}${isFavorite ? ' ⭐' : ''}${isDefault ? ' 📌' : ''}</h3>
-      <div class="category">${categoryName}</div>
-      <div class="location">${locationName}</div>
-    </div>
-    <div class="actions">
-      <input type="checkbox" class="bought" ${item.bought ? 'checked' : ''} data-id="${item.id}">
-      <button type="button" class="delete-btn" data-id="${item.id}">${TRASH_SVG}</button>
-    </div>
-  `;
+
+  const productInfo = document.createElement('div');
+  productInfo.className = 'product-info';
+  
+  const title = document.createElement('h3');
+  title.textContent = item.name + (isFavorite ? ' ⭐' : '') + (isDefault ? ' 📌' : '');
+  productInfo.appendChild(title);
+  
+  const categoryEl = document.createElement('div');
+  categoryEl.className = 'category';
+  categoryEl.textContent = categoryName;
+  productInfo.appendChild(categoryEl);
+  
+  const locationEl = document.createElement('div');
+  locationEl.className = 'location';
+  locationEl.textContent = locationName;
+  productInfo.appendChild(locationEl);
+  
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+  
+  const boughtCheckbox = document.createElement('input');
+  boughtCheckbox.type = 'checkbox';
+  boughtCheckbox.className = 'bought';
+  boughtCheckbox.checked = item.bought;
+  boughtCheckbox.dataset.id = item.id;
+  actions.appendChild(boughtCheckbox);
+  
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'delete-btn';
+  deleteBtn.innerHTML = TRASH_SVG;
+  deleteBtn.onclick = () => {
+    undoStack.shoppingList = JSON.parse(JSON.stringify(shoppingList));
+    shoppingList = shoppingList.filter(p => p.id !== item.id);
+    renderShoppingList();
+    showUndoButton();
+  };
+  actions.appendChild(deleteBtn);
+  
+  li.appendChild(productInfo);
+  li.appendChild(actions);
   return li;
 }
 
@@ -297,7 +252,6 @@ function renderShoppingList() {
   saveData();
   initDragAndDrop(shoppingListEl, 'li', shoppingList, renderShoppingList);
 }
-
 function renderFavoritesList() {
   favoritesListEl.innerHTML = '';
   
@@ -309,26 +263,105 @@ function renderFavoritesList() {
     div.className = 'favorite-item';
     div.dataset.id = item.id;
     div.draggable = true;
-    div.innerHTML = `
-      <div class="product-edit">
-        <input type="text" value="${item.name}" data-id="${item.id}" class="product-name" />
-        <div class="category-location-row">
-          <select class="product-category" data-id="${item.id}">
-            <option value="">-- Categoría --</option>
-            ${categories.map(cat => `<option value="${cat.id}" ${cat.id === item.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
-          </select>
-          <select class="product-location" data-id="${item.id}">
-            <option value="">-- Ubicación --</option>
-            ${locations.map(loc => `<option value="${loc.id}" ${loc.id === item.locationId ? 'selected' : ''}>${loc.name}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-      <div class="favorite-actions">
-        <button type="button" class="add-to-list" data-id="${item.id}" data-type="favorite">➕ Añadir</button>
-        <button type="button" class="save-favorite" data-id="${item.id}">${SAVE_SVG}</button>
-        <button type="button" class="delete-favorite" data-id="${item.id}">${TRASH_SVG}</button>
-      </div>
-    `;
+    
+    // Product edit
+    const productEdit = document.createElement('div');
+    productEdit.className = 'product-edit';
+    
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.value = item.name;
+    nameInput.className = 'product-name';
+    nameInput.dataset.id = item.id;
+    productEdit.appendChild(nameInput);
+    
+    const row = document.createElement('div');
+    row.className = 'category-location-row';
+    
+    const catSelect = document.createElement('select');
+    catSelect.className = 'product-category';
+    catSelect.dataset.id = item.id;
+    const catDefaultOpt = document.createElement('option');
+    catDefaultOpt.value = '';
+    catDefaultOpt.textContent = '-- Categoría --';
+    catSelect.appendChild(catDefaultOpt);
+    categories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat.id;
+      opt.textContent = cat.name;
+      if (cat.id === item.categoryId) opt.selected = true;
+      catSelect.appendChild(opt);
+    });
+    row.appendChild(catSelect);
+    
+    const locSelect = document.createElement('select');
+    locSelect.className = 'product-location';
+    locSelect.dataset.id = item.id;
+    const locDefaultOpt = document.createElement('option');
+    locDefaultOpt.value = '';
+    locDefaultOpt.textContent = '-- Ubicación --';
+    locSelect.appendChild(locDefaultOpt);
+    locations.forEach(loc => {
+      const opt = document.createElement('option');
+      opt.value = loc.id;
+      opt.textContent = loc.name;
+      if (loc.id === item.locationId) opt.selected = true;
+      locSelect.appendChild(opt);
+    });
+    row.appendChild(locSelect);
+    
+    productEdit.appendChild(row);
+    div.appendChild(productEdit);
+    
+    // Actions
+    const actions = document.createElement('div');
+    actions.className = 'favorite-actions';
+    
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-to-list';
+    addBtn.textContent = '➕ Añadir';
+    addBtn.dataset.id = item.id;
+    addBtn.dataset.type = 'favorite';
+    addBtn.onclick = () => {
+      if (shoppingList.some(p => p.name === item.name)) {
+        showAlert('Este producto ya está en la lista.', false, null, 'warning');
+        return;
+      }
+      shoppingList.push({ ...item, id: generateId(), bought: false });
+      renderShoppingList();
+      showAlert('Producto añadido a la lista!', false, null, 'info');
+    };
+    actions.appendChild(addBtn);
+    
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'save-favorite';
+    saveBtn.innerHTML = SAVE_SVG;
+    saveBtn.dataset.id = item.id;
+    saveBtn.onclick = () => {
+      const newName = nameInput.value.trim();
+      if (newName) {
+        item.name = newName;
+        renderFavoritesList();
+        renderShoppingList();
+        saveData();
+      }
+    };
+    actions.appendChild(saveBtn);
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-favorite';
+    deleteBtn.innerHTML = TRASH_SVG;
+    deleteBtn.dataset.id = item.id;
+    deleteBtn.onclick = () => {
+      undoStack.favorites = JSON.parse(JSON.stringify(favoriteProducts));
+      favoriteProducts = favoriteProducts.filter(p => p.id !== item.id);
+      renderFavoritesList();
+      renderShoppingList();
+      showModalUndoButton(favoritesModal, 'favorites');
+    };
+    actions.appendChild(deleteBtn);
+    
+    div.appendChild(actions);
     favoritesListEl.appendChild(div);
   });
   initDragAndDrop(favoritesListEl, '.favorite-item', favoriteProducts, renderFavoritesList);
@@ -345,26 +378,105 @@ function renderDefaultsList() {
     div.className = 'default-item';
     div.dataset.id = item.id;
     div.draggable = true;
-    div.innerHTML = `
-      <div class="product-edit">
-        <input type="text" value="${item.name}" data-id="${item.id}" class="product-name" />
-        <div class="category-location-row">
-          <select class="product-category" data-id="${item.id}">
-            <option value="">-- Categoría --</option>
-            ${categories.map(cat => `<option value="${cat.id}" ${cat.id === item.categoryId ? 'selected' : ''}>${cat.name}</option>`).join('')}
-          </select>
-          <select class="product-location" data-id="${item.id}">
-            <option value="">-- Ubicación --</option>
-            ${locations.map(loc => `<option value="${loc.id}" ${loc.id === item.locationId ? 'selected' : ''}>${loc.name}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-      <div class="default-actions">
-        <button type="button" class="add-to-list" data-id="${item.id}" data-type="default">➕ Añadir</button>
-        <button type="button" class="save-default" data-id="${item.id}">${SAVE_SVG}</button>
-        <button type="button" class="delete-default" data-id="${item.id}">${TRASH_SVG}</button>
-      </div>
-    `;
+    
+    // Product edit
+    const productEdit = document.createElement('div');
+    productEdit.className = 'product-edit';
+    
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.value = item.name;
+    nameInput.className = 'product-name';
+    nameInput.dataset.id = item.id;
+    productEdit.appendChild(nameInput);
+    
+    const row = document.createElement('div');
+    row.className = 'category-location-row';
+    
+    const catSelect = document.createElement('select');
+    catSelect.className = 'product-category';
+    catSelect.dataset.id = item.id;
+    const catDefaultOpt = document.createElement('option');
+    catDefaultOpt.value = '';
+    catDefaultOpt.textContent = '-- Categoría --';
+    catSelect.appendChild(catDefaultOpt);
+    categories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat.id;
+      opt.textContent = cat.name;
+      if (cat.id === item.categoryId) opt.selected = true;
+      catSelect.appendChild(opt);
+    });
+    row.appendChild(catSelect);
+    
+    const locSelect = document.createElement('select');
+    locSelect.className = 'product-location';
+    locSelect.dataset.id = item.id;
+    const locDefaultOpt = document.createElement('option');
+    locDefaultOpt.value = '';
+    locDefaultOpt.textContent = '-- Ubicación --';
+    locSelect.appendChild(locDefaultOpt);
+    locations.forEach(loc => {
+      const opt = document.createElement('option');
+      opt.value = loc.id;
+      opt.textContent = loc.name;
+      if (loc.id === item.locationId) opt.selected = true;
+      locSelect.appendChild(opt);
+    });
+    row.appendChild(locSelect);
+    
+    productEdit.appendChild(row);
+    div.appendChild(productEdit);
+    
+    // Actions
+    const actions = document.createElement('div');
+    actions.className = 'default-actions';
+    
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-to-list';
+    addBtn.textContent = '➕ Añadir';
+    addBtn.dataset.id = item.id;
+    addBtn.dataset.type = 'default';
+    addBtn.onclick = () => {
+      if (shoppingList.some(p => p.name === item.name)) {
+        showAlert('Este producto ya está en la lista.', false, null, 'warning');
+        return;
+      }
+      shoppingList.push({ ...item, id: generateId(), bought: false });
+      renderShoppingList();
+      showAlert('Producto añadido a la lista!', false, null, 'info');
+    };
+    actions.appendChild(addBtn);
+    
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'save-default';
+    saveBtn.innerHTML = SAVE_SVG;
+    saveBtn.dataset.id = item.id;
+    saveBtn.onclick = () => {
+      const newName = nameInput.value.trim();
+      if (newName) {
+        item.name = newName;
+        renderDefaultsList();
+        renderShoppingList();
+        saveData();
+      }
+    };
+    actions.appendChild(saveBtn);
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-default';
+    deleteBtn.innerHTML = TRASH_SVG;
+    deleteBtn.dataset.id = item.id;
+    deleteBtn.onclick = () => {
+      undoStack.defaults = JSON.parse(JSON.stringify(defaultProducts));
+      defaultProducts = defaultProducts.filter(p => p.id !== item.id);
+      renderDefaultsList();
+      renderShoppingList();
+      showModalUndoButton(defaultsModal, 'defaults');
+    };
+    actions.appendChild(deleteBtn);
+    
+    div.appendChild(actions);
     defaultsListEl.appendChild(div);
   });
   initDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList);
@@ -562,82 +674,9 @@ function showModalUndoButton(modal, context) {
   setTimeout(() => { if (btn.parentNode) btn.remove(); undoStack[context] = null; }, 5000);
 }
 
-
 // >>> RESTO DE EVENTOS (sin tocar eliminación ni deshacer) <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
-
-  if (target.classList.contains('add-to-list')) {
-    const type = target.dataset.type;
-    const id = Number(target.dataset.id);
-    let itemToAdd = type === 'favorite' ? favoriteProducts.find(p => p.id === id) : defaultProducts.find(p => p.id === id);
-    if (itemToAdd && shoppingList.some(p => p.name === itemToAdd.name)) {
-      showAlert('Este producto ya está en la lista.', false, null, 'warning');
-      return;
-    }
-    if (itemToAdd) {
-      shoppingList.push({ ...itemToAdd, id: generateId(), bought: false });
-      renderShoppingList();
-      showAlert('Producto añadido a la lista!', false, null, 'info');
-    }
-    return;
-  }
-
-  if (target.classList.contains('save-category')) {
-    const id = Number(target.dataset.id);
-    const input = target.closest('.category-item').querySelector('input');
-    const newName = input.value.trim();
-    if (newName && categories.some(c => c.id === id)) {
-      categories.find(c => c.id === id).name = newName;
-      renderCategories();
-      renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
-      saveData();
-    }
-    return;
-  }
-
-  if (target.classList.contains('save-location')) {
-    const id = Number(target.dataset.id);
-    const input = target.closest('.location-item').querySelector('input');
-    const newName = input.value.trim();
-    if (newName && locations.some(l => l.id === id)) {
-      locations.find(l => l.id === id).name = newName;
-      renderLocations();
-      renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
-      saveData();
-    }
-    return;
-  }
-
-  if (target.classList.contains('save-favorite')) {
-    const id = Number(target.dataset.id);
-    const input = target.closest('.favorite-item').querySelector('.product-name');
-    const newName = input.value.trim();
-    if (newName && favoriteProducts.some(p => p.id === id)) {
-      favoriteProducts.find(p => p.id === id).name = newName;
-      renderFavoritesList();
-      renderShoppingList();
-      saveData();
-    }
-    return;
-  }
-
-  if (target.classList.contains('save-default')) {
-    const id = Number(target.dataset.id);
-    const input = target.closest('.default-item').querySelector('.product-name');
-    const newName = input.value.trim();
-    if (newName && defaultProducts.some(p => p.id === id)) {
-      defaultProducts.find(p => p.id === id).name = newName;
-      renderDefaultsList();
-      renderShoppingList();
-      saveData();
-    }
-    return;
-  }
 
   if (target.id === 'undo-btn') {
     let restored = false;
