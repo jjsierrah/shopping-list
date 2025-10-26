@@ -59,32 +59,32 @@ function generateId() {
   return Date.now() + Math.floor(Math.random() * 1000000);
 }
 
-// >>> LISTENER GLOBAL DE ELIMINACIÓN (AL INICIO, SIN CONDICIONES) <<<
+// >>> LISTENER GLOBAL DE ELIMINACIÓN (ROBUSTO, SIN EXCEPCIONES) <<<
 document.addEventListener('click', function(e) {
   const target = e.target;
 
-  // Solo actuar si el clic es en un botón de papelera
-  if (!target.classList.contains('delete-btn') &&
-      !target.classList.contains('delete-favorite') &&
-      !target.classList.contains('delete-default') &&
-      !target.classList.contains('delete-category') &&
-      !target.classList.contains('delete-location')) {
-    return;
-  }
+  // Verificar si es un botón de eliminar
+  const isDeleteBtn = target.classList.contains('delete-btn') ||
+                      target.classList.contains('delete-favorite') ||
+                      target.classList.contains('delete-default') ||
+                      target.classList.contains('delete-category') ||
+                      target.classList.contains('delete-location');
 
-  // Obtener el ID de forma robusta
-  const idStr = target.getAttribute('data-id');
-  if (!idStr) return;
+  if (!isDeleteBtn) return;
 
-  const id = Number(idStr);
-  if (isNaN(id)) return;
+  // Obtener ID de forma segura
+  const idAttr = target.getAttribute('data-id');
+  if (!idAttr) return;
 
-  // Prevenir múltiples ejecuciones
-  if (target.disabled) return;
-  target.disabled = true;
-  setTimeout(() => { target.disabled = false; }, 500);
+  const id = Number(idAttr);
+  if (isNaN(id) || id <= 0) return;
 
-  // --- ELIMINACIÓN SEGÚN CONTEXTO ---
+  // Evitar doble clic
+  if (target.hasAttribute('data-processing')) return;
+  target.setAttribute('data-processing', 'true');
+  setTimeout(() => target.removeAttribute('data-processing'), 300);
+
+  // --- GUARDAR ESTADO ANTES DE ELIMINAR (para deshacer) ---
   if (target.classList.contains('delete-btn') && target.closest('#shopping-list')) {
     undoStack.shoppingList = JSON.parse(JSON.stringify(shoppingList));
     shoppingList = shoppingList.filter(p => p.id !== id);
@@ -230,7 +230,6 @@ function renderCategories() {
     categorySelect.appendChild(option);
   });
 
-  // Re-inicializar Drag & Drop aquí
   initDragAndDrop(categoriesListEl, '.category-item', categories, renderCategories);
 }
 
@@ -258,7 +257,6 @@ function renderLocations() {
     locationSelect.appendChild(option);
   });
 
-  // Re-inicializar Drag & Drop aquí
   initDragAndDrop(locationsListEl, '.location-item', locations, renderLocations);
 }
 
@@ -421,20 +419,15 @@ function initDragAndDrop(container, itemSelector, dataArray, renderFn) {
     });
   }
 
-  // Limpiar listeners anteriores
-  const existingItems = container.querySelectorAll(itemSelector);
-  existingItems.forEach(item => {
+  const items = container.querySelectorAll(itemSelector);
+  items.forEach(item => {
     item.removeEventListener('dragstart', handleDragStart);
     item.removeEventListener('dragover', handleDragOver);
     item.removeEventListener('dragenter', handleDragEnter);
     item.removeEventListener('dragleave', handleDragLeave);
     item.removeEventListener('drop', handleDrop);
     item.removeEventListener('dragend', handleDragEnd);
-  });
 
-  // Añadir nuevos listeners
-  const items = container.querySelectorAll(itemSelector);
-  items.forEach(item => {
     item.addEventListener('dragstart', handleDragStart, false);
     item.addEventListener('dragover', handleDragOver, false);
     item.addEventListener('dragenter', handleDragEnter, false);
@@ -454,25 +447,23 @@ function closeModal(modal) {
   modal.style.display = 'none';
 }
 
-// Cerrar modales con botones y fuera
+// Cerrar modales
 const modalCloseTriggers = [
-  { btn: 'close-add-product-modal-btn', modal: 'add-product-modal' },
-  { btn: 'close-config-btn', modal: 'config-modal' },
-  { btn: 'close-favorites-btn', modal: 'favorites-modal' },
-  { btn: 'close-defaults-btn', modal: 'defaults-modal' },
-  { btn: 'close-config-modal-btn', modal: 'config-modal' },
-  { btn: 'close-favorites-modal-btn', modal: 'favorites-modal' },
-  { btn: 'close-defaults-modal-btn', modal: 'defaults-modal' },
-  { btn: 'close-help-btn', modal: 'help-modal' },
-  { btn: 'close-help-modal-btn', modal: 'help-modal' }
+  {btn: 'close-add-product-modal-btn', modal: 'add-product-modal'},
+  {btn: 'close-config-btn', modal: 'config-modal'},
+  {btn: 'close-favorites-btn', modal: 'favorites-modal'},
+  {btn: 'close-defaults-btn', modal: 'defaults-modal'},
+  {btn: 'close-config-modal-btn', modal: 'config-modal'},
+  {btn: 'close-favorites-modal-btn', modal: 'favorites-modal'},
+  {btn: 'close-defaults-modal-btn', modal: 'defaults-modal'},
+  {btn: 'close-help-btn', modal: 'help-modal'},
+  {btn: 'close-help-modal-btn', modal: 'help-modal'}
 ];
 
 modalCloseTriggers.forEach(({btn, modal}) => {
   const button = document.getElementById(btn);
   const modalEl = document.getElementById(modal);
-  if (button) {
-    button.addEventListener('click', () => closeModal(modalEl));
-  }
+  if (button) button.addEventListener('click', () => closeModal(modalEl));
 });
 
 // Cerrar al hacer clic fuera
@@ -485,60 +476,43 @@ modalCloseTriggers.forEach(({btn, modal}) => {
   }
 });
 
-if (openFavoritesBtn) {
-  openFavoritesBtn.addEventListener('click', () => openModal(favoritesModal, renderFavoritesList));
-}
-
-if (openDefaultsBtn) {
-  openDefaultsBtn.addEventListener('click', () => openModal(defaultsModal, renderDefaultsList));
-}
-
-if (openConfigBtn) {
-  openConfigBtn.addEventListener('click', () => {
-    openModal(configModal, () => {
-      renderCategories();
-      renderLocations();
-    });
-  });
-}
+if (openFavoritesBtn) openFavoritesBtn.addEventListener('click', () => openModal(favoritesModal, renderFavoritesList));
+if (openDefaultsBtn) openDefaultsBtn.addEventListener('click', () => openModal(defaultsModal, renderDefaultsList));
+if (openConfigBtn) openConfigBtn.addEventListener('click', () => openModal(configModal, () => { renderCategories(); renderLocations(); }));
 
 // Añadir categoría
-if (categoryForm) {
-  categoryForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const input = document.getElementById('new-category');
-    const name = input.value.trim();
-    if (!name) return;
-    if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-      showAlert('La categoría ya existe.', false, null, 'warning');
-      return;
-    }
-    categories.push({ id: generateId(), name });
-    renderCategories();
-    saveData();
-    input.value = '';
-  });
-}
+if (categoryForm) categoryForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = document.getElementById('new-category');
+  const name = input.value.trim();
+  if (!name) return;
+  if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+    showAlert('La categoría ya existe.', false, null, 'warning');
+    return;
+  }
+  categories.push({ id: generateId(), name });
+  renderCategories();
+  saveData();
+  input.value = '';
+});
 
 // Añadir ubicación
-if (locationForm) {
-  locationForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const input = document.getElementById('new-location');
-    const name = input.value.trim();
-    if (!name) return;
-    if (locations.some(l => l.name.toLowerCase() === name.toLowerCase())) {
-      showAlert('La ubicación ya existe.', false, null, 'warning');
-      return;
-    }
-    locations.push({ id: generateId(), name });
-    renderLocations();
-    saveData();
-    input.value = '';
-  });
-}
+if (locationForm) locationForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = document.getElementById('new-location');
+  const name = input.value.trim();
+  if (!name) return;
+  if (locations.some(l => l.name.toLowerCase() === name.toLowerCase())) {
+    showAlert('La ubicación ya existe.', false, null, 'warning');
+    return;
+  }
+  locations.push({ id: generateId(), name });
+  renderLocations();
+  saveData();
+  input.value = '';
+});
 
-// Crear botón de deshacer global al inicio
+// Botón de deshacer global
 (function() {
   if (!document.getElementById('undo-btn')) {
     const undoBtn = document.createElement('button');
@@ -555,9 +529,7 @@ function showUndoButton() {
   if (undoBtn) {
     undoBtn.style.display = 'block';
     if (window.undoTimeout) clearTimeout(window.undoTimeout);
-    window.undoTimeout = setTimeout(() => {
-      undoBtn.style.display = 'none';
-    }, 5000);
+    window.undoTimeout = setTimeout(() => undoBtn.style.display = 'none', 5000);
   }
 }
 
@@ -587,34 +559,22 @@ function showModalUndoButton(modal, context) {
     }
   };
   modal.querySelector('.modal-content').appendChild(btn);
-
-  setTimeout(() => {
-    if (btn.parentNode) btn.remove();
-    undoStack[context] = null;
-  }, 5000);
+  setTimeout(() => { if (btn.parentNode) btn.remove(); undoStack[context] = null; }, 5000);
 }
 
-// >>> LISTENER ÚNICO Y ROBUSTO PARA TODOS LOS CLICKS (excepto eliminación, ya manejada) <<<
+
+// >>> RESTO DE EVENTOS (sin tocar eliminación ni deshacer) <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
 
-  // --- AÑADIR DESDE FAVORITOS O PREDETERMINADOS ---
   if (target.classList.contains('add-to-list')) {
     const type = target.dataset.type;
     const id = Number(target.dataset.id);
-    let itemToAdd = null;
-
-    if (type === 'favorite') {
-      itemToAdd = favoriteProducts.find(p => p.id === id);
-    } else if (type === 'default') {
-      itemToAdd = defaultProducts.find(p => p.id === id);
-    }
-
+    let itemToAdd = type === 'favorite' ? favoriteProducts.find(p => p.id === id) : defaultProducts.find(p => p.id === id);
     if (itemToAdd && shoppingList.some(p => p.name === itemToAdd.name)) {
       showAlert('Este producto ya está en la lista.', false, null, 'warning');
       return;
     }
-
     if (itemToAdd) {
       shoppingList.push({ ...itemToAdd, id: generateId(), bought: false });
       renderShoppingList();
@@ -623,7 +583,6 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // --- GUARDAR EDICIONES EN MODALES ---
   if (target.classList.contains('save-category')) {
     const id = Number(target.dataset.id);
     const input = target.closest('.category-item').querySelector('input');
@@ -680,7 +639,6 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // --- DESHACER GLOBAL ---
   if (target.id === 'undo-btn') {
     let restored = false;
     for (const key of ['shoppingList', 'favorites', 'defaults', 'categories', 'locations']) {
@@ -707,13 +665,11 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // --- AÑADIR PRODUCTO DESDE MODAL ---
   if (target.id === 'add-product-btn') {
     e.preventDefault();
     const nameInput = document.getElementById('product-name');
     const name = nameInput.value.trim();
     if (!name) return nameInput.focus();
-
     if (shoppingList.some(item => item.name === name)) {
       showAlert('Este producto ya está en la lista.', false, null, 'warning');
       return;
@@ -746,7 +702,6 @@ document.addEventListener('click', (e) => {
     document.getElementById('product-default').checked = true;
     document.getElementById('add-product-modal').style.display = 'none';
     showAlert('Producto añadido a la lista!', false, null, 'info');
-    return;
   }
 });
 
@@ -756,27 +711,21 @@ document.addEventListener('change', (e) => {
   const id = Number(target.dataset.id);
 
   if (target.classList.contains('product-category')) {
-    if (target.closest('.favorite-item')) {
-      const item = favoriteProducts.find(p => p.id === id);
-      if (item) { item.categoryId = target.value ? Number(target.value) : null; saveData(); }
-    } else if (target.closest('.default-item')) {
-      const item = defaultProducts.find(p => p.id === id);
-      if (item) { item.categoryId = target.value ? Number(target.value) : null; saveData(); }
-    }
+    const item = target.closest('.favorite-item') ? 
+      favoriteProducts.find(p => p.id === id) : 
+      defaultProducts.find(p => p.id === id);
+    if (item) { item.categoryId = target.value ? Number(target.value) : null; saveData(); }
   }
 
   if (target.classList.contains('product-location')) {
-    if (target.closest('.favorite-item')) {
-      const item = favoriteProducts.find(p => p.id === id);
-      if (item) { item.locationId = target.value ? Number(target.value) : null; saveData(); }
-    } else if (target.closest('.default-item')) {
-      const item = defaultProducts.find(p => p.id === id);
-      if (item) { item.locationId = target.value ? Number(target.value) : null; saveData(); }
-    }
+    const item = target.closest('.favorite-item') ? 
+      favoriteProducts.find(p => p.id === id) : 
+      defaultProducts.find(p => p.id === id);
+    if (item) { item.locationId = target.value ? Number(target.value) : null; saveData(); }
   }
 });
 
-// Función fallback para copiar
+// Copiar al portapapeles
 function fallbackCopyTextToClipboard(text) {
   const textArea = document.createElement('textarea');
   textArea.value = text;
@@ -796,7 +745,7 @@ function fallbackCopyTextToClipboard(text) {
   document.body.removeChild(textArea);
 }
 
-// >>> NUEVA FUNCIÓN: DESCARGAR COMO ARCHIVO TXT <<<
+// Exportar a TXT
 function downloadTextAsFile(text, filename) {
   const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -809,42 +758,26 @@ function downloadTextAsFile(text, filename) {
   URL.revokeObjectURL(url);
 }
 
-// >>> NUEVA FUNCIÓN: IMPORTAR DESDE ARCHIVO TXT <<<
+// Importar desde TXT
 function importListFromText(text) {
   const lines = text.split('\n').filter(line => line.trim() !== '');
   const newItems = [];
 
   for (const line of lines) {
-    // Ejemplo: "1. 📌 Leche [Lácteos - Supermercado]"
     const match = line.match(/^\d+\.\s*(?:⭐\s*|📌\s*)?([^\[]+?)\s*\[\s*([^\]]*?)\s*-\s*([^\]]*?)\s*\]$/);
     if (match) {
       const name = match[1].trim();
       const categoryName = match[2].trim();
       const locationName = match[3].trim();
 
-      // Buscar o crear categoría
       let category = categories.find(c => c.name === categoryName);
-      if (!category) {
-        category = { id: generateId(), name: categoryName };
-        categories.push(category);
-      }
+      if (!category) { category = { id: generateId(), name: categoryName }; categories.push(category); }
 
-      // Buscar o crear ubicación
       let location = locations.find(l => l.name === locationName);
-      if (!location) {
-        location = { id: generateId(), name: locationName };
-        locations.push(location);
-      }
+      if (!location) { location = { id: generateId(), name: locationName }; locations.push(location); }
 
-      // Evitar duplicados
       if (!shoppingList.some(p => p.name === name && p.categoryId === category.id && p.locationId === location.id)) {
-        newItems.push({
-          id: generateId(),
-          name,
-          categoryId: category.id,
-          locationId: location.id,
-          bought: false
-        });
+        newItems.push({ id: generateId(), name, categoryId: category.id, locationId: location.id, bought: false });
       }
     }
   }
@@ -860,34 +793,22 @@ function importListFromText(text) {
   }
 }
 
-// Manejar selección de archivo
 if (importFileInput) {
   importFileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target.result;
-      importListFromText(text);
-      importFileInput.value = ''; // Reset
-    };
-    reader.onerror = () => {
-      showAlert('Error al leer el archivo.', false, null, 'error');
-    };
+    reader.onload = (event) => { importListFromText(event.target.result); importFileInput.value = ''; };
+    reader.onerror = () => showAlert('Error al leer el archivo.', false, null, 'error');
     reader.readAsText(file, 'utf-8');
   });
 }
 
 // Modal de Ayuda
 const openHelpBtn = document.getElementById('open-help-btn');
-if (openHelpBtn) {
-  openHelpBtn.addEventListener('click', () => {
-    document.getElementById('help-modal').style.display = 'block';
-  });
-}
+if (openHelpBtn) openHelpBtn.addEventListener('click', () => document.getElementById('help-modal').style.display = 'block');
 
-// >>> MANEJADOR DEL SELECT DE ACCIONES PRINCIPALES <<<
+// Manejador del select
 const mainActionsSelect = document.getElementById('main-actions');
 if (mainActionsSelect) {
   mainActionsSelect.addEventListener('change', (e) => {
@@ -896,9 +817,7 @@ if (mainActionsSelect) {
     e.target.selectedIndex = 0;
 
     switch (action) {
-      case 'add-product':
-        document.getElementById('add-product-modal').style.display = 'block';
-        break;
+      case 'add-product': document.getElementById('add-product-modal').style.display = 'block'; break;
       case 'copy-list':
         const pendingItems = shoppingList.filter(item => !item.bought);
         if (pendingItems.length === 0) {
@@ -915,50 +834,25 @@ if (mainActionsSelect) {
             return `${index + 1}. ${prefix}${item.name} [${cat} - ${loc}]`;
           }).join('\n');
           if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(listText).then(() => {
-              showAlert('Lista copiada al portapapeles!', false, null, 'info');
-            }).catch(() => fallbackCopyTextToClipboard(listText));
-          } else {
-            fallbackCopyTextToClipboard(listText);
-          }
+            navigator.clipboard.writeText(listText).then(() => showAlert('Lista copiada!', false, null, 'info'))
+              .catch(() => fallbackCopyTextToClipboard(listText));
+          } else fallbackCopyTextToClipboard(listText);
         }
         break;
       case 'clear-list':
-        showAlert('¿Seguro que quieres borrar la lista actual?', true, () => {
-          shoppingList = [];
-          renderShoppingList();
-        }, 'error');
+        showAlert('¿Seguro que quieres borrar la lista actual?', true, () => { shoppingList = []; renderShoppingList(); }, 'error');
         break;
-      case 'open-favorites':
-        openModal(favoritesModal, renderFavoritesList);
-        break;
+      case 'open-favorites': openModal(favoritesModal, renderFavoritesList); break;
       case 'load-favorites':
-        if (shoppingList.length > 0) {
-          showAlert('La lista ya contiene productos. No se puede cargar favoritos.', false, null, 'warning');
-          return;
-        }
-        if (favoriteProducts.length === 0) {
-          showAlert('No hay productos marcados como favoritos.', false, null, 'warning');
-          return;
-        }
+        if (shoppingList.length > 0) { showAlert('La lista ya contiene productos. No se puede cargar favoritos.', false, null, 'warning'); return; }
+        if (favoriteProducts.length === 0) { showAlert('No hay productos marcados como favoritos.', false, null, 'warning'); return; }
         const favoritesToAdd = favoriteProducts.filter(fav => !shoppingList.some(item => item.name === fav.name));
-        if (favoritesToAdd.length === 0) {
-          showAlert('Los favoritos ya están en la lista.', false, null, 'warning');
-          return;
-        }
+        if (favoritesToAdd.length === 0) { showAlert('Los favoritos ya están en la lista.', false, null, 'warning'); return; }
         shoppingList.push(...favoritesToAdd.map(fav => ({ ...fav, id: generateId(), bought: false })));
         renderShoppingList();
         showAlert('Favoritos cargados correctamente.', false, null, 'info');
         break;
-      case 'open-defaults':
-        openModal(defaultsModal, renderDefaultsList);
-        break;
-      case 'open-config':
-        openModal(configModal, () => {
-          renderCategories();
-          renderLocations();
-        });
-        break;
+      case 'open-defaults': openModal(defaultsModal, renderDefaultsList); break;
       case 'export-txt':
         const pendingItemsExport = shoppingList.filter(item => !item.bought);
         if (pendingItemsExport.length === 0) {
@@ -979,63 +873,24 @@ if (mainActionsSelect) {
           showAlert('Archivo TXT descargado.', false, null, 'info');
         }
         break;
-      case 'import-txt':
-        importFileInput.click();
-        break;
+      case 'import-txt': importFileInput.click(); break;
+      case 'open-config': openModal(configModal, () => { renderCategories(); renderLocations(); }); break;
     }
   });
 }
 
-// Estilos para alertas y SVGs
+// Estilos para alertas
 const style = document.createElement('style');
 style.textContent = `
-  .custom-alert {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-  }
-  .alert-content {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-    min-width: 250px;
-  }
-  .alert-title {
-    margin-bottom: 10px;
-  }
-  .alert-content p {
-    margin-bottom: 15px;
-  }
-  .alert-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-  }
-  .alert-ok, .alert-cancel, .alert-confirm {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  .alert-cancel {
-    background-color: #6c757d;
-  }
-  .alert-ok:hover, .alert-confirm:hover {
-    background-color: #388E3C;
-  }
-  .alert-cancel:hover {
-    background-color: #5a6268;
-  }
+  .custom-alert { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000; }
+  .alert-content { background: white; padding: 20px; border-radius: 8px; text-align: center; min-width: 250px; }
+  .alert-title { margin-bottom: 10px; }
+  .alert-content p { margin-bottom: 15px; }
+  .alert-buttons { display: flex; gap: 10px; justify-content: center; }
+  .alert-ok, .alert-cancel, .alert-confirm { background-color: #4CAF50; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+  .alert-cancel { background-color: #6c757d; }
+  .alert-ok:hover, .alert-confirm:hover { background-color: #388E3C; }
+  .alert-cancel:hover { background-color: #5a6268; }
 `;
 document.head.appendChild(style);
 
