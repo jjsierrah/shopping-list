@@ -24,6 +24,7 @@ const closeDefaultsModalBtn = document.getElementById('close-defaults-modal-btn'
 const configModal = document.getElementById('config-modal');
 const favoritesModal = document.getElementById('favorites-modal');
 const defaultsModal = document.getElementById('defaults-modal');
+const importFileInput = document.getElementById('import-file-input');
 
 // Load data - TRES LISTAS SEPARADAS
 let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
@@ -516,7 +517,7 @@ function showModalUndoButton(modal, context) {
     if (btn.parentNode) btn.remove();
     undoStack[context] = null;
   }, 5000);
-      }
+  }
 
 // >>> LISTENER ÚNICO Y ROBUSTO PARA TODOS LOS CLICKS <<<
 document.addEventListener('click', (e) => {
@@ -765,7 +766,7 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Función fallback para copiar (usada por el select)
+// Función fallback para copiar
 function fallbackCopyTextToClipboard(text) {
   const textArea = document.createElement('textarea');
   textArea.value = text;
@@ -785,6 +786,89 @@ function fallbackCopyTextToClipboard(text) {
   document.body.removeChild(textArea);
 }
 
+// >>> NUEVA FUNCIÓN: DESCARGAR COMO ARCHIVO TXT <<<
+function downloadTextAsFile(text, filename) {
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// >>> NUEVA FUNCIÓN: IMPORTAR DESDE ARCHIVO TXT <<<
+function importListFromText(text) {
+  const lines = text.split('\n').filter(line => line.trim() !== '');
+  const newItems = [];
+
+  for (const line of lines) {
+    // Ejemplo: "1. 📌 Leche [Lácteos - Supermercado]"
+    const match = line.match(/^\d+\.\s*(?:⭐\s*|📌\s*)?([^\[]+?)\s*\[\s*([^\]]*?)\s*-\s*([^\]]*?)\s*\]$/);
+    if (match) {
+      const name = match[1].trim();
+      const categoryName = match[2].trim();
+      const locationName = match[3].trim();
+
+      // Buscar o crear categoría
+      let category = categories.find(c => c.name === categoryName);
+      if (!category) {
+        category = { id: generateId(), name: categoryName };
+        categories.push(category);
+      }
+
+      // Buscar o crear ubicación
+      let location = locations.find(l => l.name === locationName);
+      if (!location) {
+        location = { id: generateId(), name: locationName };
+        locations.push(location);
+      }
+
+      // Evitar duplicados
+      if (!shoppingList.some(p => p.name === name && p.categoryId === category.id && p.locationId === location.id)) {
+        newItems.push({
+          id: generateId(),
+          name,
+          categoryId: category.id,
+          locationId: location.id,
+          bought: false
+        });
+      }
+    }
+  }
+
+  if (newItems.length > 0) {
+    shoppingList.push(...newItems);
+    renderShoppingList();
+    renderCategories();
+    renderLocations();
+    showAlert(`Se importaron ${newItems.length} productos.`, false, null, 'info');
+  } else {
+    showAlert('No se encontraron productos válidos en el archivo.', false, null, 'warning');
+  }
+}
+
+// Manejar selección de archivo
+if (importFileInput) {
+  importFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target.result;
+      importListFromText(text);
+      importFileInput.value = ''; // Reset
+    };
+    reader.onerror = () => {
+      showAlert('Error al leer el archivo.', false, null, 'error');
+    };
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
 // Modal de Ayuda
 const openHelpBtn = document.getElementById('open-help-btn');
 if (openHelpBtn) {
@@ -793,7 +877,7 @@ if (openHelpBtn) {
   });
 }
 
-// >>> MANEJADOR DEL SELECT DE ACCIONES PRINCIPALES (CORREGIDO) <<<
+// >>> MANEJADOR DEL SELECT DE ACCIONES PRINCIPALES (CORREGIDO + EXPORTAR/IMPORTAR TXT) <<<
 const mainActionsSelect = document.getElementById('main-actions');
 if (mainActionsSelect) {
   mainActionsSelect.addEventListener('change', (e) => {
@@ -808,7 +892,6 @@ if (mainActionsSelect) {
         document.getElementById('add-product-modal').style.display = 'block';
         break;
       case 'copy-list':
-        // Lógica directa de copiar lista
         const pendingItems = shoppingList.filter(item => !item.bought);
         if (pendingItems.length === 0) {
           showAlert(pendingItems.length === 0 && shoppingList.length > 0 
@@ -868,6 +951,30 @@ if (mainActionsSelect) {
           renderCategories();
           renderLocations();
         });
+        break;
+      case 'export-txt':
+        const pendingItemsExport = shoppingList.filter(item => !item.bought);
+        if (pendingItemsExport.length === 0) {
+          showAlert(pendingItemsExport.length === 0 && shoppingList.length > 0 
+            ? 'No hay productos pendientes en la lista.' 
+            : 'La lista está vacía.', false, null, 'warning');
+        } else {
+          const listText = pendingItemsExport.map((item, index) => {
+            const cat = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
+            const loc = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
+            const isFav = favoriteProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
+            const isDef = defaultProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
+            const prefix = isFav ? '⭐ ' : isDef ? '📌 ' : '';
+            return `${index + 1}. ${prefix}${item.name} [${cat} - ${loc}]`;
+          }).join('\n');
+
+          const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+          downloadTextAsFile(listText, `shopping-list-${timestamp}.txt`);
+          showAlert('Archivo TXT descargado.', false, null, 'info');
+        }
+        break;
+      case 'import-txt':
+        importFileInput.click();
         break;
     }
   });
