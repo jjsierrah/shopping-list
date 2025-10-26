@@ -59,6 +59,81 @@ function generateId() {
   return Date.now() + Math.floor(Math.random() * 1000000);
 }
 
+// >>> LISTENER GLOBAL DE ELIMINACIÓN (AL INICIO, SIN CONDICIONES) <<<
+document.addEventListener('click', function(e) {
+  const target = e.target;
+
+  // Solo actuar si el clic es en un botón de papelera
+  if (!target.classList.contains('delete-btn') &&
+      !target.classList.contains('delete-favorite') &&
+      !target.classList.contains('delete-default') &&
+      !target.classList.contains('delete-category') &&
+      !target.classList.contains('delete-location')) {
+    return;
+  }
+
+  // Obtener el ID de forma robusta
+  const idStr = target.getAttribute('data-id');
+  if (!idStr) return;
+
+  const id = Number(idStr);
+  if (isNaN(id)) return;
+
+  // Prevenir múltiples ejecuciones
+  if (target.disabled) return;
+  target.disabled = true;
+  setTimeout(() => { target.disabled = false; }, 500);
+
+  // --- ELIMINACIÓN SEGÚN CONTEXTO ---
+  if (target.classList.contains('delete-btn') && target.closest('#shopping-list')) {
+    undoStack.shoppingList = JSON.parse(JSON.stringify(shoppingList));
+    shoppingList = shoppingList.filter(p => p.id !== id);
+    renderShoppingList();
+    showUndoButton();
+    return;
+  }
+
+  if (target.classList.contains('delete-favorite')) {
+    undoStack.favorites = JSON.parse(JSON.stringify(favoriteProducts));
+    favoriteProducts = favoriteProducts.filter(p => p.id !== id);
+    renderFavoritesList();
+    renderShoppingList();
+    showModalUndoButton(favoritesModal, 'favorites');
+    return;
+  }
+
+  if (target.classList.contains('delete-default')) {
+    undoStack.defaults = JSON.parse(JSON.stringify(defaultProducts));
+    defaultProducts = defaultProducts.filter(p => p.id !== id);
+    renderDefaultsList();
+    renderShoppingList();
+    showModalUndoButton(defaultsModal, 'defaults');
+    return;
+  }
+
+  if (target.classList.contains('delete-category')) {
+    undoStack.categories = JSON.parse(JSON.stringify(categories));
+    categories = categories.filter(c => c.id !== id);
+    renderCategories();
+    renderShoppingList();
+    renderFavoritesList();
+    renderDefaultsList();
+    showModalUndoButton(configModal, 'categories');
+    return;
+  }
+
+  if (target.classList.contains('delete-location')) {
+    undoStack.locations = JSON.parse(JSON.stringify(locations));
+    locations = locations.filter(l => l.id !== id);
+    renderLocations();
+    renderShoppingList();
+    renderFavoritesList();
+    renderDefaultsList();
+    showModalUndoButton(configModal, 'locations');
+    return;
+  }
+});
+
 // Función de alerta personalizada mejorada
 function showAlert(message, isConfirm = false, onConfirm = null, type = 'info') {
   const colors = {
@@ -517,102 +592,11 @@ function showModalUndoButton(modal, context) {
     if (btn.parentNode) btn.remove();
     undoStack[context] = null;
   }, 5000);
-  }
+}
 
-// >>> LISTENER ÚNICO Y ROBUSTO PARA TODOS LOS CLICKS <<<
+// >>> LISTENER ÚNICO Y ROBUSTO PARA TODOS LOS CLICKS (excepto eliminación, ya manejada) <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
-
-  // --- ELIMINACIÓN (robusta, sin banderas) ---
-  if (target.classList.contains('delete-btn') && target.closest('#shopping-list')) {
-    const id = Number(target.dataset.id);
-    if (!isNaN(id)) {
-      undoStack.shoppingList = JSON.parse(JSON.stringify(shoppingList));
-      shoppingList = shoppingList.filter(p => p.id !== id);
-      renderShoppingList();
-      showUndoButton();
-    }
-    return;
-  }
-
-  if (target.classList.contains('delete-favorite')) {
-    const id = Number(target.dataset.id);
-    if (!isNaN(id)) {
-      undoStack.favorites = JSON.parse(JSON.stringify(favoriteProducts));
-      favoriteProducts = favoriteProducts.filter(p => p.id !== id);
-      renderFavoritesList();
-      renderShoppingList();
-      showModalUndoButton(favoritesModal, 'favorites');
-    }
-    return;
-  }
-
-  if (target.classList.contains('delete-default')) {
-    const id = Number(target.dataset.id);
-    if (!isNaN(id)) {
-      undoStack.defaults = JSON.parse(JSON.stringify(defaultProducts));
-      defaultProducts = defaultProducts.filter(p => p.id !== id);
-      renderDefaultsList();
-      renderShoppingList();
-      showModalUndoButton(defaultsModal, 'defaults');
-    }
-    return;
-  }
-
-  if (target.classList.contains('delete-category')) {
-    const id = Number(target.dataset.id);
-    if (!isNaN(id)) {
-      undoStack.categories = JSON.parse(JSON.stringify(categories));
-      categories = categories.filter(c => c.id !== id);
-      renderCategories(); // Esto ya llama a initDragAndDrop
-      renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
-      showModalUndoButton(configModal, 'categories');
-    }
-    return;
-  }
-
-  if (target.classList.contains('delete-location')) {
-    const id = Number(target.dataset.id);
-    if (!isNaN(id)) {
-      undoStack.locations = JSON.parse(JSON.stringify(locations));
-      locations = locations.filter(l => l.id !== id);
-      renderLocations(); // Esto ya llama a initDragAndDrop
-      renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
-      showModalUndoButton(configModal, 'locations');
-    }
-    return;
-  }
-
-  // --- DESHACER ---
-  if (target.id === 'undo-btn') {
-    let restored = false;
-    for (const key of ['shoppingList', 'favorites', 'defaults', 'categories', 'locations']) {
-      if (undoStack[key]) {
-        if (key === 'shoppingList') shoppingList = JSON.parse(JSON.stringify(undoStack[key]));
-        else if (key === 'favorites') favoriteProducts = JSON.parse(JSON.stringify(undoStack[key]));
-        else if (key === 'defaults') defaultProducts = JSON.parse(JSON.stringify(undoStack[key]));
-        else if (key === 'categories') categories = JSON.parse(JSON.stringify(undoStack[key]));
-        else if (key === 'locations') locations = JSON.parse(JSON.stringify(undoStack[key]));
-        undoStack[key] = null;
-        restored = true;
-        break;
-      }
-    }
-    if (restored) {
-      renderShoppingList();
-      renderFavoritesList();
-      renderDefaultsList();
-      renderCategories();
-      renderLocations();
-      document.getElementById('undo-btn').style.display = 'none';
-      showAlert('Acción deshecha.', false, null, 'info');
-    }
-    return;
-  }
 
   // --- AÑADIR DESDE FAVORITOS O PREDETERMINADOS ---
   if (target.classList.contains('add-to-list')) {
@@ -695,37 +679,36 @@ document.addEventListener('click', (e) => {
     }
     return;
   }
-});
 
-// Eventos para selects en modales
-document.addEventListener('change', (e) => {
-  const target = e.target;
-  const id = Number(target.dataset.id);
-
-  if (target.classList.contains('product-category')) {
-    if (target.closest('.favorite-item')) {
-      const item = favoriteProducts.find(p => p.id === id);
-      if (item) { item.categoryId = target.value ? Number(target.value) : null; saveData(); }
-    } else if (target.closest('.default-item')) {
-      const item = defaultProducts.find(p => p.id === id);
-      if (item) { item.categoryId = target.value ? Number(target.value) : null; saveData(); }
+  // --- DESHACER GLOBAL ---
+  if (target.id === 'undo-btn') {
+    let restored = false;
+    for (const key of ['shoppingList', 'favorites', 'defaults', 'categories', 'locations']) {
+      if (undoStack[key]) {
+        if (key === 'shoppingList') shoppingList = JSON.parse(JSON.stringify(undoStack[key]));
+        else if (key === 'favorites') favoriteProducts = JSON.parse(JSON.stringify(undoStack[key]));
+        else if (key === 'defaults') defaultProducts = JSON.parse(JSON.stringify(undoStack[key]));
+        else if (key === 'categories') categories = JSON.parse(JSON.stringify(undoStack[key]));
+        else if (key === 'locations') locations = JSON.parse(JSON.stringify(undoStack[key]));
+        undoStack[key] = null;
+        restored = true;
+        break;
+      }
     }
+    if (restored) {
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+      renderCategories();
+      renderLocations();
+      document.getElementById('undo-btn').style.display = 'none';
+      showAlert('Acción deshecha.', false, null, 'info');
+    }
+    return;
   }
 
-  if (target.classList.contains('product-location')) {
-    if (target.closest('.favorite-item')) {
-      const item = favoriteProducts.find(p => p.id === id);
-      if (item) { item.locationId = target.value ? Number(target.value) : null; saveData(); }
-    } else if (target.closest('.default-item')) {
-      const item = defaultProducts.find(p => p.id === id);
-      if (item) { item.locationId = target.value ? Number(target.value) : null; saveData(); }
-    }
-  }
-});
-
-// Añadir producto desde modal
-document.addEventListener('click', (e) => {
-  if (e.target.id === 'add-product-btn') {
+  // --- AÑADIR PRODUCTO DESDE MODAL ---
+  if (target.id === 'add-product-btn') {
     e.preventDefault();
     const nameInput = document.getElementById('product-name');
     const name = nameInput.value.trim();
@@ -763,6 +746,33 @@ document.addEventListener('click', (e) => {
     document.getElementById('product-default').checked = true;
     document.getElementById('add-product-modal').style.display = 'none';
     showAlert('Producto añadido a la lista!', false, null, 'info');
+    return;
+  }
+});
+
+// Eventos para selects en modales
+document.addEventListener('change', (e) => {
+  const target = e.target;
+  const id = Number(target.dataset.id);
+
+  if (target.classList.contains('product-category')) {
+    if (target.closest('.favorite-item')) {
+      const item = favoriteProducts.find(p => p.id === id);
+      if (item) { item.categoryId = target.value ? Number(target.value) : null; saveData(); }
+    } else if (target.closest('.default-item')) {
+      const item = defaultProducts.find(p => p.id === id);
+      if (item) { item.categoryId = target.value ? Number(target.value) : null; saveData(); }
+    }
+  }
+
+  if (target.classList.contains('product-location')) {
+    if (target.closest('.favorite-item')) {
+      const item = favoriteProducts.find(p => p.id === id);
+      if (item) { item.locationId = target.value ? Number(target.value) : null; saveData(); }
+    } else if (target.closest('.default-item')) {
+      const item = defaultProducts.find(p => p.id === id);
+      if (item) { item.locationId = target.value ? Number(target.value) : null; saveData(); }
+    }
   }
 });
 
@@ -877,14 +887,12 @@ if (openHelpBtn) {
   });
 }
 
-// >>> MANEJADOR DEL SELECT DE ACCIONES PRINCIPALES (CORREGIDO + EXPORTAR/IMPORTAR TXT) <<<
+// >>> MANEJADOR DEL SELECT DE ACCIONES PRINCIPALES <<<
 const mainActionsSelect = document.getElementById('main-actions');
 if (mainActionsSelect) {
   mainActionsSelect.addEventListener('change', (e) => {
     const action = e.target.value;
     if (!action) return;
-
-    // Reset select
     e.target.selectedIndex = 0;
 
     switch (action) {
@@ -906,7 +914,6 @@ if (mainActionsSelect) {
             const prefix = isFav ? '⭐ ' : isDef ? '📌 ' : '';
             return `${index + 1}. ${prefix}${item.name} [${cat} - ${loc}]`;
           }).join('\n');
-
           if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(listText).then(() => {
               showAlert('Lista copiada al portapapeles!', false, null, 'info');
@@ -967,7 +974,6 @@ if (mainActionsSelect) {
             const prefix = isFav ? '⭐ ' : isDef ? '📌 ' : '';
             return `${index + 1}. ${prefix}${item.name} [${cat} - ${loc}]`;
           }).join('\n');
-
           const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
           downloadTextAsFile(listText, `shopping-list-${timestamp}.txt`);
           showAlert('Archivo TXT descargado.', false, null, 'info');
