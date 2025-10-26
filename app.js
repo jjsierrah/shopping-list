@@ -140,13 +140,49 @@ function renderCategories() {
     div.className = 'category-item';
     div.dataset.id = cat.id;
     div.draggable = true;
-    div.innerHTML = `
-      <input type="text" value="${cat.name}" data-id="${cat.id}" />
-      <div class="category-actions">
-        <button type="button" class="save-category" data-id="${cat.id}">${SAVE_SVG}</button>
-        <button type="button" class="delete-category" data-id="${cat.id}">${TRASH_SVG}</button>
-      </div>
-    `;
+    
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = cat.name;
+    input.dataset.id = cat.id;
+    
+    const actions = document.createElement('div');
+    actions.className = 'category-actions';
+    
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'save-category';
+    saveBtn.innerHTML = SAVE_SVG;
+    saveBtn.dataset.id = cat.id;
+    saveBtn.onclick = () => {
+      const newName = input.value.trim();
+      if (newName) {
+        cat.name = newName;
+        renderCategories();
+        renderShoppingList();
+        renderFavoritesList();
+        renderDefaultsList();
+        saveData();
+      }
+    };
+    actions.appendChild(saveBtn);
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-category';
+    deleteBtn.innerHTML = TRASH_SVG;
+    deleteBtn.dataset.id = cat.id;
+    deleteBtn.onclick = () => {
+      undoStack.categories = JSON.parse(JSON.stringify(categories));
+      categories = categories.filter(c => c.id !== cat.id);
+      renderCategories();
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+      showModalUndoButton(configModal, 'categories');
+    };
+    actions.appendChild(deleteBtn);
+    
+    div.appendChild(input);
+    div.appendChild(actions);
     categoriesListEl.appendChild(div);
 
     const option = document.createElement('option');
@@ -167,13 +203,49 @@ function renderLocations() {
     div.className = 'location-item';
     div.dataset.id = loc.id;
     div.draggable = true;
-    div.innerHTML = `
-      <input type="text" value="${loc.name}" data-id="${loc.id}" />
-      <div class="location-actions">
-        <button type="button" class="save-location" data-id="${loc.id}">${SAVE_SVG}</button>
-        <button type="button" class="delete-location" data-id="${loc.id}">${TRASH_SVG}</button>
-      </div>
-    `;
+    
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = loc.name;
+    input.dataset.id = loc.id;
+    
+    const actions = document.createElement('div');
+    actions.className = 'location-actions';
+    
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'save-location';
+    saveBtn.innerHTML = SAVE_SVG;
+    saveBtn.dataset.id = loc.id;
+    saveBtn.onclick = () => {
+      const newName = input.value.trim();
+      if (newName) {
+        loc.name = newName;
+        renderLocations();
+        renderShoppingList();
+        renderFavoritesList();
+        renderDefaultsList();
+        saveData();
+      }
+    };
+    actions.appendChild(saveBtn);
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-location';
+    deleteBtn.innerHTML = TRASH_SVG;
+    deleteBtn.dataset.id = loc.id;
+    deleteBtn.onclick = () => {
+      undoStack.locations = JSON.parse(JSON.stringify(locations));
+      locations = locations.filter(l => l.id !== loc.id);
+      renderLocations();
+      renderShoppingList();
+      renderFavoritesList();
+      renderDefaultsList();
+      showModalUndoButton(configModal, 'locations');
+    };
+    actions.appendChild(deleteBtn);
+    
+    div.appendChild(input);
+    div.appendChild(actions);
     locationsListEl.appendChild(div);
 
     const option = document.createElement('option');
@@ -252,6 +324,7 @@ function renderShoppingList() {
   saveData();
   initDragAndDrop(shoppingListEl, 'li', shoppingList, renderShoppingList);
 }
+
 function renderFavoritesList() {
   favoritesListEl.innerHTML = '';
   
@@ -352,9 +425,10 @@ function renderFavoritesList() {
     deleteBtn.className = 'delete-favorite';
     deleteBtn.innerHTML = TRASH_SVG;
     deleteBtn.dataset.id = item.id;
+    const itemId = item.id;
     deleteBtn.onclick = () => {
       undoStack.favorites = JSON.parse(JSON.stringify(favoriteProducts));
-      favoriteProducts = favoriteProducts.filter(p => p.id !== item.id);
+      favoriteProducts = favoriteProducts.filter(p => p.id !== itemId);
       renderFavoritesList();
       renderShoppingList();
       showModalUndoButton(favoritesModal, 'favorites');
@@ -467,9 +541,10 @@ function renderDefaultsList() {
     deleteBtn.className = 'delete-default';
     deleteBtn.innerHTML = TRASH_SVG;
     deleteBtn.dataset.id = item.id;
+    const itemId = item.id; // Capturar ID como valor primitivo
     deleteBtn.onclick = () => {
       undoStack.defaults = JSON.parse(JSON.stringify(defaultProducts));
-      defaultProducts = defaultProducts.filter(p => p.id !== item.id);
+      defaultProducts = defaultProducts.filter(p => p.id !== itemId);
       renderDefaultsList();
       renderShoppingList();
       showModalUndoButton(defaultsModal, 'defaults');
@@ -672,7 +747,7 @@ function showModalUndoButton(modal, context) {
   };
   modal.querySelector('.modal-content').appendChild(btn);
   setTimeout(() => { if (btn.parentNode) btn.remove(); undoStack[context] = null; }, 5000);
-}
+      }
 
 // >>> RESTO DE EVENTOS (sin tocar eliminación ni deshacer) <<<
 document.addEventListener('click', (e) => {
