@@ -15,7 +15,7 @@
     <button id="open-help-btn" class="header-help-btn">?</button>
   </header>
 
-  <!-- Menú desplegable: Exportar/Importar ANTES de Configuración -->
+  <!-- Menú desplegable: Exportar/Importar JSON ANTES de Configuración -->
   <select id="main-actions" class="main-actions-select">
     <option value="">— Acciones —</option>
     <option value="add-product">➕ Añadir producto</option>
@@ -24,8 +24,8 @@
     <option value="open-favorites">⭐ Favoritos</option>
     <option value="load-favorites">➕ Cargar Favoritos</option>
     <option value="open-defaults">📌 Predeterminados</option>
-    <option value="export-txt">📤 Exportar a TXT</option>
-    <option value="import-txt">📥 Importar desde TXT</option>
+    <option value="export-json">📤 Exportar a JSON</option>
+    <option value="import-json">📥 Importar desde JSON</option>
     <option value="open-config">⚙️ Configuración</option>
   </select>
 
@@ -60,7 +60,7 @@
     </div>
   </div>
 
-  <!-- Modal de Ayuda – versión 1.0 -->
+  <!-- Modal de Ayuda – versión 1.0.1 -->
   <div id="help-modal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
@@ -68,7 +68,7 @@
         <button id="close-help-btn" class="close-btn">&times;</button>
       </div>
       <div class="help-content">
-        <p><strong>Versión: v1.0</strong></p>
+        <p><strong>Versión: v1.0.1</strong></p>
         <p>Aplicación PWA para gestionar tu lista de la compra con las siguientes funcionalidades:</p>
         <br />
         <ul>
@@ -77,7 +77,7 @@
           <li>📌 Marcar productos como predeterminados</li>
           <li>🔄 Gestionar categorías y ubicaciones</li>
           <li>📋 Copiar lista al portapapeles</li>
-          <li>📤📥 Exportar/Importar lista en TXT</li>
+          <li>📤📥 Exportar/Importar **todos los datos en JSON**</li>
           <li>📱 Instalable como aplicación en Android</li>
           <li>🔒 Datos guardados localmente (sin conexión necesaria)</li>
           <li>↕️ Reordenar productos con arrastrar y soltar</li>
@@ -139,7 +139,7 @@
   </div>
 
   <!-- Input oculto para importar archivo -->
-  <input type="file" id="import-file-input" accept=".txt" style="display: none;" />
+  <input type="file" id="import-file-input" accept=".json" style="display: none;" />
 
   <script src="app.js?v=1.0"></script>
 </body>
