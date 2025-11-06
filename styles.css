@@ -482,6 +482,27 @@ h3 {
   font-size: 1.1em;
 }
 
+/* Acciones de ordenamiento en modales */
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.modal-actions button {
+  flex: 1;
+  min-width: 48%;
+  padding: 8px;
+  font-size: 0.85em;
+  background-color: #455a64;
+  color: white;
+}
+
+.modal-actions button:hover {
+  background-color: #37474f;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
   .modal-content {
