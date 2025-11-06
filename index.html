@@ -60,7 +60,7 @@
     </div>
   </div>
 
-  <!-- Modal de Ayuda – versión 1.0.1 -->
+  <!-- Modal de Ayuda – versión 1.0 -->
   <div id="help-modal" class="modal" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
@@ -68,7 +68,7 @@
         <button id="close-help-btn" class="close-btn">&times;</button>
       </div>
       <div class="help-content">
-        <p><strong>Versión: v1.0.1</strong></p>
+        <p><strong>Versión: v1.0</strong></p>
         <p>Aplicación PWA para gestionar tu lista de la compra con las siguientes funcionalidades:</p>
         <br />
         <ul>
@@ -76,6 +76,7 @@
           <li>⭐ Marcar productos como favoritos</li>
           <li>📌 Marcar productos como predeterminados</li>
           <li>🔄 Gestionar categorías y ubicaciones</li>
+          <li>📊 Ordenar Favoritos/Predeterminados por Categoría o Ubicación</li>
           <li>📋 Copiar lista al portapapeles</li>
           <li>📤📥 Exportar/Importar **todos los datos en JSON**</li>
           <li>📱 Instalable como aplicación en Android</li>
@@ -95,6 +96,10 @@
         <h2>Productos Favoritos</h2>
         <button id="close-favorites-btn" class="close-btn">&times;</button>
       </div>
+      <div class="modal-actions">
+        <button id="sort-favorites-by-category">📊 Ordenar por Categoría</button>
+        <button id="sort-favorites-by-location">📍 Ordenar por Ubicación</button>
+      </div>
       <div class="favorites-list" id="favorites-list"></div>
       <button id="close-favorites-modal-btn" class="btn-secondary">Cerrar</button>
     </div>
@@ -106,6 +111,10 @@
       <div class="modal-header">
         <h2>Productos Predeterminados</h2>
         <button id="close-defaults-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-actions">
+        <button id="sort-defaults-by-category">📊 Ordenar por Categoría</button>
+        <button id="sort-defaults-by-location">📍 Ordenar por Ubicación</button>
       </div>
       <div class="defaults-list" id="defaults-list"></div>
       <button id="close-defaults-modal-btn" class="btn-secondary">Cerrar</button>
