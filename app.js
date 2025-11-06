@@ -276,8 +276,8 @@ function renderLocations() {
 }
 
 function renderProductItem(item) {
-  const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
-  const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
+  const categoryName = item.categoryId ? categories.find(c => c.id === item.categoryId)?.name : '';
+  const locationName = item.locationId ? locations.find(l => l.id === item.locationId)?.name : '';
   
   const isFavorite = favoriteProducts.some(p => 
     p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId
@@ -297,15 +297,19 @@ function renderProductItem(item) {
   title.textContent = item.name + (isFavorite ? ' ⭐' : '') + (isDefault ? ' 📌' : '');
   productInfo.appendChild(title);
   
-  const categoryEl = document.createElement('div');
-  categoryEl.className = 'category';
-  categoryEl.textContent = categoryName;
-  productInfo.appendChild(categoryEl);
+  if (categoryName) {
+    const categoryEl = document.createElement('div');
+    categoryEl.className = 'category';
+    categoryEl.textContent = categoryName;
+    productInfo.appendChild(categoryEl);
+  }
   
-  const locationEl = document.createElement('div');
-  locationEl.className = 'location';
-  locationEl.textContent = locationName;
-  productInfo.appendChild(locationEl);
+  if (locationName) {
+    const locationEl = document.createElement('div');
+    locationEl.className = 'location';
+    locationEl.textContent = locationName;
+    productInfo.appendChild(locationEl);
+  }
   
   const actions = document.createElement('div');
   actions.className = 'actions';
