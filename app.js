@@ -77,6 +77,21 @@ function sortProductsBy(products, type) {
   });
 }
 
+// >>> GENERAR COLOR A PARTIR DE STRING <<<
+function stringToColor(str) {
+  if (!str) return '#ccc';
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  let color = '#';
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xff;
+    color += ('00' + value.toString(16)).substr(-2);
+  }
+  return color;
+}
+
 // Función de alerta personalizada mejorada
 function showAlert(message, isConfirm = false, onConfirm = null, type = 'info') {
   const colors = {
@@ -276,7 +291,8 @@ function renderLocations() {
 }
 
 function renderProductItem(item) {
-  const categoryName = item.categoryId ? categories.find(c => c.id === item.categoryId)?.name : '';
+  const category = categories.find(c => c.id === item.categoryId);
+  const categoryName = category ? category.name : '';
   const locationName = item.locationId ? locations.find(l => l.id === item.locationId)?.name : '';
   
   const isFavorite = favoriteProducts.some(p => 
@@ -289,6 +305,14 @@ function renderProductItem(item) {
   const li = document.createElement('li');
   li.dataset.id = item.id;
   li.draggable = true;
+
+  // Aplicar borde según categoría
+  if (categoryName) {
+    const color = stringToColor(categoryName);
+    li.style.borderLeft = `4px solid ${color}`;
+  } else {
+    li.style.borderLeft = '4px solid transparent';
+  }
 
   const productInfo = document.createElement('div');
   productInfo.className = 'product-info';
@@ -793,7 +817,7 @@ function showModalUndoButton(modal, context) {
   };
   modal.querySelector('.modal-content').appendChild(btn);
   setTimeout(() => { if (btn.parentNode) btn.remove(); undoStack[context] = null; }, 5000);
-}
+        }
 // >>> RESTO DE EVENTOS (sin tocar eliminación ni deshacer) <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
