@@ -59,6 +59,24 @@ function generateId() {
   return Date.now() + Math.floor(Math.random() * 1000000);
 }
 
+// >>> FUNCION DE ORDENAMIENTO <<<
+function sortProductsBy(products, type) {
+  // Crear mapa de índice: id → posición
+  const indexMap = (type === 'category' ? categories : locations)
+    .reduce((map, item, index) => {
+      map[item.id] = index;
+      return map;
+    }, {});
+
+  return [...products].sort((a, b) => {
+    const idA = type === 'category' ? a.categoryId : a.locationId;
+    const idB = type === 'category' ? b.categoryId : b.locationId;
+    const indexA = idA !== null && idA !== undefined ? indexMap[idA] : Infinity;
+    const indexB = idB !== null && idB !== undefined ? indexMap[idB] : Infinity;
+    return indexA - indexB;
+  });
+}
+
 // Función de alerta personalizada mejorada
 function showAlert(message, isConfirm = false, onConfirm = null, type = 'info') {
   const colors = {
@@ -665,6 +683,31 @@ modalCloseTriggers.forEach(({btn, modal}) => {
 if (openFavoritesBtn) openFavoritesBtn.addEventListener('click', () => openModal(favoritesModal, renderFavoritesList));
 if (openDefaultsBtn) openDefaultsBtn.addEventListener('click', () => openModal(defaultsModal, renderDefaultsList));
 if (openConfigBtn) openConfigBtn.addEventListener('click', () => openModal(configModal, () => { renderCategories(); renderLocations(); }));
+
+// >>> LISTENERS DE ORDENAMIENTO <<<
+document.getElementById('sort-favorites-by-category')?.addEventListener('click', () => {
+  favoriteProducts = sortProductsBy(favoriteProducts, 'category');
+  renderFavoritesList();
+  showAlert('Favoritos ordenados por categoría.', false, null, 'info');
+});
+
+document.getElementById('sort-favorites-by-location')?.addEventListener('click', () => {
+  favoriteProducts = sortProductsBy(favoriteProducts, 'location');
+  renderFavoritesList();
+  showAlert('Favoritos ordenados por ubicación.', false, null, 'info');
+});
+
+document.getElementById('sort-defaults-by-category')?.addEventListener('click', () => {
+  defaultProducts = sortProductsBy(defaultProducts, 'category');
+  renderDefaultsList();
+  showAlert('Predeterminados ordenados por categoría.', false, null, 'info');
+});
+
+document.getElementById('sort-defaults-by-location')?.addEventListener('click', () => {
+  defaultProducts = sortProductsBy(defaultProducts, 'location');
+  renderDefaultsList();
+  showAlert('Predeterminados ordenados por ubicación.', false, null, 'info');
+});
 
 // Añadir categoría
 if (categoryForm) categoryForm.addEventListener('submit', (e) => {
