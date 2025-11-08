@@ -1,30 +1,30 @@
 // DOM Elements
 const productForm = document.getElementById('add-product-form');
-const shoppingListEl = document.getElementById('shoppingList');
-const clearBtn = document.getElementById('clearList');
-const loadFavoritesBtn = document.getElementById('loadFavorites');
-const copyListBtn = document.getElementById('copyList');
-const categoryForm = document.getElementById('addCategoryForm');
-const locationForm = document.getElementById('addLocationForm');
-const categoriesListEl = document.getElementById('categoriesList');
-const locationsListEl = document.getElementById('locationsList');
-const favoritesListEl = document.getElementById('favoritesList');
-const defaultsListEl = document.getElementById('defaultsList');
-const categorySelect = document.getElementById('productCategorySelect');
-const locationSelect = document.getElementById('productLocationSelect');
-const openConfigBtn = document.getElementById('openConfigBtn');
-const openFavoritesBtn = document.getElementById('openFavoritesBtn');
-const openDefaultsBtn = document.getElementById('openDefaultsBtn');
-const closeConfigBtn = document.getElementById('closeConfigBtn');
-const closeFavoritesBtn = document.getElementById('closeFavoritesBtn');
-const closeDefaultsBtn = document.getElementById('closeDefaultsBtn');
-const closeConfigModalBtn = document.getElementById('closeConfigModalBtn');
-const closeFavoritesModalBtn = document.getElementById('closeFavoritesModalBtn');
-const closeDefaultsModalBtn = document.getElementById('closeDefaultsModalBtn');
-const configModal = document.getElementById('configModal');
-const favoritesModal = document.getElementById('favoritesModal');
-const defaultsModal = document.getElementById('defaultsModal');
-const importFileInput = document.getElementById('importFileInput');
+const shoppingListEl = document.getElementById('shopping-list');
+const clearBtn = document.getElementById('clear-list');
+const loadFavoritesBtn = document.getElementById('load-favorites');
+const copyListBtn = document.getElementById('copy-list');
+const categoryForm = document.getElementById('add-category-form');
+const locationForm = document.getElementById('add-location-form');
+const categoriesListEl = document.getElementById('categories-list');
+const locationsListEl = document.getElementById('locations-list');
+const favoritesListEl = document.getElementById('favorites-list');
+const defaultsListEl = document.getElementById('defaults-list');
+const categorySelect = document.getElementById('product-category-select');
+const locationSelect = document.getElementById('product-location-select');
+const openConfigBtn = document.getElementById('open-config-btn');
+const openFavoritesBtn = document.getElementById('open-favorites-btn');
+const openDefaultsBtn = document.getElementById('open-defaults-btn');
+const closeConfigBtn = document.getElementById('close-config-btn');
+const closeFavoritesBtn = document.getElementById('close-favorites-btn');
+const closeDefaultsBtn = document.getElementById('close-defaults-btn');
+const closeConfigModalBtn = document.getElementById('close-config-modal-btn');
+const closeFavoritesModalBtn = document.getElementById('close-favorites-modal-btn');
+const closeDefaultsModalBtn = document.getElementById('close-defaults-modal-btn');
+const configModal = document.getElementById('config-modal');
+const favoritesModal = document.getElementById('favorites-modal');
+const defaultsModal = document.getElementById('defaults-modal');
+const importFileInput = document.getElementById('import-file-input');
 
 // Load data - TRES LISTAS SEPARADAS
 let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
@@ -823,7 +823,7 @@ function showModalUndoButton(modal, context) {
   };
   modal.querySelector('.modal-content').appendChild(btn);
   setTimeout(() => { if (btn.parentNode) btn.remove(); undoStack[context] = null; }, 5000);
-}
+                          }
 // >>> RESTO DE EVENTOS (sin tocar eliminación ni deshacer) <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
