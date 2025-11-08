@@ -56,20 +56,20 @@ const SAVE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><p
 
 // >>> PALETA DE COLORES PARA CATEGORÍAS <<<
 const CATEGORY_COLORS = [
-  '#4CAF50', // Verde
-  '#2196F3', // Azul
-  '#FF9800', // Naranja
-  '#F44336', // Rojo
-  '#9C27B0', // Púrpura
-  '#00BCD4', // Cian
-  '#FFC107', // Ámbar
-  '#E91E63', // Rosa
   '#009688', // Teal
-  '#607D8B', // Azul grisáceo
-  '#795548', // Marrón
   '#673AB7', // Violeta oscuro
-  '#03A9F4', // Azul claro
+  '#FF0080', // Rosa
+  '#FF9800', // Naranja
+  '#795548', // Marrón
+  '#2196F3', // Azul
   '#FF5722', // Naranja oscuro
+  '#03A9F4', // Azul claro
+  '#F44336', // Rojo
+  '#4CAF50', // Verde
+  '#FFC107', // Ámbar
+  '#00BCD4', // Cian
+  '#607D8B', // Azul grisáceo
+  '#9C27B0', // Púrpura
   '#CDDC39', // Lima
   '#9E9E9E', // Gris
   '#FF4081', // Rosa brillante
@@ -368,6 +368,23 @@ function renderProductItem(item) {
 }
 
 function renderShoppingList() {
+  // Guardar el estado actual de "bought" desde el DOM antes de destruirlo
+  const currentStates = {};
+  document.querySelectorAll('#shopping-list li input[type="checkbox"].bought').forEach(checkbox => {
+    const id = Number(checkbox.dataset.id);
+    if (!isNaN(id)) {
+      currentStates[id] = checkbox.checked;
+    }
+  });
+
+  // Sincronizar el estado con el modelo de datos
+  shoppingList.forEach(item => {
+    if (currentStates.hasOwnProperty(item.id)) {
+      item.bought = currentStates[item.id];
+    }
+  });
+
+  // Renderizar
   shoppingListEl.innerHTML = '';
   shoppingList.forEach(item => {
     const li = renderProductItem(item);
@@ -843,7 +860,7 @@ function showModalUndoButton(modal, context) {
   };
   modal.querySelector('.modal-content').appendChild(btn);
   setTimeout(() => { if (btn.parentNode) btn.remove(); undoStack[context] = null; }, 5000);
-}
+        }
 // >>> RESTO DE EVENTOS (sin tocar eliminación ni deshacer) <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
