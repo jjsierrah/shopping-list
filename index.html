@@ -12,11 +12,8 @@
 <body>
   <header>
     <h1>🛒 JJ Shopping List</h1>
-    <!-- Botón de ayuda y hamburguesa -->
-    <div class="header-actions">
-      <button id="open-help-btn" class="header-help-btn">?</button>
-      <button id="hamburger-btn" class="hamburger-btn">☰</button>
-    </div>
+    <!-- Solo botón hamburguesa -->
+    <button id="hamburger-btn" class="hamburger-btn">☰</button>
   </header>
 
   <!-- Menú hamburguesa (oculto por defecto) -->
@@ -27,14 +24,17 @@
     <button class="menu-action" data-action="open-favorites">⭐ Favoritos</button>
     <button class="menu-action" data-action="load-favorites">➕ Cargar Favoritos</button>
     <button class="menu-action" data-action="open-defaults">📌 Predeterminados</button>
+    <button class="menu-action" data-action="sort-list">🔃 Ordenar lista</button>
     <button class="menu-action" data-action="export-json">📤 Exportar a JSON</button>
     <button class="menu-action" data-action="import-json">📥 Importar desde JSON</button>
     <button class="menu-action" data-action="open-config">⚙️ Configuración</button>
+    <button class="menu-action" data-action="open-help">❓ Ayuda</button>
   </div>
 
   <!-- Lista de productos -->
   <ul id="shopping-list"></ul>
 
+  <!-- Resto de modales (sin cambios en estructura) -->
   <!-- Modal de Añadir Producto -->
   <div id="add-product-modal" class="modal" style="display: none;">
     <div class="modal-content">
@@ -80,6 +80,7 @@
           <li>📌 Marcar productos como predeterminados</li>
           <li>🔄 Gestionar categorías y ubicaciones</li>
           <li>📊 Ordenar Favoritos/Predeterminados por Categoría o Ubicación</li>
+          <li>🔃 **Ordenar lista principal** por Categoría y Ubicación</li>
           <li>📋 Copiar lista al portapapeles</li>
           <li>📤📥 Exportar/Importar **todos los datos en JSON**</li>
           <li>📱 Instalable como aplicación en Android</li>
