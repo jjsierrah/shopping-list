@@ -1021,14 +1021,6 @@ if (importFileInput) {
   });
 }
 
-// Modal de Ayuda
-const openHelpBtn = document.getElementById('open-help-btn');
-if (openHelpBtn) {
-  openHelpBtn.addEventListener('click', () => {
-    document.getElementById('help-modal').style.display = 'block';
-  });
-}
-
 // >>> MANEJADOR DEL MENÚ HAMBURGUESA <<<
 const hamburgerBtn = document.getElementById('hamburger-btn');
 const hamburgerMenu = document.getElementById('hamburger-menu');
@@ -1111,6 +1103,29 @@ if (hamburgerBtn && hamburgerMenu) {
         case 'open-defaults':
           openModal(defaultsModal, renderDefaultsList);
           break;
+        case 'sort-list':
+          // Crear mapas de índice
+          const categoryIndexMap = categories.reduce((map, item, index) => {
+            map[item.id] = index;
+            return map;
+          }, {});
+          const locationIndexMap = locations.reduce((map, item, index) => {
+            map[item.id] = index;
+            return map;
+          }, {});
+
+          shoppingList.sort((a, b) => {
+            const catA = a.categoryId !== undefined && a.categoryId !== null ? categoryIndexMap[a.categoryId] : Infinity;
+            const catB = b.categoryId !== undefined && b.categoryId !== null ? categoryIndexMap[b.categoryId] : Infinity;
+            if (catA !== catB) return catA - catB;
+            
+            const locA = a.locationId !== undefined && a.locationId !== null ? locationIndexMap[a.locationId] : Infinity;
+            const locB = b.locationId !== undefined && b.locationId !== null ? locationIndexMap[b.locationId] : Infinity;
+            return locA - locB;
+          });
+          renderShoppingList();
+          showAlert('✅ Lista ordenada por categoría y ubicación.', false, null, 'info');
+          break;
         case 'export-json':
           const exportData = {
             shoppingList,
@@ -1133,6 +1148,9 @@ if (hamburgerBtn && hamburgerMenu) {
             renderCategories();
             renderLocations();
           });
+          break;
+        case 'open-help':
+          document.getElementById('help-modal').style.display = 'block';
           break;
       }
     }
