@@ -843,7 +843,7 @@ function showModalUndoButton(modal, context) {
   };
   modal.querySelector('.modal-content').appendChild(btn);
   setTimeout(() => { if (btn.parentNode) btn.remove(); undoStack[context] = null; }, 5000);
-  }
+}
 // >>> RESTO DE EVENTOS (sin tocar eliminación ni deshacer) <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
@@ -1029,95 +1029,112 @@ if (openHelpBtn) {
   });
 }
 
-// >>> MANEJADOR DEL SELECT DE ACCIONES PRINCIPALES <<<
-const mainActionsSelect = document.getElementById('main-actions');
-if (mainActionsSelect) {
-  mainActionsSelect.addEventListener('change', (e) => {
-    const action = e.target.value;
-    if (!action) return;
-    e.target.selectedIndex = 0;
+// >>> MANEJADOR DEL MENÚ HAMBURGUESA <<<
+const hamburgerBtn = document.getElementById('hamburger-btn');
+const hamburgerMenu = document.getElementById('hamburger-menu');
 
-    switch (action) {
-      case 'add-product':
-        document.getElementById('add-product-modal').style.display = 'block';
-        break;
-      case 'copy-list':
-        const pendingItems = shoppingList.filter(item => !item.bought);
-        if (pendingItems.length === 0) {
-          showAlert(pendingItems.length === 0 && shoppingList.length > 0 
-            ? 'No hay productos pendientes en la lista.' 
-            : 'La lista está vacía.', false, null, 'warning');
-        } else {
-          const listText = pendingItems.map((item, index) => {
-            const cat = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
-            const loc = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
-            const isFav = favoriteProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
-            const isDef = defaultProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
-            const prefix = isFav ? '⭐ ' : isDef ? '📌 ' : '';
-            return `${index + 1}. ${prefix}${item.name} [${cat} - ${loc}]`;
-          }).join('\n');
-          if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(listText).then(() => {
-              showAlert('Lista copiada!', false, null, 'info');
-            }).catch(() => fallbackCopyTextToClipboard(listText));
+if (hamburgerBtn && hamburgerMenu) {
+  hamburgerBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    hamburgerMenu.classList.toggle('show');
+  });
+
+  // Cerrar menú al hacer clic fuera
+  document.addEventListener('click', (e) => {
+    if (!hamburgerMenu.contains(e.target) && e.target !== hamburgerBtn) {
+      hamburgerMenu.classList.remove('show');
+    }
+  });
+
+  // Asignar acciones a los botones del menú
+  hamburgerMenu.addEventListener('click', (e) => {
+    if (e.target.classList.contains('menu-action')) {
+      const action = e.target.dataset.action;
+      hamburgerMenu.classList.remove('show');
+
+      switch (action) {
+        case 'add-product':
+          document.getElementById('add-product-modal').style.display = 'block';
+          break;
+        case 'copy-list':
+          const pendingItems = shoppingList.filter(item => !item.bought);
+          if (pendingItems.length === 0) {
+            showAlert(pendingItems.length === 0 && shoppingList.length > 0 
+              ? 'No hay productos pendientes en la lista.' 
+              : 'La lista está vacía.', false, null, 'warning');
           } else {
-            fallbackCopyTextToClipboard(listText);
+            const listText = pendingItems.map((item, index) => {
+              const cat = categories.find(c => c.id === item.categoryId)?.name || '';
+              const loc = locations.find(l => l.id === item.locationId)?.name || '';
+              const isFav = favoriteProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
+              const isDef = defaultProducts.some(p => p.name === item.name && p.categoryId === item.categoryId && p.locationId === item.locationId);
+              const prefix = isFav ? '⭐ ' : isDef ? '📌 ' : '';
+              const catLoc = cat && loc ? `[${cat} - ${loc}]` : cat ? `[${cat}]` : loc ? `[${loc}]` : '';
+              return `${index + 1}. ${prefix}${item.name} ${catLoc}`.trim();
+            }).join('\n');
+            if (navigator.clipboard && window.isSecureContext) {
+              navigator.clipboard.writeText(listText).then(() => {
+                showAlert('Lista copiada!', false, null, 'info');
+              }).catch(() => fallbackCopyTextToClipboard(listText));
+            } else {
+              fallbackCopyTextToClipboard(listText);
+            }
           }
-        }
-        break;
-      case 'clear-list':
-        showAlert('¿Seguro que quieres borrar la lista actual?', true, () => {
-          shoppingList = [];
+          break;
+        case 'clear-list':
+          showAlert('¿Seguro que quieres borrar la lista actual?', true, () => {
+            shoppingList = [];
+            renderShoppingList();
+          }, 'error');
+          break;
+        case 'open-favorites':
+          openModal(favoritesModal, renderFavoritesList);
+          break;
+        case 'load-favorites':
+          if (shoppingList.length > 0) {
+            showAlert('La lista ya contiene productos. No se puede cargar favoritos.', false, null, 'warning');
+            return;
+          }
+          if (favoriteProducts.length === 0) {
+            showAlert('No hay productos marcados como favoritos.', false, null, 'warning');
+            return;
+          }
+          const favoritesToAdd = favoriteProducts.filter(fav => !shoppingList.some(item => item.name === fav.name));
+          if (favoritesToAdd.length === 0) {
+            showAlert('Los favoritos ya están en la lista.', false, null, 'warning');
+            return;
+          }
+          shoppingList.push(...favoritesToAdd.map(fav => ({ ...fav, id: generateId(), bought: false })));
           renderShoppingList();
-        }, 'error');
-        break;
-      case 'open-favorites':
-        openModal(favoritesModal, renderFavoritesList);
-        break;
-      case 'load-favorites':
-        if (shoppingList.length > 0) {
-          showAlert('La lista ya contiene productos. No se puede cargar favoritos.', false, null, 'warning');
-          return;
-        }
-        if (favoriteProducts.length === 0) {
-          showAlert('No hay productos marcados como favoritos.', false, null, 'warning');
-          return;
-        }
-        const favoritesToAdd = favoriteProducts.filter(fav => !shoppingList.some(item => item.name === fav.name));
-        if (favoritesToAdd.length === 0) {
-          showAlert('Los favoritos ya están en la lista.', false, null, 'warning');
-          return;
-        }
-        shoppingList.push(...favoritesToAdd.map(fav => ({ ...fav, id: generateId(), bought: false })));
-        renderShoppingList();
-        showAlert('Favoritos cargados correctamente.', false, null, 'info');
-        break;
-      case 'open-defaults':
-        openModal(defaultsModal, renderDefaultsList);
-        break;
-      case 'export-json':
-        const exportData = {
-          shoppingList,
-          favoriteProducts,
-          defaultProducts,
-          categories,
-          locations,
-          exportedAt: new Date().toISOString(),
-          version: '1.0'
-        };
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
-        downloadJsonAsFile(exportData, `jj-shopping-list-backup-${timestamp}.json`);
-        showAlert('✅ Copia de seguridad en JSON creada.', false, null, 'info');
-        break;
-      case 'import-json':
-        importFileInput.click();
-        break;
-      case 'open-config':
-        openModal(configModal, () => {
-          renderCategories();
-          renderLocations();
-        });
-        break;
+          showAlert('Favoritos cargados correctamente.', false, null, 'info');
+          break;
+        case 'open-defaults':
+          openModal(defaultsModal, renderDefaultsList);
+          break;
+        case 'export-json':
+          const exportData = {
+            shoppingList,
+            favoriteProducts,
+            defaultProducts,
+            categories,
+            locations,
+            exportedAt: new Date().toISOString(),
+            version: '1.0'
+          };
+          const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+          downloadJsonAsFile(exportData, `jj-shopping-list-backup-${timestamp}.json`);
+          showAlert('✅ Copia de seguridad en JSON creada.', false, null, 'info');
+          break;
+        case 'import-json':
+          importFileInput.click();
+          break;
+        case 'open-config':
+          openModal(configModal, () => {
+            renderCategories();
+            renderLocations();
+          });
+          break;
+      }
     }
   });
 }
