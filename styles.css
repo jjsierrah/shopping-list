@@ -35,25 +35,6 @@ header h1 {
   align-items: center;
 }
 
-/* Botón de ayuda */
-.header-help-btn {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.header-help-btn:hover {
-  background-color: #5a6268;
-}
 
 /* Botón hamburguesa */
 .hamburger-btn {
