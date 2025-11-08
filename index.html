@@ -12,22 +12,25 @@
 <body>
   <header>
     <h1>🛒 JJ Shopping List</h1>
-    <button id="open-help-btn" class="header-help-btn">?</button>
+    <!-- Botón de ayuda y hamburguesa -->
+    <div class="header-actions">
+      <button id="open-help-btn" class="header-help-btn">?</button>
+      <button id="hamburger-btn" class="hamburger-btn">☰</button>
+    </div>
   </header>
 
-  <!-- Menú desplegable: Exportar/Importar JSON ANTES de Configuración -->
-  <select id="main-actions" class="main-actions-select">
-    <option value="">— Acciones —</option>
-    <option value="add-product">➕ Añadir producto</option>
-    <option value="copy-list">📋 Copiar lista</option>
-    <option value="clear-list">🗑️ Limpiar lista</option>
-    <option value="open-favorites">⭐ Favoritos</option>
-    <option value="load-favorites">➕ Cargar Favoritos</option>
-    <option value="open-defaults">📌 Predeterminados</option>
-    <option value="export-json">📤 Exportar a JSON</option>
-    <option value="import-json">📥 Importar desde JSON</option>
-    <option value="open-config">⚙️ Configuración</option>
-  </select>
+  <!-- Menú hamburguesa (oculto por defecto) -->
+  <div id="hamburger-menu" class="hamburger-menu">
+    <button class="menu-action" data-action="add-product">➕ Añadir producto</button>
+    <button class="menu-action" data-action="copy-list">📋 Copiar lista</button>
+    <button class="menu-action" data-action="clear-list">🗑️ Limpiar lista</button>
+    <button class="menu-action" data-action="open-favorites">⭐ Favoritos</button>
+    <button class="menu-action" data-action="load-favorites">➕ Cargar Favoritos</button>
+    <button class="menu-action" data-action="open-defaults">📌 Predeterminados</button>
+    <button class="menu-action" data-action="export-json">📤 Exportar a JSON</button>
+    <button class="menu-action" data-action="import-json">📥 Importar desde JSON</button>
+    <button class="menu-action" data-action="open-config">⚙️ Configuración</button>
+  </div>
 
   <!-- Lista de productos -->
   <ul id="shopping-list"></ul>
@@ -82,6 +85,7 @@
           <li>📱 Instalable como aplicación en Android</li>
           <li>🔒 Datos guardados localmente (sin conexión necesaria)</li>
           <li>↕️ Reordenar productos con arrastrar y soltar</li>
+          <li>🎨 Cada producto tiene un borde de color según su categoría</li>
         </ul>
         <p><em>Desarrollado por JJ Sierra - 2025</em></p>
       </div>
