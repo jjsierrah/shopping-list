@@ -380,13 +380,23 @@ function renderFavoritesList() {
   favoritesListEl.innerHTML = '';
   
   favoriteProducts.forEach(item => {
-    const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
-    const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
+    const category = categories.find(c => c.id === item.categoryId);
+    const categoryName = category ? category.name : '';
+    const locationName = item.locationId ? locations.find(l => l.id === item.locationId)?.name : '';
     
     const div = document.createElement('div');
     div.className = 'favorite-item';
     div.dataset.id = item.id;
     div.draggable = true;
+
+    // >>> BORDE POR CATEGORÍA <<<
+    if (category) {
+      const index = categories.findIndex(c => c.id === category.id);
+      const color = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+      div.style.borderLeft = `4px solid ${color}`;
+    } else {
+      div.style.borderLeft = '4px solid transparent';
+    }
     
     // Product edit
     const productEdit = document.createElement('div');
@@ -496,13 +506,23 @@ function renderDefaultsList() {
   defaultsListEl.innerHTML = '';
   
   defaultProducts.forEach(item => {
-    const categoryName = categories.find(c => c.id === item.categoryId)?.name || 'Sin categoría';
-    const locationName = locations.find(l => l.id === item.locationId)?.name || 'Sin ubicación';
+    const category = categories.find(c => c.id === item.categoryId);
+    const categoryName = category ? category.name : '';
+    const locationName = item.locationId ? locations.find(l => l.id === item.locationId)?.name : '';
     
     const div = document.createElement('div');
     div.className = 'default-item';
     div.dataset.id = item.id;
     div.draggable = true;
+
+    // >>> BORDE POR CATEGORÍA <<<
+    if (category) {
+      const index = categories.findIndex(c => c.id === category.id);
+      const color = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+      div.style.borderLeft = `4px solid ${color}`;
+    } else {
+      div.style.borderLeft = '4px solid transparent';
+    }
     
     // Product edit
     const productEdit = document.createElement('div');
@@ -823,7 +843,7 @@ function showModalUndoButton(modal, context) {
   };
   modal.querySelector('.modal-content').appendChild(btn);
   setTimeout(() => { if (btn.parentNode) btn.remove(); undoStack[context] = null; }, 5000);
-                          }
+  }
 // >>> RESTO DE EVENTOS (sin tocar eliminación ni deshacer) <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
