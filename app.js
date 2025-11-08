@@ -1,30 +1,30 @@
 // DOM Elements
 const productForm = document.getElementById('add-product-form');
-const shoppingListEl = document.getElementById('shopping-list');
-const clearBtn = document.getElementById('clear-list');
-const loadFavoritesBtn = document.getElementById('load-favorites');
-const copyListBtn = document.getElementById('copy-list');
-const categoryForm = document.getElementById('add-category-form');
-const locationForm = document.getElementById('add-location-form');
-const categoriesListEl = document.getElementById('categories-list');
-const locationsListEl = document.getElementById('locations-list');
-const favoritesListEl = document.getElementById('favorites-list');
-const defaultsListEl = document.getElementById('defaults-list');
-const categorySelect = document.getElementById('product-category-select');
-const locationSelect = document.getElementById('product-location-select');
-const openConfigBtn = document.getElementById('open-config-btn');
-const openFavoritesBtn = document.getElementById('open-favorites-btn');
-const openDefaultsBtn = document.getElementById('open-defaults-btn');
-const closeConfigBtn = document.getElementById('close-config-btn');
-const closeFavoritesBtn = document.getElementById('close-favorites-btn');
-const closeDefaultsBtn = document.getElementById('close-defaults-btn');
-const closeConfigModalBtn = document.getElementById('close-config-modal-btn');
-const closeFavoritesModalBtn = document.getElementById('close-favorites-modal-btn');
-const closeDefaultsModalBtn = document.getElementById('close-defaults-modal-btn');
-const configModal = document.getElementById('config-modal');
-const favoritesModal = document.getElementById('favorites-modal');
-const defaultsModal = document.getElementById('defaults-modal');
-const importFileInput = document.getElementById('import-file-input');
+const shoppingListEl = document.getElementById('shoppingList');
+const clearBtn = document.getElementById('clearList');
+const loadFavoritesBtn = document.getElementById('loadFavorites');
+const copyListBtn = document.getElementById('copyList');
+const categoryForm = document.getElementById('addCategoryForm');
+const locationForm = document.getElementById('addLocationForm');
+const categoriesListEl = document.getElementById('categoriesList');
+const locationsListEl = document.getElementById('locationsList');
+const favoritesListEl = document.getElementById('favoritesList');
+const defaultsListEl = document.getElementById('defaultsList');
+const categorySelect = document.getElementById('productCategorySelect');
+const locationSelect = document.getElementById('productLocationSelect');
+const openConfigBtn = document.getElementById('openConfigBtn');
+const openFavoritesBtn = document.getElementById('openFavoritesBtn');
+const openDefaultsBtn = document.getElementById('openDefaultsBtn');
+const closeConfigBtn = document.getElementById('closeConfigBtn');
+const closeFavoritesBtn = document.getElementById('closeFavoritesBtn');
+const closeDefaultsBtn = document.getElementById('closeDefaultsBtn');
+const closeConfigModalBtn = document.getElementById('closeConfigModalBtn');
+const closeFavoritesModalBtn = document.getElementById('closeFavoritesModalBtn');
+const closeDefaultsModalBtn = document.getElementById('closeDefaultsModalBtn');
+const configModal = document.getElementById('configModal');
+const favoritesModal = document.getElementById('favoritesModal');
+const defaultsModal = document.getElementById('defaultsModal');
+const importFileInput = document.getElementById('importFileInput');
 
 // Load data - TRES LISTAS SEPARADAS
 let shoppingList = JSON.parse(localStorage.getItem('shoppingList')) || [];
@@ -54,6 +54,27 @@ let undoStack = {
 const TRASH_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
 const SAVE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17,3H5C3.89,3 3,3.89 3,5V19C3,20.11 3.89,21 5,21H19C20.11,21 21,20.11 21,19V7L17,3M12,19C10.34,19 9,17.66 9,16C9,14.34 10.34,13 12,13C13.66,13 15,14.34 15,16C15,17.66 13.66,19 12,19M18,12H6V6H17V12Z"/></svg>`;
 
+// >>> PALETA DE COLORES PARA CATEGORÍAS <<<
+const CATEGORY_COLORS = [
+  '#4CAF50', // Verde
+  '#2196F3', // Azul
+  '#FF9800', // Naranja
+  '#F44336', // Rojo
+  '#9C27B0', // Púrpura
+  '#00BCD4', // Cian
+  '#FFC107', // Ámbar
+  '#E91E63', // Rosa
+  '#009688', // Teal
+  '#607D8B', // Azul grisáceo
+  '#795548', // Marrón
+  '#673AB7', // Violeta oscuro
+  '#03A9F4', // Azul claro
+  '#FF5722', // Naranja oscuro
+  '#CDDC39', // Lima
+  '#9E9E9E', // Gris
+  '#FF4081', // Rosa brillante
+];
+
 // Función para generar ID único
 function generateId() {
   return Date.now() + Math.floor(Math.random() * 1000000);
@@ -61,7 +82,6 @@ function generateId() {
 
 // >>> FUNCION DE ORDENAMIENTO <<<
 function sortProductsBy(products, type) {
-  // Crear mapa de índice: id → posición
   const indexMap = (type === 'category' ? categories : locations)
     .reduce((map, item, index) => {
       map[item.id] = index;
@@ -75,21 +95,6 @@ function sortProductsBy(products, type) {
     const indexB = idB !== null && idB !== undefined ? indexMap[idB] : Infinity;
     return indexA - indexB;
   });
-}
-
-// >>> GENERAR COLOR A PARTIR DE STRING <<<
-function stringToColor(str) {
-  if (!str) return '#ccc';
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  let color = '#';
-  for (let i = 0; i < 3; i++) {
-    const value = (hash >> (i * 8)) & 0xff;
-    color += ('00' + value.toString(16)).substr(-2);
-  }
-  return color;
 }
 
 // Función de alerta personalizada mejorada
@@ -306,9 +311,10 @@ function renderProductItem(item) {
   li.dataset.id = item.id;
   li.draggable = true;
 
-  // Aplicar borde según categoría
-  if (categoryName) {
-    const color = stringToColor(categoryName);
+  // >>> COLOR POR POSICIÓN EN LA LISTA DE CATEGORÍAS <<<
+  if (category) {
+    const index = categories.findIndex(c => c.id === category.id);
+    const color = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
     li.style.borderLeft = `4px solid ${color}`;
   } else {
     li.style.borderLeft = '4px solid transparent';
@@ -817,7 +823,7 @@ function showModalUndoButton(modal, context) {
   };
   modal.querySelector('.modal-content').appendChild(btn);
   setTimeout(() => { if (btn.parentNode) btn.remove(); undoStack[context] = null; }, 5000);
-        }
+}
 // >>> RESTO DE EVENTOS (sin tocar eliminación ni deshacer) <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
