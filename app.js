@@ -392,7 +392,7 @@ function renderShoppingList() {
   });
   saveData();
   initDragAndDrop(shoppingListEl, 'li', shoppingList, renderShoppingList);
-}
+                    }
 function renderFavoritesList() {
   favoritesListEl.innerHTML = '';
   
@@ -860,7 +860,7 @@ function showModalUndoButton(modal, context) {
   };
   modal.querySelector('.modal-content').appendChild(btn);
   setTimeout(() => { if (btn.parentNode) btn.remove(); undoStack[context] = null; }, 5000);
-        }
+}
 // >>> RESTO DE EVENTOS (sin tocar eliminación ni deshacer) <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
@@ -1065,6 +1065,29 @@ if (hamburgerBtn && hamburgerMenu) {
         case 'add-product':
           document.getElementById('add-product-modal').style.display = 'block';
           break;
+        case 'sort-list':
+          // Crear mapas de índice
+          const categoryIndexMap = categories.reduce((map, item, index) => {
+            map[item.id] = index;
+            return map;
+          }, {});
+          const locationIndexMap = locations.reduce((map, item, index) => {
+            map[item.id] = index;
+            return map;
+          }, {});
+
+          shoppingList.sort((a, b) => {
+            const catA = a.categoryId !== undefined && a.categoryId !== null ? categoryIndexMap[a.categoryId] : Infinity;
+            const catB = b.categoryId !== undefined && b.categoryId !== null ? categoryIndexMap[b.categoryId] : Infinity;
+            if (catA !== catB) return catA - catB;
+            
+            const locA = a.locationId !== undefined && a.locationId !== null ? locationIndexMap[a.locationId] : Infinity;
+            const locB = b.locationId !== undefined && b.locationId !== null ? locationIndexMap[b.locationId] : Infinity;
+            return locA - locB;
+          });
+          renderShoppingList();
+          showAlert('✅ Lista ordenada por categoría y ubicación.', false, null, 'info');
+          break;
         case 'copy-list':
           const pendingItems = shoppingList.filter(item => !item.bought);
           if (pendingItems.length === 0) {
@@ -1120,29 +1143,6 @@ if (hamburgerBtn && hamburgerMenu) {
         case 'open-defaults':
           openModal(defaultsModal, renderDefaultsList);
           break;
-        case 'sort-list':
-          // Crear mapas de índice
-          const categoryIndexMap = categories.reduce((map, item, index) => {
-            map[item.id] = index;
-            return map;
-          }, {});
-          const locationIndexMap = locations.reduce((map, item, index) => {
-            map[item.id] = index;
-            return map;
-          }, {});
-
-          shoppingList.sort((a, b) => {
-            const catA = a.categoryId !== undefined && a.categoryId !== null ? categoryIndexMap[a.categoryId] : Infinity;
-            const catB = b.categoryId !== undefined && b.categoryId !== null ? categoryIndexMap[b.categoryId] : Infinity;
-            if (catA !== catB) return catA - catB;
-            
-            const locA = a.locationId !== undefined && a.locationId !== null ? locationIndexMap[a.locationId] : Infinity;
-            const locB = b.locationId !== undefined && b.locationId !== null ? locationIndexMap[b.locationId] : Infinity;
-            return locA - locB;
-          });
-          renderShoppingList();
-          showAlert('✅ Lista ordenada por categoría y ubicación.', false, null, 'info');
-          break;
         case 'export-json':
           const exportData = {
             shoppingList,
@@ -1172,6 +1172,14 @@ if (hamburgerBtn && hamburgerMenu) {
       }
     }
   });
+
+  // Cerrar con el botón ×
+  const closeHamburgerBtn = document.getElementById('close-hamburger-menu');
+  if (closeHamburgerBtn) {
+    closeHamburgerBtn.addEventListener('click', () => {
+      hamburgerMenu.classList.remove('show');
+    });
+  }
 }
 
 // Estilos para alertas
