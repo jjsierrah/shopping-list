@@ -6,7 +6,7 @@
 
 body {
   font-family: 'Segoe UI', sans-serif;
-  background-color: #f9f9f9;
+  background-color: #f0f8ff; /* Fondo azul muy claro */
   padding: 16px;
   max-width: 600px;
   margin: 0 auto;
@@ -17,7 +17,7 @@ body {
 header {
   text-align: center;
   margin-bottom: 20px;
-  color: #2e7d32;
+  color: #1976d2; /* Azul oscuro para título */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -30,7 +30,7 @@ header h1 {
 
 /* Botón hamburguesa */
 .hamburger-btn {
-  background-color: #4CAF50;
+  background-color: #2196f3; /* Azul primario */
   color: white;
   border: none;
   border-radius: 50%;
@@ -45,7 +45,7 @@ header h1 {
 }
 
 .hamburger-btn:hover {
-  background-color: #388E3C;
+  background-color: #1976d2;
 }
 
 /* Menú hamburguesa */
@@ -56,7 +56,7 @@ header h1 {
   left: 16px;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
   z-index: 900;
   display: none;
   flex-direction: column;
@@ -84,13 +84,13 @@ header h1 {
   align-items: center;
   padding: 16px 16px 12px;
   border-bottom: 1px solid #eee;
-  background: #f9f9f9;
+  background: #e3f2fd;
   border-radius: 12px 12px 0 0;
 }
 
 .hamburger-header h3 {
   margin: 0;
-  color: #2e7d32;
+  color: #1976d2;
   font-size: 1.1em;
 }
 
@@ -99,7 +99,7 @@ header h1 {
   border: none;
   font-size: 28px;
   cursor: pointer;
-  color: #666;
+  color: #1976d2;
   padding: 0;
   width: 36px;
   height: 36px;
@@ -109,8 +109,7 @@ header h1 {
 }
 
 .close-hamburger-btn:hover {
-  color: #2e7d32;
-  background: #f0f0f0;
+  background: #bbdefb;
   border-radius: 50%;
 }
 
@@ -130,7 +129,7 @@ header h1 {
 }
 
 .hamburger-menu .menu-action:hover {
-  background-color: #f8f9fa;
+  background-color: #f0f7ff;
 }
 
 .hamburger-menu .menu-action:not(:last-child) {
@@ -172,7 +171,7 @@ header h1 {
 #add-product-btn {
   width: 100%;
   padding: 10px 16px;
-  background-color: #4CAF50;
+  background-color: #2196f3;
   color: white;
   border: none;
   border-radius: 4px;
@@ -183,13 +182,13 @@ header h1 {
 }
 
 #add-product-btn:hover {
-  background-color: #388E3C;
+  background-color: #1976d2;
 }
 
 /* Botones generales (botonera, modales, etc.) */
 button:not(#add-product-btn):not(.btn-add-product):not(.menu-action) {
   padding: 10px 12px;
-  background-color: #4CAF50;
+  background-color: #2196f3;
   color: white;
   border: none;
   border-radius: 4px;
@@ -202,7 +201,7 @@ button:not(#add-product-btn):not(.btn-add-product):not(.menu-action) {
 }
 
 button:not(#add-product-btn):not(.btn-add-product):not(.menu-action):hover {
-  background-color: #388E3C;
+  background-color: #1976d2;
 }
 
 .btn-clear {
@@ -219,9 +218,9 @@ button:not(#add-product-btn):not(.btn-add-product):not(.menu-action):hover {
   margin-top: 16px;
 }
 
-/* Botón de configuración: gris azulado distintivo */
+/* Botón de configuración: azul */
 #open-config-btn {
-  background-color: #455a64;
+  background-color: #1976d2;
   color: white;
   display: flex;
   align-items: center;
@@ -236,7 +235,7 @@ button:not(#add-product-btn):not(.btn-add-product):not(.menu-action):hover {
 }
 
 #open-config-btn:hover {
-  background-color: #37474f;
+  background-color: #1565c0;
 }
 
 /* Lista de productos */
@@ -258,7 +257,7 @@ button:not(#add-product-btn):not(.btn-add-product):not(.menu-action):hover {
 
 #shopping-list li.dragging {
   opacity: 0.6;
-  background-color: #e8f5e9;
+  background-color: #e3f2fd;
   transform: scale(1.01);
 }
 
@@ -287,7 +286,7 @@ button:not(#add-product-btn):not(.btn-add-product):not(.menu-action):hover {
   gap: 8px;
 }
 
-/* Botón de eliminar (papelera) - con SVG y color blanco garantizado */
+/* Botón de eliminar (papelera) - rojo */
 .delete-btn {
   background-color: #f44336;
   color: white;
@@ -551,29 +550,8 @@ input[type="checkbox"].bought {
 
 h3 {
   margin: 16px 0 8px;
-  color: #333;
+  color: #1976d2;
   font-size: 1.1em;
-}
-
-/* Acciones de ordenamiento en modales */
-.modal-actions {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-
-.modal-actions button {
-  flex: 1;
-  min-width: 48%;
-  padding: 8px;
-  font-size: 0.85em;
-  background-color: #455a64;
-  color: white;
-}
-
-.modal-actions button:hover {
-  background-color: #37474f;
 }
 
 /* Responsive */
