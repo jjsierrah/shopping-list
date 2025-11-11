@@ -393,11 +393,12 @@ input[type="checkbox"].bought {
 /* Estilo para bloques de favoritos y predeterminados */
 .favorite-item,
 .default-item {
-  border: 1px solid #eee;
+  border: 1px solid #ddd;
   border-radius: 6px;
   padding: 12px;
-  background-color: #fafafa;
+  background-color: white;
   margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 
 /* Edición de producto en modales */
@@ -552,6 +553,37 @@ h3 {
   margin: 16px 0 8px;
   color: #1976d2;
   font-size: 1.1em;
+}
+
+/* Acciones de ordenamiento en modales */
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 8px 0;
+  justify-content: center;
+}
+
+.modal-actions button {
+  flex: 1;
+  min-width: 48%;
+  padding: 10px 12px;
+  font-size: 0.9em;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.modal-actions button:hover {
+  background-color: #1565c0;
+}
+
+/* Espacio adicional arriba de la primera tarjeta */
+.favorite-item:first-child,
+.default-item:first-child {
+  margin-top: 8px;
 }
 
 /* Responsive */
