@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -16,29 +17,28 @@
     <button id="hamburger-btn" class="hamburger-btn">☰</button>
   </header>
 
-<!-- Menú hamburguesa (oculto por defecto) -->
-<div id="hamburger-menu" class="hamburger-menu">
-  <div class="hamburger-header">
-    <h3>Menú</h3>
-    <button id="close-hamburger-menu" class="close-hamburger-btn">&times;</button>
+  <!-- Menú hamburguesa (oculto por defecto) -->
+  <div id="hamburger-menu" class="hamburger-menu">
+    <div class="hamburger-header">
+      <h3>Menú</h3>
+      <button id="close-hamburger-menu" class="close-hamburger-btn">&times;</button>
+    </div>
+    <button class="menu-action" data-action="add-product">➕ Añadir producto</button>
+    <button class="menu-action" data-action="sort-list">🔃 Ordenar lista</button>
+    <button class="menu-action" data-action="copy-list">📋 Copiar lista</button>
+    <button class="menu-action" data-action="clear-list">🗑️ Limpiar lista</button>
+    <button class="menu-action" data-action="open-favorites">⭐ Favoritos</button>
+    <button class="menu-action" data-action="load-favorites">➕ Cargar Favoritos</button>
+    <button class="menu-action" data-action="open-defaults">📌 Predeterminados</button>
+    <button class="menu-action" data-action="export-json">📤 Exportar a JSON</button>
+    <button class="menu-action" data-action="import-json">📥 Importar desde JSON</button>
+    <button class="menu-action" data-action="open-config">⚙️ Configuración</button>
+    <button class="menu-action" data-action="open-help">❓ Ayuda</button>
   </div>
-  <button class="menu-action" data-action="add-product">➕ Añadir producto</button>
-  <button class="menu-action" data-action="sort-list">🔃 Ordenar lista</button>
-  <button class="menu-action" data-action="copy-list">📋 Copiar lista</button>
-  <button class="menu-action" data-action="clear-list">🗑️ Limpiar lista</button>
-  <button class="menu-action" data-action="open-favorites">⭐ Favoritos</button>
-  <button class="menu-action" data-action="load-favorites">➕ Cargar Favoritos</button>
-  <button class="menu-action" data-action="open-defaults">📌 Predeterminados</button>
-  <button class="menu-action" data-action="export-json">📤 Exportar a JSON</button>
-  <button class="menu-action" data-action="import-json">📥 Importar desde JSON</button>
-  <button class="menu-action" data-action="open-config">⚙️ Configuración</button>
-  <button class="menu-action" data-action="open-help">❓ Ayuda</button>
-</div>
 
   <!-- Lista de productos -->
   <ul id="shopping-list"></ul>
 
-  <!-- Resto de modales (sin cambios en estructura) -->
   <!-- Modal de Añadir Producto -->
   <div id="add-product-modal" class="modal" style="display: none;">
     <div class="modal-content">
@@ -121,6 +121,15 @@
         <h2>Productos Predeterminados</h2>
         <button id="close-defaults-btn" class="close-btn">&times;</button>
       </div>
+      
+      <!-- Filtro por categoría -->
+      <div class="filter-section">
+        <label for="filter-category-defaults">Filtrar por:</label>
+        <select id="filter-category-defaults" class="filter-select">
+          <option value="">Todas las categorías</option>
+        </select>
+      </div>
+      
       <div class="modal-actions">
         <button id="sort-defaults-by-category">📊 Ordenar por Categoría</button>
         <button id="sort-defaults-by-location">📍 Ordenar por Ubicación</button>
