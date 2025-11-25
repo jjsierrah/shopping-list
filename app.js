@@ -392,7 +392,7 @@ function renderShoppingList() {
   });
   saveData();
   initDragAndDrop(shoppingListEl, 'li', shoppingList, renderShoppingList);
-                    }
+}
 function renderFavoritesList() {
   favoritesListEl.innerHTML = '';
   
@@ -522,7 +522,16 @@ function renderFavoritesList() {
 function renderDefaultsList() {
   defaultsListEl.innerHTML = '';
   
-  defaultProducts.forEach(item => {
+  // Obtener categoría filtrada
+  const filterSelect = document.getElementById('filter-category-defaults');
+  const selectedCategoryId = filterSelect?.value || null;
+  
+  // Filtrar productos según categoría seleccionada
+  const filteredProducts = selectedCategoryId 
+    ? defaultProducts.filter(p => p.categoryId === Number(selectedCategoryId))
+    : defaultProducts;
+  
+  filteredProducts.forEach(item => {
     const category = categories.find(c => c.id === item.categoryId);
     const categoryName = category ? category.name : '';
     const locationName = item.locationId ? locations.find(l => l.id === item.locationId)?.name : '';
@@ -629,7 +638,7 @@ function renderDefaultsList() {
     deleteBtn.className = 'delete-default';
     deleteBtn.innerHTML = TRASH_SVG;
     deleteBtn.dataset.id = item.id;
-    const itemId = item.id; // Capturar ID como valor primitivo
+    const itemId = item.id;
     deleteBtn.onclick = () => {
       undoStack.defaults = JSON.parse(JSON.stringify(defaultProducts));
       defaultProducts = defaultProducts.filter(p => p.id !== itemId);
@@ -716,6 +725,26 @@ function initDragAndDrop(container, itemSelector, dataArray, renderFn) {
 function openModal(modal, renderFn) {
   modal.style.display = 'block';
   renderFn();
+
+  // >>> INICIALIZAR FILTROS EN MODALES <<<
+  if (modal === defaultsModal) {
+    const filterSelect = document.getElementById('filter-category-defaults');
+    if (filterSelect) {
+      // Rellenar opciones de categorías
+      filterSelect.innerHTML = '<option value="">Todas las categorías</option>';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.name;
+        filterSelect.appendChild(opt);
+      });
+
+      // Listener para el cambio de filtro
+      filterSelect.addEventListener('change', () => {
+        renderDefaultsList();
+      });
+    }
+  }
 }
 
 function closeModal(modal) {
@@ -860,7 +889,7 @@ function showModalUndoButton(modal, context) {
   };
   modal.querySelector('.modal-content').appendChild(btn);
   setTimeout(() => { if (btn.parentNode) btn.remove(); undoStack[context] = null; }, 5000);
-}
+                           }
 // >>> RESTO DE EVENTOS (sin tocar eliminación ni deshacer) <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
@@ -1203,12 +1232,3 @@ renderLocations();
 renderShoppingList();
 renderFavoritesList();
 renderDefaultsList();
-
-// Registrar Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('✅ SW registrado:', reg))
-      .catch(err => console.error('❌ Error en SW:', err));
-  });
-}
