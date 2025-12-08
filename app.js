@@ -328,6 +328,7 @@ function renderProductItem(item) {
   titleContainer.style.display = 'flex';
   titleContainer.style.justifyContent = 'space-between';
   titleContainer.style.alignItems = 'center';
+  titleContainer.className = 'title-container'; 
   
   const title = document.createElement('h3');
   title.textContent = item.name;
