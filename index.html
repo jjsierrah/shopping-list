@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -36,6 +35,11 @@
     <button class="menu-action" data-action="open-help">❓ Ayuda</button>
   </div>
 
+  <!-- Contenedor del precio total -->
+  <div id="total-price-container" class="total-price-container">
+    <h2>💰 Precio total: <span id="total-price">0,00</span> €</h2>
+  </div>
+
   <!-- Lista de productos -->
   <ul id="shopping-list"></ul>
 
@@ -54,6 +58,13 @@
         <select id="product-location-select">
           <option value="">-- Ubicación --</option>
         </select>
+        
+        <!-- Campos de unidades y precio -->
+        <div class="units-price-row">
+          <input type="number" id="product-units" min="1" placeholder="Unidades" value="1" />
+          <input type="number" id="product-price" step="0.01" min="0" placeholder="Precio (€)" />
+        </div>
+        
         <div class="checkbox-group">
           <label>
             <input type="checkbox" id="product-favorite" /> Favorito
@@ -91,6 +102,8 @@
           <li>🔒 Datos guardados localmente (sin conexión necesaria)</li>
           <li>↕️ Reordenar productos con arrastrar y soltar</li>
           <li>🎨 Cada producto tiene un borde de color según su categoría</li>
+          <li>💰 Calcular precio total de la lista</li>
+          <li>📦 Especificar número de unidades por producto</li>
         </ul>
         <p><em>Desarrollado por JJ Sierra - 2025</em></p>
       </div>
