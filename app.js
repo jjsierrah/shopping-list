@@ -561,7 +561,26 @@ function renderDefaultsList() {
     nameInput.dataset.id = item.id;
     productEdit.appendChild(nameInput);
     
-    // >>> CHECKBOX PARA FAVORITO <<<
+    // >>> CAMPO DE PRECIO + CHECKBOX DE FAVORITO <<<
+    const priceFavContainer = document.createElement('div');
+    priceFavContainer.className = 'price-fav-container';
+    priceFavContainer.style.display = 'flex';
+    priceFavContainer.style.gap = '12px';
+    priceFavContainer.style.alignItems = 'center';
+    priceFavContainer.style.marginTop = '8px';
+    
+    // Campo de precio
+    const priceInput = document.createElement('input');
+    priceInput.type = 'number';
+    priceInput.step = '0.01';
+    priceInput.placeholder = 'Precio (€)';
+    priceInput.value = item.price || '';
+    priceInput.dataset.id = item.id;
+    priceInput.style.width = '100px';
+    priceInput.style.textAlign = 'right';
+    priceFavContainer.appendChild(priceInput);
+    
+    // Checkbox de favorito
     const favCheckbox = document.createElement('div');
     favCheckbox.className = 'checkbox-group';
     favCheckbox.innerHTML = `
@@ -570,7 +589,9 @@ function renderDefaultsList() {
         Favorito
       </label>
     `;
-    productEdit.appendChild(favCheckbox);
+    priceFavContainer.appendChild(favCheckbox);
+    
+    productEdit.appendChild(priceFavContainer);
     
     const row = document.createElement('div');
     row.className = 'category-location-row';
@@ -636,12 +657,18 @@ function renderDefaultsList() {
     saveBtn.dataset.id = item.id;
     saveBtn.onclick = () => {
       const newName = nameInput.value.trim();
+      const newPrice = parseFloat(priceInput.value) || null;
+      
       if (newName) {
         item.name = newName;
-        renderDefaultsList();
-        renderShoppingList();
-        saveData();
       }
+      
+      // Actualizar precio (puede ser null)
+      item.price = newPrice;
+      
+      renderDefaultsList();
+      renderShoppingList();
+      saveData();
     };
     actions.appendChild(saveBtn);
     
@@ -929,7 +956,7 @@ function showModalUndoButton(modal, context) {
   };
   modal.querySelector('.modal-content').appendChild(btn);
   setTimeout(() => { if (btn.parentNode) btn.remove(); undoStack[context] = null; }, 5000);
-    }
+}
 // >>> RESTO DE EVENTOS (sin tocar eliminación ni deshacer) <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
