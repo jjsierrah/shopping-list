@@ -561,6 +561,17 @@ function renderDefaultsList() {
     nameInput.dataset.id = item.id;
     productEdit.appendChild(nameInput);
     
+    // >>> CHECKBOX PARA FAVORITO <<<
+    const favCheckbox = document.createElement('div');
+    favCheckbox.className = 'checkbox-group';
+    favCheckbox.innerHTML = `
+      <label>
+        <input type="checkbox" class="product-favorite" data-id="${item.id}" ${favoriteProducts.some(p => p.id === item.id) ? 'checked' : ''}>
+        Favorito
+      </label>
+    `;
+    productEdit.appendChild(favCheckbox);
+    
     const row = document.createElement('div');
     row.className = 'category-location-row';
     
@@ -651,6 +662,35 @@ function renderDefaultsList() {
     div.appendChild(actions);
     defaultsListEl.appendChild(div);
   });
+  
+  // >>> ASIGNAR EVENTOS A LOS CHECKBOX DE FAVORITOS <<<
+  document.querySelectorAll('.default-item .product-favorite').forEach(checkbox => {
+    checkbox.addEventListener('change', (e) => {
+      const id = Number(e.target.dataset.id);
+      const item = defaultProducts.find(p => p.id === id);
+      
+      if (!item) return;
+      
+      if (e.target.checked) {
+        // Añadir a favoritos si no está
+        if (!favoriteProducts.some(p => p.id === id)) {
+          favoriteProducts.push({ ...item }); // Clonar para evitar referencias cruzadas
+          saveData();
+          renderFavoritesList();
+          renderShoppingList();
+          showAlert('✅ Marcado como favorito', false, null, 'info');
+        }
+      } else {
+        // Eliminar de favoritos
+        favoriteProducts = favoriteProducts.filter(p => p.id !== id);
+        saveData();
+        renderFavoritesList();
+        renderShoppingList();
+        showAlert('✅ Eliminado de favoritos', false, null, 'info');
+      }
+    });
+  });
+  
   initDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList);
 }
 
@@ -889,7 +929,7 @@ function showModalUndoButton(modal, context) {
   };
   modal.querySelector('.modal-content').appendChild(btn);
   setTimeout(() => { if (btn.parentNode) btn.remove(); undoStack[context] = null; }, 5000);
-                           }
+    }
 // >>> RESTO DE EVENTOS (sin tocar eliminación ni deshacer) <<<
 document.addEventListener('click', (e) => {
   const target = e.target;
