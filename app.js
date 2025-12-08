@@ -323,9 +323,36 @@ function renderProductItem(item) {
   const productInfo = document.createElement('div');
   productInfo.className = 'product-info';
   
+  // >>> NOMBRE + UNIDADES + PRECIO <<<
+  const titleContainer = document.createElement('div');
+  titleContainer.style.display = 'flex';
+  titleContainer.style.justifyContent = 'space-between';
+  titleContainer.style.alignItems = 'center';
+  
   const title = document.createElement('h3');
-  title.textContent = item.name + (isFavorite ? ' ⭐' : '') + (isDefault ? ' 📌' : '');
-  productInfo.appendChild(title);
+  title.textContent = item.name;
+  titleContainer.appendChild(title);
+  
+  const priceUnits = document.createElement('div');
+  priceUnits.style.textAlign = 'right';
+  priceUnits.style.fontWeight = 'bold';
+  priceUnits.style.color = '#1976d2';
+  
+  if (item.price !== null && item.price !== undefined) {
+    const priceText = (item.price * (item.units || 1)).toFixed(2);
+    priceUnits.textContent = `${priceText} €`;
+  }
+  
+  if (item.units && item.units > 1) {
+    const unitsText = document.createElement('div');
+    unitsText.style.fontSize = '0.8em';
+    unitsText.style.color = '#666';
+    unitsText.textContent = `${item.units} uds`;
+    priceUnits.appendChild(unitsText);
+  }
+  
+  titleContainer.appendChild(priceUnits);
+  productInfo.appendChild(titleContainer);
   
   if (categoryName) {
     const categoryEl = document.createElement('div');
@@ -392,6 +419,9 @@ function renderShoppingList() {
   });
   saveData();
   initDragAndDrop(shoppingListEl, 'li', shoppingList, renderShoppingList);
+  
+  // >>> ACTUALIZAR PRECIO TOTAL <<<
+  updateTotalPrice();
 }
 function renderFavoritesList() {
   favoritesListEl.innerHTML = '';
@@ -425,6 +455,51 @@ function renderFavoritesList() {
     nameInput.className = 'product-name';
     nameInput.dataset.id = item.id;
     productEdit.appendChild(nameInput);
+    
+    // >>> CAMPO DE UNIDADES + PRECIO + CHECKBOX DE FAVORITO <<<
+    const priceFavContainer = document.createElement('div');
+    priceFavContainer.className = 'price-fav-container';
+    priceFavContainer.style.display = 'flex';
+    priceFavContainer.style.gap = '12px';
+    priceFavContainer.style.alignItems = 'center';
+    priceFavContainer.style.marginTop = '8px';
+    priceFavContainer.style.flexWrap = 'wrap';
+    
+    // Campo de unidades
+    const unitsInput = document.createElement('input');
+    unitsInput.type = 'number';
+    unitsInput.min = '1';
+    unitsInput.placeholder = 'Unidades';
+    unitsInput.value = item.units || 1;
+    unitsInput.dataset.id = item.id;
+    unitsInput.style.width = '80px';
+    unitsInput.style.textAlign = 'center';
+    priceFavContainer.appendChild(unitsInput);
+    
+    // Campo de precio
+    const priceInput = document.createElement('input');
+    priceInput.type = 'number';
+    priceInput.step = '0.01';
+    priceInput.min = '0';
+    priceInput.placeholder = 'Precio (€)';
+    priceInput.value = item.price || '';
+    priceInput.dataset.id = item.id;
+    priceInput.style.width = '90px';
+    priceInput.style.textAlign = 'right';
+    priceFavContainer.appendChild(priceInput);
+    
+    // Checkbox de favorito
+    const favCheckbox = document.createElement('div');
+    favCheckbox.className = 'checkbox-group';
+    favCheckbox.innerHTML = `
+      <label>
+        <input type="checkbox" class="product-favorite" data-id="${item.id}" checked>
+        Favorito
+      </label>
+    `;
+    priceFavContainer.appendChild(favCheckbox);
+    
+    productEdit.appendChild(priceFavContainer);
     
     const row = document.createElement('div');
     row.className = 'category-location-row';
@@ -478,7 +553,13 @@ function renderFavoritesList() {
         showAlert('Este producto ya está en la lista.', false, null, 'warning');
         return;
       }
-      shoppingList.push({ ...item, id: generateId(), bought: false });
+      shoppingList.push({ 
+        ...item, 
+        id: generateId(), 
+        bought: false,
+        units: parseInt(unitsInput.value) || 1,
+        price: parseFloat(priceInput.value) || null
+      });
       renderShoppingList();
       showAlert('Producto añadido a la lista!', false, null, 'info');
     };
@@ -490,12 +571,19 @@ function renderFavoritesList() {
     saveBtn.dataset.id = item.id;
     saveBtn.onclick = () => {
       const newName = nameInput.value.trim();
+      const newUnits = parseInt(unitsInput.value) || 1;
+      const newPrice = parseFloat(priceInput.value) || null;
+      
       if (newName) {
         item.name = newName;
-        renderFavoritesList();
-        renderShoppingList();
-        saveData();
       }
+      
+      item.units = newUnits;
+      item.price = newPrice;
+      
+      renderFavoritesList();
+      renderShoppingList();
+      saveData();
     };
     actions.appendChild(saveBtn);
     
@@ -561,22 +649,35 @@ function renderDefaultsList() {
     nameInput.dataset.id = item.id;
     productEdit.appendChild(nameInput);
     
-    // >>> CAMPO DE PRECIO + CHECKBOX DE FAVORITO <<<
+    // >>> CAMPO DE UNIDADES + PRECIO + CHECKBOX DE FAVORITO <<<
     const priceFavContainer = document.createElement('div');
     priceFavContainer.className = 'price-fav-container';
     priceFavContainer.style.display = 'flex';
     priceFavContainer.style.gap = '12px';
     priceFavContainer.style.alignItems = 'center';
     priceFavContainer.style.marginTop = '8px';
+    priceFavContainer.style.flexWrap = 'wrap';
+    
+    // Campo de unidades
+    const unitsInput = document.createElement('input');
+    unitsInput.type = 'number';
+    unitsInput.min = '1';
+    unitsInput.placeholder = 'Unidades';
+    unitsInput.value = item.units || 1;
+    unitsInput.dataset.id = item.id;
+    unitsInput.style.width = '80px';
+    unitsInput.style.textAlign = 'center';
+    priceFavContainer.appendChild(unitsInput);
     
     // Campo de precio
     const priceInput = document.createElement('input');
     priceInput.type = 'number';
     priceInput.step = '0.01';
+    priceInput.min = '0';
     priceInput.placeholder = 'Precio (€)';
     priceInput.value = item.price || '';
     priceInput.dataset.id = item.id;
-    priceInput.style.width = '100px';
+    priceInput.style.width = '90px';
     priceInput.style.textAlign = 'right';
     priceFavContainer.appendChild(priceInput);
     
@@ -585,7 +686,8 @@ function renderDefaultsList() {
     favCheckbox.className = 'checkbox-group';
     favCheckbox.innerHTML = `
       <label>
-        <input type="checkbox" class="product-favorite" data-id="${item.id}" ${favoriteProducts.some(p => p.id === item.id) ? 'checked' : ''}>
+        <input type="checkbox" class="product-favorite" data-id="${item.id}" 
+          ${favoriteProducts.some(p => p.id === item.id) ? 'checked' : ''}>
         Favorito
       </label>
     `;
@@ -645,7 +747,13 @@ function renderDefaultsList() {
         showAlert('Este producto ya está en la lista.', false, null, 'warning');
         return;
       }
-      shoppingList.push({ ...item, id: generateId(), bought: false });
+      shoppingList.push({ 
+        ...item, 
+        id: generateId(), 
+        bought: false,
+        units: parseInt(unitsInput.value) || 1,
+        price: parseFloat(priceInput.value) || null
+      });
       renderShoppingList();
       showAlert('Producto añadido a la lista!', false, null, 'info');
     };
@@ -657,13 +765,14 @@ function renderDefaultsList() {
     saveBtn.dataset.id = item.id;
     saveBtn.onclick = () => {
       const newName = nameInput.value.trim();
+      const newUnits = parseInt(unitsInput.value) || 1;
       const newPrice = parseFloat(priceInput.value) || null;
       
       if (newName) {
         item.name = newName;
       }
       
-      // Actualizar precio (puede ser null)
+      item.units = newUnits;
       item.price = newPrice;
       
       renderDefaultsList();
@@ -720,7 +829,6 @@ function renderDefaultsList() {
   
   initDragAndDrop(defaultsListEl, '.default-item', defaultProducts, renderDefaultsList);
 }
-
 // Drag & Drop robusto (sin clonación)
 function initDragAndDrop(container, itemSelector, dataArray, renderFn) {
   let dragSrcEl = null;
@@ -1001,8 +1109,18 @@ document.addEventListener('click', (e) => {
     const isDefault = document.getElementById('product-default').checked;
     const categoryId = categorySelect.value ? Number(categorySelect.value) : null;
     const locationId = locationSelect.value ? Number(locationSelect.value) : null;
+    const units = parseInt(document.getElementById('product-units').value) || 1;
+    const price = parseFloat(document.getElementById('product-price').value) || null;
 
-    const newItem = { id: generateId(), name, categoryId, locationId, bought: false };
+    const newItem = { 
+      id: generateId(), 
+      name, 
+      categoryId, 
+      locationId, 
+      bought: false,
+      units,
+      price
+    };
     shoppingList.push(newItem);
 
     if (favorite && !favoriteProducts.some(p => p.name === name)) {
@@ -1276,6 +1394,28 @@ if (hamburgerBtn && hamburgerMenu) {
       hamburgerMenu.classList.remove('show');
     });
   }
+}
+
+// >>> CALCULAR Y MOSTRAR PRECIO TOTAL <<<
+function updateTotalPrice() {
+  const totalPriceContainer = document.getElementById('total-price-container');
+  const totalPriceSpan = document.getElementById('total-price');
+  
+  if (!totalPriceContainer || !totalPriceSpan) return;
+  
+  // Solo productos no comprados y con precio
+  const pendingItems = shoppingList.filter(item => 
+    !item.bought && 
+    item.price !== null && 
+    item.price !== undefined &&
+    item.units > 0
+  );
+  
+  const total = pendingItems.reduce((sum, item) => {
+    return sum + (item.price * (item.units || 1));
+  }, 0);
+  
+  totalPriceSpan.textContent = total.toFixed(2);
 }
 
 // Estilos para alertas
